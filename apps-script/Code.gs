@@ -1,0 +1,311 @@
+/**
+ * XOAY CHIỀU — MÁY CHỦ GOOGLE APPS SCRIPT, phiên bản 2.1.0.
+ *
+ * Các điểm vào từ trình duyệt:
+ *   doGet()                  → phục vụ giao diện Index.html.
+ *   submitRecord(payload)    → kiểm tra, chống trùng và ghi vào Google Sheets.
+ *   loginCoordinator(input)  → xác thực PIN của đúng trường/lớp.
+ *
+ * Các hàm kết thúc bằng '_' là hàm nội bộ, không gọi được qua google.script.run.
+ * Không có API đọc danh sách/câu trả lời của học sinh từ Sheet.
+ */
+const SERVER_VERSION = '2.1.0';
+
+const HEADERS = {
+  chu_trinh: [
+    'id', 'thoi_gian_nhan', 'thoi_gian', 'bat_dau', 'ma', 'truong', 'lop', 'tuan',
+    'thu_lam', 'nghi_1', 'nghi_2', 'nghi_3', 'noi', 'dang_san_pham', 'san_pham',
+    'chia_se', 'tu_danh_gia', 'thoi_luong_giay', 'thoi_gian_troi_giay', 'phe',
+    'doi_hay_giu', 'kiem_soat', 'ngoai_kiem_soat', 'ban_goc_id',
+    'phien_ban_app', 'phien_ban_noi_dung',
+  ],
+  phieu_buoi: [
+    'id', 'thoi_gian_nhan', 'thoi_gian', 'truong', 'lop', 'tuan', 'ngay', 'khung_gio',
+    'thoi_luong_thuc_te_phut', 'si_so', 'so_tham_gia', 'da_lam_mo_thu', 'da_lam_thu',
+    'da_lam_nghi', 'da_lam_noi', 'da_lam_chia_se', 'dung_app_hay_giay',
+    'dieu_tot', 'kho_khan', 'dieu_phoi_vien_viet_tat', 'phien_ban_app',
+  ],
+  doi_y: [
+    'id', 'thoi_gian_nhan', 'thoi_gian', 'truong', 'lop', 'tuan', 'nhom',
+    'doi_hay_giu', 'vi_sao', 'phien_ban_app',
+  ],
+};
+
+/** Chạy MỘT LẦN trong editor, từ dự án Apps Script gắn với Sheet mới. */
+function setup_() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  if (!spreadsheet) throw new Error('Hãy mở Apps Script từ Google Sheet mới.');
+
+  // Kiểm tra dịch vụ trước khi sửa cấu hình. Cần Services → Google Sheets API.
+  Sheets.Spreadsheets.get(spreadsheet.getId(), {
+    fields: 'spreadsheetId'
+  });
+  for (const name of Object.keys(HEADERS)) {
+    const sheet = spreadsheet.getSheetByName(name) || spreadsheet.insertSheet(name);
+    const columns = HEADERS[name];
+    if (sheet.getLastRow() === 0) {
+      sheet.getRange(1, 1, 1, columns.length).setValues([columns]);
+      sheet.setFrozenRows(1);
+      sheet.getRange(1, 1, 1, columns.length)
+        .setFontWeight('bold').setBackground('#1e2a5e').setFontColor('#ffffff');
+    } else if (!headersMatch_(sheet, columns)) {
+      throw new Error('Cột ' + name + ' không khớp. Dùng Sheet mới; không ghi đè dữ liệu cũ.');
+    }
+  }
+  PropertiesService.getScriptProperties()
+    .setProperty('SPREADSHEET_ID', spreadsheet.getId());
+}
+
+/** HTML Service hỗ trợ google.script.run và tự thực thi trong iframe bảo vệ. */
+function doGet() {
+  return HtmlService.createHtmlOutputFromFile('Index')
+    .setTitle('Xoay Chiều — Hành trình 4 tuần')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
+function headersMatch_(sheet, columns) {
+  return JSON.stringify(sheet.getRange(1, 1, 1, columns.length).getValues()[0]) ===
+    JSON.stringify(columns);
+}
+
+function schoolOK_(data) {
+  return SCHEMA.schools.some(s => s.truong === data.truong && s.lop.includes(data.lop));
+}
+
+function count_(value) {
+  return String(value ?? '').trim().split(/\s+/).filter(Boolean).length;
+}
+
+function fail_(message, code = 'INVALID_RECORD') {
+  const error = new Error(message);
+  error.code = code;
+  throw error;
+}
+
+/** Chỉ kiểm tra, không trim và không cắt văn bản sẽ được lưu. */
+function text_(value, name, minWords, maxLength) {
+  if (typeof value !== 'string' || count_(value) < minWords || value.length > maxLength) {
+    fail_('Phần ' + name + ' cần ít nhất ' + minWords + ' từ, tối đa ' + maxLength + ' ký tự.');
+  }
+}
+
+function num_(value, min, max) {
+  return typeof value === 'number' && isFinite(value) && value >= min && value <= max;
+}
+
+function valid_(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data) ||
+    JSON.stringify(data).length > 100000) fail_('Bản ghi không hợp lệ hoặc quá lớn.');
+  if (!Object.prototype.hasOwnProperty.call(HEADERS, data.loai)) fail_(
+    'Loại bản ghi không hợp lệ.');
+  if (typeof data.id !== 'string' || !/^[a-zA-Z0-9-]{12,80}$/.test(data.id)) fail_(
+    'ID bản ghi không hợp lệ.');
+  if (!schoolOK_(data)) fail_('Trường/lớp không thuộc danh sách.');
+  if (!Number.isInteger(data.tuan) || data.tuan < 1 || data.tuan > SCHEMA.weeks.length) {
+    fail_('Tuần không hợp lệ.');
+  }
+  if (typeof data.thoi_gian !== 'string' || !isFinite(Date.parse(data.thoi_gian))) fail_(
+    'Thời gian không hợp lệ.');
+
+  // Mỗi ô chỉ được là kiểu đơn giản; từ chối đối tượng lồng nhau bất thường.
+  Object.entries(data).forEach(([name, value]) => {
+    if (!HEADERS[data.loai].includes(name) && name !== 'loai') fail_(
+      'Trường dữ liệu không được hỗ trợ: ' + name);
+    if (!['string', 'number', 'boolean'].includes(typeof value)) fail_(
+      'Kiểu dữ liệu không hợp lệ: ' + name);
+    if (typeof value === 'string' && value.length > 13000) fail_('Giá trị quá dài: ' + name);
+  });
+
+  if (data.loai === 'chu_trinh') validateStudent_(data);
+  else if (data.loai === 'phieu_buoi') validateSession_(data);
+  else validateDebate_(data);
+}
+
+function validateStudent_(data) {
+  if (typeof data.ma !== 'string' || !/^[A-Z]{2}[0-9]{2}-[A-Z]$/.test(data.ma) || data.ma ===
+    'HO07-T') {
+    fail_('Mã học sinh không hợp lệ.');
+  }
+  // Schema sinh từ cùng content.json với giao diện, tránh lệch quy tắc hai phía.
+  SCHEMA.weeks[data.tuan - 1].forEach(field => {
+    const value = data[field.key];
+    if (field.kind === 'rating') {
+      if (![1, 2, 3].includes(value)) fail_('Chưa chọn mức tự đánh giá.');
+    } else if (field.options) {
+      if (!field.options.includes(value)) fail_('Lựa chọn ' + field.key + ' không hợp lệ.');
+    } else {
+      // Chỉ đếm phần học sinh viết, không tính phần tiền tố do app thêm.
+      let raw = value;
+      if (data.tuan === 3 && field.key === 'nghi_1') raw = String(value ?? '').replace(
+        /^Phe [AB]: /, '');
+      if (data.tuan === 3 && field.key === 'chia_se') raw = String(value ?? '').replace(
+        /^(Đổi ý|Giữ ý): /, '');
+      text_(raw, field.key, field.min, field.max);
+    }
+  });
+  if (data.tuan === 3) {
+    if (!data.nghi_1.startsWith(data.phe.startsWith('A') ? 'Phe A: ' : 'Phe B: ')) fail_(
+      'Phe không khớp câu trả lời.');
+    if (!data.chia_se.startsWith(data.doi_hay_giu + ': ')) fail_('Lựa chọn đổi/giữ không khớp.');
+  }
+  if (data.tuan === 4) {
+    const expected = 'Phần mình thay đổi được:\n' + data.kiem_soat +
+      '\n\nPhần mình không thay đổi được:\n' + data.ngoai_kiem_soat;
+    if (data.thu_lam !== expected) fail_('Hai phần của bước Thử không khớp.');
+  }
+  if (!num_(data.thoi_luong_giay, 0, 604800) ||
+    !num_(data.thoi_gian_troi_giay, 0, 31536000) ||
+    !isFinite(Date.parse(data.bat_dau))) fail_('Thời lượng không hợp lệ.');
+}
+
+function validateSession_(data) {
+  ['khung_gio', 'dieu_tot', 'kho_khan', 'dieu_phoi_vien_viet_tat'].forEach(key => {
+    text_(data[key], key, 1, key === 'dieu_phoi_vien_viet_tat' ? 30 : 6000);
+  });
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(data.ngay) || !isFinite(Date.parse(data.ngay))) fail_(
+    'Ngày không hợp lệ.');
+  if (!num_(data.si_so, 1, 200) || !Number.isInteger(data.si_so) ||
+    !num_(data.so_tham_gia, 0, data.si_so) || !Number.isInteger(data.so_tham_gia) ||
+    !num_(data.thoi_luong_thuc_te_phut, 1, 240)) fail_('Sĩ số/thời lượng không hợp lệ.');
+  if (!['App', 'Giấy', 'Kết hợp'].includes(data.dung_app_hay_giay)) fail_(
+    'Hình thức không hợp lệ.');
+  ['mo_thu', 'thu', 'nghi', 'noi', 'chia_se'].forEach(key => {
+    if (typeof data['da_lam_' + key] !== 'boolean') fail_('Thiếu trạng thái bước ' + key);
+  });
+}
+
+function validateDebate_(data) {
+  if (data.tuan !== 3 || !['doi', 'giu'].includes(data.doi_hay_giu)) fail_(
+    'Phiếu đổi ý chỉ dành cho tuần 3.');
+  text_(data.nhom, 'nhóm', 1, 60);
+  text_(data.vi_sao, 'vì sao', 5, 6000);
+}
+
+/**
+ * Đảm bảo tính idempotent:
+ * - Cùng ID + cùng nội dung → ACK lại, không tạo dòng mới.
+ * - Cùng ID + khác nội dung → báo xung đột, không ghi đè.
+ * - ID mới → thêm đúng một dòng bằng API RAW.
+ *
+ * Khóa bao trùm thao tác tìm ID và ghi. Chờ khóa ngắn để nhiều yêu cầu không
+ * giữ các slot thực thi quá lâu. Client tự giãn lần thử sau nếu máy chủ bận.
+ */
+function submitRecord(payload) {
+  let lock;
+  try {
+    const data = payload && payload.record;
+    valid_(data);
+    if (data.loai !== 'chu_trinh') authorizeCoordinator_(payload.token, data);
+
+    const spreadsheetId = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
+    if (!spreadsheetId) fail_('Máy chủ chưa chạy setup_.', 'SETUP_REQUIRED');
+    lock = LockService.getScriptLock();
+    if (!lock.tryLock(1500)) return {
+      ok: false,
+      code: 'BUSY',
+      error: 'Máy chủ đang bận; bài được giữ để gửi lại.'
+    };
+
+    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    const sheet = spreadsheet.getSheetByName(data.loai);
+    const columns = HEADERS[data.loai];
+    if (!sheet || !headersMatch_(sheet, columns)) fail_(
+      'Cấu trúc Sheet không khớp; liên hệ người quản lý.', 'SETUP_REQUIRED');
+
+    if (sheet.getLastRow() > 1) {
+      const match = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1)
+        .createTextFinder(data.id).matchEntireCell(true).findNext();
+      if (match) {
+        const existing = sheet.getRange(match.getRow(), 1, 1, columns.length).getValues()[0];
+        const identical = columns.every((key, index) => key === 'thoi_gian_nhan' ||
+          String(existing[index] ?? '') === String(data[key] ?? ''));
+        if (!identical) fail_('ID đã tồn tại với nội dung khác. Không ghi đè.', 'ID_CONFLICT');
+        return {
+          ok: true,
+          id: data.id,
+          duplicate: true
+        };
+      }
+    }
+
+    const row = columns.map(key => key === 'thoi_gian_nhan' ?
+      new Date().toISOString() : (data[key] ?? ''));
+    // RAW giữ cả =, +, -, @, dấu nháy và xuống dòng như văn bản, không chạy công thức.
+    Sheets.Spreadsheets.Values.append({
+      values: [row]
+    }, spreadsheetId, "'" + data.loai + "'!A1", {
+      valueInputOption: 'RAW',
+      insertDataOption: 'INSERT_ROWS'
+    }, );
+    return {
+      ok: true,
+      id: data.id,
+      duplicate: false
+    };
+  } catch (error) {
+    // Lỗi do Google/quota: log phía chủ dự án, không log câu trả lời học sinh.
+    if (!error.code) console.error('submitRecord: ' + String(error.message));
+    return {
+      ok: false,
+      code: error.code || 'SERVER_ERROR',
+      error: error.code ? error.message :
+        'Chưa ghi được vào Google Sheets. Bài vẫn chờ gửi; kiểm tra dịch vụ và quyền của dự án.',
+    };
+  } finally {
+    if (lock && lock.hasLock()) lock.releaseLock();
+  }
+}
+
+function authorizeCoordinator_(token, data) {
+  const stored = CacheService.getScriptCache().get('coord:' + String(token || ''));
+  let auth;
+  try {
+    auth = JSON.parse(stored || 'null');
+  } catch {
+    auth = null;
+  }
+  if (!auth || auth.truong !== data.truong || auth.lop !== data.lop) {
+    fail_('Phiên điều phối hết hạn hoặc không đúng lớp. Hãy nhập lại PIN.', 'AUTH_REQUIRED');
+  }
+}
+
+/** PIN ở Script Properties, không nằm trong HTML/JSON người học tải về. */
+function loginCoordinator(input) {
+  let lock;
+  try {
+    if (!input || !schoolOK_(input)) fail_('Lớp không hợp lệ.', 'AUTH_REQUIRED');
+    lock = LockService.getScriptLock();
+    if (!lock.tryLock(1500)) fail_('Máy chủ đang bận. Thử lại sau vài giây.', 'BUSY');
+    const cache = CacheService.getScriptCache();
+    const key = 'login:' + input.truong + '|' + input.lop;
+    const attempts = Number(cache.get(key) || 0);
+    if (attempts >= 8) fail_('Đã thử nhiều lần. Vui lòng đợi 10 phút.', 'AUTH_REQUIRED');
+    const raw = PropertiesService.getScriptProperties().getProperty('COORDINATOR_PINS') || '{}';
+    const pins = JSON.parse(raw);
+    const expected = pins[input.truong + '|' + input.lop];
+    if (!expected || !/^\d{6,12}$/.test(String(expected)) || String(input.pin) !== String(
+        expected)) {
+      cache.put(key, String(attempts + 1), 600);
+      fail_('PIN chưa được cấu hình hoặc không đúng.', 'AUTH_REQUIRED');
+    }
+    cache.remove(key);
+    const token = Utilities.getUuid() + Utilities.getUuid();
+    cache.put('coord:' + token, JSON.stringify({
+      truong: input.truong,
+      lop: input.lop
+    }), 21600);
+    return {
+      ok: true,
+      token,
+      expires: Date.now() + 21600000
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      code: error.code || 'SERVER_ERROR',
+      error: error.code ? error.message : 'Chưa mở được chế độ điều phối.'
+    };
+  } finally {
+    if (lock && lock.hasLock()) lock.releaseLock();
+  }
+}

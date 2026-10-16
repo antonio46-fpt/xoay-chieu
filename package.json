@@ -1,0 +1,17 @@
+{
+  "devDependencies": {
+    "jsdom": "30.1.3"
+  },
+  "name": "xoay-chieu",
+  "version": "2.1.0",
+  "private": true,
+  "description": "Công cụ hoạt động và thu dữ liệu nghiên cứu học tập trong bốn tuần",
+  "engines": {
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+  },
+  "scripts": {
+    "build": "python build.py",
+    "test": "node tests/run.cjs",
+    "package": "python package_source.py"
+  }
+}

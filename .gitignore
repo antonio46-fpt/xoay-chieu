@@ -1,0 +1,11 @@
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+coverage/
+
+# Cấu hình riêng của người triển khai
+.env
+.env.*
+!.env.example
+.clasp.json

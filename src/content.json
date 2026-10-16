@@ -1,0 +1,977 @@
+{
+  "truong_lop": [
+    {
+      "truong": "THPT Chuyên Chu Văn An",
+      "lop": [
+        "10 Trung",
+        "10D2"
+      ]
+    },
+    {
+      "truong": "THPT Dân tộc nội trú tỉnh",
+      "lop": [
+        "10A6",
+        "10A7"
+      ]
+    }
+  ],
+  "huong_dan_ma": {
+    "buoc": [
+      "Hai chữ cái đầu trong tên của mẹ (viết HOA, không dấu; Đ viết là D). Nếu không ghi được tên mẹ, dùng tên người chăm sóc chính – và lần sau cũng dùng người đó. Ví dụ: Mẹ tên Hoa → HO.",
+      "Ngày sinh của bạn (2 chữ số, chỉ ghi ngày). Ví dụ: sinh ngày 7 → 07.",
+      "Chữ cái đầu của tên đệm của bạn (viết HOA, không dấu); không có tên đệm thì ghi X. Ví dụ: Nguyễn Thị Mai → T."
+    ],
+    "mau": "^[A-Z]{2}[0-9]{2}-[A-Z]$",
+    "ma_vi_du_cam": "HO07-T",
+    "nhac": "Dùng đúng mã bạn đã ghi ở phiếu khảo sát."
+  },
+  "mat_nang_luc": [
+    {
+      "k": "tnt",
+      "ten": "Tự nhận thức",
+      "mau": "#B7791F",
+      "mau_toi": "#F2B44C",
+      "mo_ta": "Biết mình đang hiểu đến đâu, chủ động tìm trải nghiệm mới."
+    },
+    {
+      "k": "td",
+      "ten": "Linh hoạt tư duy",
+      "mau": "#4C51BF",
+      "mau_toi": "#8C93F5",
+      "mo_ta": "Nối kiến thức giữa các môn và với đời sống."
+    },
+    {
+      "k": "tt",
+      "ten": "Linh hoạt con người",
+      "mau": "#C53F6B",
+      "mau_toi": "#F07CA3",
+      "mo_ta": "Lắng nghe và dùng góc nhìn khác mình."
+    },
+    {
+      "k": "tdg",
+      "ten": "Linh hoạt thay đổi",
+      "mau": "#0F7C70",
+      "mau_toi": "#48C9B5",
+      "mo_ta": "Dám đổi cách học khi cách cũ không hiệu quả."
+    },
+    {
+      "k": "kq",
+      "ten": "Linh hoạt kết quả",
+      "mau": "#5F7A1E",
+      "mau_toi": "#A8C85A",
+      "mo_ta": "Tìm cách hoàn thành dù điều kiện hạn chế."
+    }
+  ],
+  "tieu_chi_san_pham": [
+    [
+      1,
+      "Mới nhắc lại điều đã học"
+    ],
+    [
+      2,
+      "Có nối sang môn khác hoặc đời sống"
+    ],
+    [
+      3,
+      "Nối được và nói lên điều mình tự nhận ra về cách học"
+    ]
+  ],
+  "dang_san_pham": [
+    "Thơ 4 câu",
+    "Tranh 4 khung",
+    "Sơ đồ hình ảnh",
+    "Nhịp đọc / rap ngắn",
+    "Tiểu phẩm 1 phút",
+    "Lời then / sli / lượn",
+    "Họa tiết thổ cẩm",
+    "Ảnh có chú thích"
+  ],
+  "an_toan": {
+    "tu_khoa": [
+      "muốn chết",
+      "tự tử",
+      "không muốn sống",
+      "tự làm đau",
+      "tự làm hại",
+      "bị đánh",
+      "bị bắt nạt",
+      "bị đe dọa"
+    ],
+    "loi_nhan": "Cảm ơn bạn đã chia sẻ. Điều bạn đang gặp rất quan trọng. Hãy nói chuyện ngay với thầy cô chủ nhiệm hoặc cán bộ tư vấn học đường của trường – bạn không phải tự mình vượt qua một mình.",
+    "lien_he": ""
+  },
+  "vai": [
+    [
+      "Người dẫn nhịp",
+      "Giữ thời gian, mời lần lượt từng bạn nói, nhắc luật “không chê, chỉ hỏi”."
+    ],
+    [
+      "Người hỏi",
+      "Sau mỗi bạn chia sẻ, đặt ít nhất một câu hỏi từ thẻ câu hỏi."
+    ],
+    [
+      "Người ghi chép",
+      "Ghi lại 3 ý hay nhất và 1 câu hỏi còn bỏ ngỏ."
+    ],
+    [
+      "Người phản biện thiện chí",
+      "Tìm một góc nhìn khác hoặc điều chưa chắc chắn – nói nhẹ nhàng, có lý do."
+    ]
+  ],
+  "loai_cau_hoi_socrates": {
+    "lr": {
+      "ten": "Làm rõ",
+      "mau_cau": [
+        "Bạn có thể nói rõ hơn ý … là gì không?",
+        "Bạn có thể cho một ví dụ cụ thể không?"
+      ]
+    },
+    "gd": {
+      "ten": "Giả định",
+      "mau_cau": [
+        "Bạn đang cho rằng điều gì là đúng?",
+        "Điều đó có luôn đúng với mọi người không?"
+      ]
+    },
+    "bc": {
+      "ten": "Bằng chứng",
+      "mau_cau": [
+        "Bạn dựa vào đâu để nói vậy?",
+        "Có dấu hiệu nào cho thấy điều ngược lại không?"
+      ]
+    },
+    "gn": {
+      "ten": "Góc nhìn khác",
+      "mau_cau": [
+        "Nếu là thầy cô, họ sẽ nhìn việc này thế nào?",
+        "Ai có thể không đồng ý, và vì sao?"
+      ]
+    },
+    "hq": {
+      "ten": "Hệ quả",
+      "mau_cau": [
+        "Nếu tiếp tục như vậy, điều gì sẽ xảy ra?",
+        "Điều đó ảnh hưởng thế nào đến việc học của bạn?"
+      ]
+    },
+    "ch": {
+      "ten": "Về câu hỏi",
+      "mau_cau": [
+        "Vì sao câu hỏi này lại quan trọng?",
+        "Chúng ta nên hỏi câu gì tiếp theo?"
+      ]
+    }
+  },
+  "luat_vong_tron": [
+    "Không chê, chỉ hỏi",
+    "Nói ngắn, có ví dụ",
+    "Bắt đầu bằng “Mình nghĩ… vì…”",
+    "Ai không muốn nói được làm người ghi chép"
+  ],
+  "phien_ban": "2.0.0",
+  "so_tuan": 4,
+  "ngay_bat_dau": "",
+  "noi_dung_status": "Bản thử nghiệm — nhóm nghiên cứu cần duyệt nội dung trước khi dùng chính thức.",
+  "weeks": [
+    {
+      "tuan": 1,
+      "title": "Mình đã thật sự hiểu chưa?",
+      "focus": "Tự nhận thức",
+      "duration": 15,
+      "quy_trinh": "chu_trinh_15",
+      "letter": {
+        "tuan": 1,
+        "trang_thai": "da_co",
+        "triet_gia": "Socrates",
+        "tieu_de": "Người biết mình không biết",
+        "mat": "tnt",
+        "doan": [
+          "Bạn thân mến,",
+          "Bạn có chắc mình biết những điều mình nghĩ là đã biết?",
+          "Khoảng 2.400 năm trước, ở thành Athens (Hy Lạp), có một người đàn ông mũi tẹt, hay đi chân đất, suốt ngày đứng ở quảng trường hỏi chuyện người qua đường. Ông tên là Socrates. Ông không viết cuốn sách nào; điều ta biết về ông chủ yếu do học trò là Plato ghi lại.",
+          "Chuyện kể rằng một người bạn của ông đến đền Delphi hỏi: “Có ai khôn ngoan hơn Socrates không?”. Lời sấm đáp: không có ai. Socrates rất ngạc nhiên, vì ông thấy mình chẳng biết bao nhiêu. Ông bèn đi trò chuyện với những người nổi tiếng là hiểu biết: chính khách, nhà thơ, thợ thủ công. Sau mỗi cuộc trò chuyện, ông nhận ra họ tưởng mình biết nhiều điều mà thật ra không biết. Còn ông, ít ra cũng không tưởng mình biết điều mình không biết. Có lẽ ông hơn họ đúng ở một điểm nhỏ ấy.",
+          "Người ta hay tóm chuyện này thành câu “Tôi chỉ biết một điều là tôi không biết gì”. Câu ấy không có nguyên văn trong sách của Plato, nhưng ý thì gần đúng.",
+          "Điều thú vị là Socrates không coi “không biết” là xấu hổ. Ông coi đó là điểm xuất phát. Ai tưởng mình đã biết thì thôi không hỏi nữa. Ai biết mình chưa biết thì mới bắt đầu học.",
+          "P.S. Một câu đố nhỏ: nếu không ai biết hết mọi thứ, thì ai nên là thầy của ai?"
+        ],
+        "cau_hoi_lon": "Có điều gì bạn tưởng mình đã biết, nhưng thật ra chưa biết?",
+        "nguoi_gui": "Hộp thư Xoay Chiều",
+        "nguon": "Plato, Biện hộ của Socrates (Apology), 21a–23b.",
+        "nguoi_viet": "Bản mẫu có AI hỗ trợ — nhóm nghiên cứu cần đọc duyệt, chỉnh sửa và ghi nhận đóng góp."
+      },
+      "steps": [
+        {
+          "title": "Một lá thư gửi bạn",
+          "stage": "Mở thư",
+          "minutes": 2,
+          "body": "",
+          "fields": [],
+          "hints": []
+        },
+        {
+          "title": "Thử giải thích không nhìn vở",
+          "stage": "Thử",
+          "minutes": 3,
+          "body": "Chọn một khái niệm trong bài học tuần này mà bạn nghĩ là đã hiểu. Giải thích nó cho một bạn trong 1 phút, không nhìn vở. Bạn vấp ở chỗ nào?",
+          "fields": [
+            {
+              "key": "thu_lam",
+              "label": "Mình đã thử thế nào?",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": []
+        },
+        {
+          "title": "Bạn vấp ở chỗ nào khi giải thích?",
+          "stage": "Nghĩ",
+          "minutes": 4,
+          "body": "",
+          "fields": [
+            {
+              "key": "nghi_1",
+              "label": "Câu trả lời của mình",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": [
+            "Nhớ lại một tình huống cụ thể trong lần thử vừa rồi.",
+            "Bạn đã quan sát hoặc làm điều gì trong tình huống đó?",
+            "Kể bằng lời của bạn; không cần trả lời giống người khác."
+          ]
+        },
+        {
+          "title": "Vì sao trước đó bạn tin là mình đã hiểu? Dấu hiệu nào khiến bạn tưởng như vậy?",
+          "stage": "Nghĩ",
+          "minutes": 4,
+          "body": "",
+          "fields": [
+            {
+              "key": "nghi_2",
+              "label": "Câu trả lời của mình",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": [
+            "Nhớ lại một tình huống cụ thể trong lần thử vừa rồi.",
+            "Bạn đã quan sát hoặc làm điều gì trong tình huống đó?",
+            "Kể bằng lời của bạn; không cần trả lời giống người khác."
+          ]
+        },
+        {
+          "title": "Lần sau, bạn sẽ làm gì để biết chắc mình đã hiểu?",
+          "stage": "Nghĩ",
+          "minutes": 4,
+          "body": "",
+          "fields": [
+            {
+              "key": "nghi_3",
+              "label": "Câu trả lời của mình",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": [
+            "Nhớ lại một tình huống cụ thể trong lần thử vừa rồi.",
+            "Bạn đã quan sát hoặc làm điều gì trong tình huống đó?",
+            "Kể bằng lời của bạn; không cần trả lời giống người khác."
+          ]
+        },
+        {
+          "title": "Nối sang một trải nghiệm khác",
+          "stage": "Nối",
+          "minutes": 4,
+          "body": "Ở môn khác hoặc ngoài đời, bạn đã từng “tưởng biết” như thế chưa? Kể một lần.",
+          "fields": [
+            {
+              "key": "noi",
+              "label": "Điều mình liên hệ được",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": []
+        },
+        {
+          "title": "Biến suy nghĩ thành sản phẩm",
+          "stage": "Nối",
+          "minutes": 4,
+          "body": "Thơ 4 câu bắt đầu bằng “Mình tưởng…” và kết bằng “hóa ra…”",
+          "fields": [
+            {
+              "key": "dang_san_pham",
+              "label": "Chọn dạng sản phẩm",
+              "min": 0,
+              "kind": "select",
+              "max": 6000,
+              "options": [
+                "Thơ 4 câu",
+                "Tranh 4 khung",
+                "Sơ đồ hình ảnh",
+                "Nhịp đọc / rap ngắn",
+                "Tiểu phẩm 1 phút",
+                "Lời then / sli / lượn",
+                "Họa tiết thổ cẩm",
+                "Ảnh có chú thích"
+              ]
+            },
+            {
+              "key": "san_pham",
+              "label": "Viết bài thơ hoặc mô tả sản phẩm của mình",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": []
+        },
+        {
+          "title": "Lắng nghe một người bạn",
+          "stage": "Chia sẻ",
+          "minutes": 2,
+          "body": "Trao đổi trực tiếp với bạn. Không ghi họ tên của bạn ấy.",
+          "fields": [
+            {
+              "key": "chia_se",
+              "label": "Điều mình vừa nghe được từ bạn",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": []
+        },
+        {
+          "title": "Nhìn lại sản phẩm",
+          "stage": "Tự đánh giá",
+          "minutes": 0,
+          "body": "Chọn mức phù hợp với sản phẩm của bạn. Đây là tự đánh giá, không phải điểm số.",
+          "fields": [
+            {
+              "key": "tu_danh_gia",
+              "label": "Mức tự đánh giá",
+              "min": 0,
+              "kind": "rating",
+              "max": 6000
+            }
+          ],
+          "hints": []
+        }
+      ]
+    },
+    {
+      "tuan": 2,
+      "title": "Thử một cách khác",
+      "focus": "Linh hoạt thay đổi",
+      "duration": 15,
+      "quy_trinh": "chu_trinh_15",
+      "letter": {
+        "tieu_de": "Không ai tắm hai lần trên cùng một dòng sông",
+        "triet_gia": "Heraclitus",
+        "doan": [
+          "Bạn thân mến,",
+          "Hãy tưởng tượng một dòng sông: hôm nay bạn đứng ở bờ quen thuộc, nhưng dòng nước vẫn đang chảy. Hình ảnh dòng sông thường được dùng để gợi nhắc tư tưởng về sự thay đổi của Heraclitus. Lá thư này diễn giải ý tưởng ấy, không phải lời trích nguyên văn của ông.",
+          "Bài học mới, môi trường mới hay thời gian ít hơn có thể khiến một cách học quen thuộc không còn phù hợp. Điều đó không có nghĩa cách cũ luôn sai. Bạn có thể thử một cách khác, quan sát kết quả rồi quyết định giữ hay điều chỉnh.",
+          "Tuần này, hãy thử thay đổi một việc nhỏ. Đừng vội chọn cách nghe có vẻ hay nhất; hãy xem điều gì thực sự giúp bạn hiểu bài."
+        ],
+        "cau_hoi_lon": "Khi bài học và hoàn cảnh thay đổi, cách học của mình có cần đổi không?",
+        "nguon": "Diễn giải giáo dục từ hình ảnh dòng sông trong tư tưởng Heraclitus; nhóm cần duyệt nguồn trước khi sử dụng.",
+        "nguoi_viet": "Bản mẫu có AI hỗ trợ — nhóm nghiên cứu cần đọc duyệt, chỉnh sửa và ghi nhận đóng góp."
+      },
+      "steps": [
+        {
+          "title": "Một lá thư gửi bạn",
+          "stage": "Mở thư",
+          "minutes": 2,
+          "body": "",
+          "fields": [],
+          "hints": []
+        },
+        {
+          "title": "Thử hai cách học",
+          "stage": "Thử",
+          "minutes": 3,
+          "body": "Chọn một đoạn kiến thức ngắn của môn Sử hoặc Địa tuần này. Học 1 phút bằng cách quen thuộc (đọc lại), rồi 1 phút bằng cách khác: vẽ sơ đồ hoặc tự đặt 3 câu hỏi “vì sao”. Gấp vở: cách nào giúp bạn nhớ và hiểu hơn?",
+          "fields": [
+            {
+              "key": "thu_lam",
+              "label": "Mình đã thử hai cách như thế nào?",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": []
+        },
+        {
+          "title": "Cách thứ hai khác cách quen thuộc ở điểm nào? Bạn thấy thế nào khi làm theo cách lạ?",
+          "stage": "Nghĩ",
+          "minutes": 4,
+          "body": "",
+          "fields": [
+            {
+              "key": "nghi_1",
+              "label": "Câu trả lời của mình",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": [
+            "Nhớ lại điều bạn vừa làm, thay vì tìm một câu trả lời chung.",
+            "So sánh một chi tiết giữa hai cách học.",
+            "Nêu một dấu hiệu bạn có thể tự quan sát."
+          ]
+        },
+        {
+          "title": "Vì sao bạn thường học theo cách quen? Cách đó có còn hợp với bài học bây giờ không?",
+          "stage": "Nghĩ",
+          "minutes": 4,
+          "body": "",
+          "fields": [
+            {
+              "key": "nghi_2",
+              "label": "Câu trả lời của mình",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": [
+            "Nhớ lại điều bạn vừa làm, thay vì tìm một câu trả lời chung.",
+            "So sánh một chi tiết giữa hai cách học.",
+            "Nêu một dấu hiệu bạn có thể tự quan sát."
+          ]
+        },
+        {
+          "title": "Tuần tới bạn muốn đổi thói quen học nhỏ nào, và làm sao biết nó có tác dụng?",
+          "stage": "Nghĩ",
+          "minutes": 4,
+          "body": "",
+          "fields": [
+            {
+              "key": "nghi_3",
+              "label": "Câu trả lời của mình",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": [
+            "Nhớ lại điều bạn vừa làm, thay vì tìm một câu trả lời chung.",
+            "So sánh một chi tiết giữa hai cách học.",
+            "Nêu một dấu hiệu bạn có thể tự quan sát."
+          ]
+        },
+        {
+          "title": "Khi hoàn cảnh thay đổi",
+          "stage": "Nối",
+          "minutes": 4,
+          "body": "Ngoài giờ học, đã có lúc nào bạn phải đổi cách làm quen thuộc (lên lớp 10, ở nội trú, đổi chỗ ở…)? Bạn xoay xở thế nào?",
+          "fields": [
+            {
+              "key": "noi",
+              "label": "Trải nghiệm mình liên hệ được",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": []
+        },
+        {
+          "title": "Dòng sông cách học của mình",
+          "stage": "Nối",
+          "minutes": 4,
+          "body": "Tạo tranh 4 khung: cách cũ → chỗ vấp → cách mới → điều nhận ra. Vẽ trên giấy và mô tả ở đây; không tải ảnh khuôn mặt.",
+          "fields": [
+            {
+              "key": "dang_san_pham",
+              "label": "Chọn dạng sản phẩm",
+              "min": 0,
+              "kind": "select",
+              "max": 6000,
+              "options": [
+                "Thơ 4 câu",
+                "Tranh 4 khung",
+                "Sơ đồ hình ảnh",
+                "Nhịp đọc / rap ngắn",
+                "Tiểu phẩm 1 phút",
+                "Lời then / sli / lượn",
+                "Họa tiết thổ cẩm",
+                "Ảnh có chú thích"
+              ]
+            },
+            {
+              "key": "san_pham",
+              "label": "Mô tả 4 khung hoặc viết sản phẩm của mình",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": []
+        },
+        {
+          "title": "Nghe thêm một cách học",
+          "stage": "Chia sẻ",
+          "minutes": 2,
+          "body": "Trao đổi với một người bạn.",
+          "fields": [
+            {
+              "key": "chia_se",
+              "label": "Điều mình nghe được từ bạn",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": []
+        },
+        {
+          "title": "Nhìn lại sản phẩm",
+          "stage": "Tự đánh giá",
+          "minutes": 0,
+          "body": "Chọn mức phù hợp với sản phẩm của bạn. Đây là tự đánh giá, không phải điểm số.",
+          "fields": [
+            {
+              "key": "tu_danh_gia",
+              "label": "Mức tự đánh giá",
+              "min": 0,
+              "kind": "rating",
+              "max": 6000
+            }
+          ],
+          "hints": []
+        }
+      ]
+    },
+    {
+      "tuan": 3,
+      "title": "Thử đứng ở phía bạn",
+      "focus": "Con người & tư duy",
+      "duration": 45,
+      "quy_trinh": "tranh_luan_45",
+      "letter": {
+        "tieu_de": "Niềm vui của con cá",
+        "triet_gia": "Trang Tử",
+        "doan": [
+          "Bạn thân mến,",
+          "Trong câu chuyện thường gọi là “Niềm vui của con cá”, Trang Tử và Huệ Tử bàn luận về việc liệu một người có thể biết niềm vui của cá khi mình không phải là cá. Câu chuyện gợi ra một vấn đề gần gũi: ta hiểu trải nghiệm của người khác bằng cách nào?",
+          "Khi đoán cảm xúc hay suy nghĩ của một người bạn, ta thường dựa vào điều mình từng trải qua. Nhưng trải nghiệm của bạn ấy có thể khác. Lắng nghe và hỏi lại giúp ta kiểm tra những điều mình đang đoán.",
+          "Hôm nay, bạn sẽ thử nói từ hai phía của một nhận định. Mục đích không phải thắng tranh luận, mà là nhận ra điều mình hiểu và điều mình còn chưa biết."
+        ],
+        "cau_hoi_lon": "Mình có thể hiểu người khác đến đâu, và cần làm gì để hiểu tốt hơn?",
+        "nguon": "Trang Tử, thiên Thu Thủy — diễn giải, không trích nguyên văn.",
+        "nguoi_viet": "Bản mẫu có AI hỗ trợ — nhóm nghiên cứu cần đọc duyệt, chỉnh sửa và ghi nhận đóng góp."
+      },
+      "steps": [
+        {
+          "title": "Niềm vui của con cá",
+          "stage": "Mở thư",
+          "minutes": 5,
+          "body": "Nhận định tranh luận: “Chúng ta không bao giờ thật sự hiểu được người khác đang nghĩ gì.”",
+          "fields": [],
+          "hints": []
+        },
+        {
+          "title": "Một dự đoán về bạn",
+          "stage": "Thử",
+          "minutes": 5,
+          "body": "Đoán bạn ngồi cạnh thích môn nào nhất và vì sao. Sau đó hỏi bạn ấy. Không ghi tên bạn.",
+          "fields": [
+            {
+              "key": "thu_lam",
+              "label": "Bạn đoán đúng đến đâu? Điều gì làm bạn đoán sai?",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": []
+        },
+        {
+          "title": "Chuẩn bị lý lẽ",
+          "stage": "Chuẩn bị",
+          "minutes": 8,
+          "body": "Viết 2 lý do, mỗi lý do có một ví dụ hoặc bằng chứng.",
+          "fields": [
+            {
+              "key": "phe",
+              "label": "Phe của mình",
+              "min": 0,
+              "kind": "select",
+              "max": 6000,
+              "options": [
+                "A — Đồng ý",
+                "B — Không đồng ý"
+              ]
+            },
+            {
+              "key": "nghi_1",
+              "label": "Hai lý do và ví dụ của mình",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": [
+            "Nhận định nói “không bao giờ”: bạn hiểu phạm vi đó thế nào?",
+            "Nhớ một lần bạn hiểu đúng hoặc hiểu sai người khác.",
+            "Giải thích vì sao ví dụ hỗ trợ lý do của bạn."
+          ]
+        },
+        {
+          "title": "Trình bày và hỏi để làm rõ",
+          "stage": "Trình bày",
+          "minutes": 6,
+          "body": "Các cặp trình bày trực tiếp. Cặp nghe chỉ hỏi để làm rõ. Không chê, không ngắt lời; nói ngắn và có ví dụ.",
+          "fields": [],
+          "hints": []
+        },
+        {
+          "title": "Thử đứng ở phía bên kia",
+          "stage": "Đổi phe",
+          "minutes": 6,
+          "body": "Bây giờ hãy nói thay phe kia.",
+          "fields": [
+            {
+              "key": "nghi_2",
+              "label": "Lý lẽ mạnh nhất của họ là gì? Viết bằng lời của bạn.",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": [
+            "Nhắc lại điều phía kia thực sự nói.",
+            "Chọn lý lẽ bạn thấy đáng cân nhắc nhất.",
+            "Giải thích như thể bạn đang giúp họ trình bày."
+          ]
+        },
+        {
+          "title": "Tìm phần có thể cùng đồng ý",
+          "stage": "Bỏ phe",
+          "minutes": 6,
+          "body": "Tạm bỏ nhãn hai phe.",
+          "fields": [
+            {
+              "key": "nghi_3",
+              "label": "Hai phe đồng ý ở đâu? Điều gì bạn vẫn chưa chắc?",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": [
+            "Nhớ lại một tình huống cụ thể thay vì trả lời chung chung.",
+            "Nêu điều bạn quan sát được hoặc một ví dụ của chính mình.",
+            "Viết điều mình nhận ra và điều còn chưa chắc; không cần giống bạn khác."
+          ]
+        },
+        {
+          "title": "Mình đổi hay giữ ý?",
+          "stage": "Sản phẩm",
+          "minutes": 6,
+          "body": "Bạn có thể đổi hoặc giữ ý; điều cần ghi là lý do.",
+          "fields": [
+            {
+              "key": "doi_hay_giu",
+              "label": "Lựa chọn của mình",
+              "min": 0,
+              "kind": "select",
+              "max": 6000,
+              "options": [
+                "Đổi ý",
+                "Giữ ý"
+              ]
+            },
+            {
+              "key": "chia_se",
+              "label": "Vì sao mình đổi hoặc giữ ý?",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": []
+        },
+        {
+          "title": "Tạo một kết nối",
+          "stage": "Sản phẩm",
+          "minutes": 6,
+          "body": "Viết theo mẫu: “Hiểu một người khác giống như __ vì __”.",
+          "fields": [
+            {
+              "key": "noi",
+              "label": "Liên hệ với môn học hoặc đời sống",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": []
+        },
+        {
+          "title": "Hai tiếng nói cùng một trang giấy",
+          "stage": "Sản phẩm",
+          "minutes": 6,
+          "body": "Viết lời then / sli ngắn hoặc thơ 4 câu đối đáp: một người nói “Tôi hiểu bạn”, người kia đáp lại.",
+          "fields": [
+            {
+              "key": "dang_san_pham",
+              "label": "Chọn dạng sản phẩm",
+              "min": 0,
+              "kind": "select",
+              "max": 6000,
+              "options": [
+                "Thơ 4 câu",
+                "Tranh 4 khung",
+                "Sơ đồ hình ảnh",
+                "Nhịp đọc / rap ngắn",
+                "Tiểu phẩm 1 phút",
+                "Lời then / sli / lượn",
+                "Họa tiết thổ cẩm",
+                "Ảnh có chú thích"
+              ]
+            },
+            {
+              "key": "san_pham",
+              "label": "Nội dung sản phẩm của mình",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": []
+        },
+        {
+          "title": "Chia sẻ với cả lớp",
+          "stage": "Chia sẻ",
+          "minutes": 3,
+          "body": "Chia sẻ sản phẩm trực tiếp và lắng nghe các nhóm khác.",
+          "fields": [],
+          "hints": []
+        },
+        {
+          "title": "Nhìn lại sản phẩm",
+          "stage": "Tự đánh giá",
+          "minutes": 0,
+          "body": "Chọn mức phù hợp với sản phẩm của bạn. Đây là tự đánh giá, không phải điểm số.",
+          "fields": [
+            {
+              "key": "tu_danh_gia",
+              "label": "Mức tự đánh giá",
+              "min": 0,
+              "kind": "rating",
+              "max": 6000
+            }
+          ],
+          "hints": []
+        }
+      ]
+    },
+    {
+      "tuan": 4,
+      "title": "Mang điều gì đi tiếp?",
+      "focus": "Linh hoạt kết quả",
+      "duration": 45,
+      "quy_trinh": "trien_lam_45",
+      "letter": {
+        "tieu_de": "Phần nằm trong tay mình",
+        "triet_gia": "Epictetus",
+        "doan": [
+          "Bạn thân mến,",
+          "Có những việc ta không thể quyết định hoàn toàn: đề bài được giao, thời tiết hay lựa chọn của người khác. Có những việc ta có thể tác động: cách chuẩn bị, việc hỏi giúp đỡ và bước tiếp theo mình sẽ thử. Tư tưởng của Epictetus gợi nhắc ta phân biệt những phần ấy.",
+          "Phân biệt không có nghĩa là bỏ mặc khó khăn hay tự trách mình. Một việc có thể vừa có phần mình tác động được, vừa có phần cần hỗ trợ từ người khác.",
+          "Hãy nhìn lại bốn tuần vừa qua. Chọn một sản phẩm để sửa, một điều học từ bạn và một thói quen nhỏ mà mình muốn tiếp tục. Không cần hứa thay đổi tất cả; hãy chọn một bước đủ cụ thể để bắt đầu."
+        ],
+        "cau_hoi_lon": "Trong việc học của mình, bước nhỏ nào nằm trong khả năng thay đổi của mình?",
+        "nguon": "Epictetus, Enchiridion, mục 1 — diễn giải giáo dục, không trích nguyên văn.",
+        "nguoi_viet": "Bản mẫu có AI hỗ trợ — nhóm nghiên cứu cần đọc duyệt, chỉnh sửa và ghi nhận đóng góp."
+      },
+      "steps": [
+        {
+          "title": "Phần nằm trong tay mình",
+          "stage": "Nhìn lại",
+          "minutes": 10,
+          "body": "",
+          "fields": [],
+          "hints": []
+        },
+        {
+          "title": "Nhìn lại một việc chưa như ý",
+          "stage": "Nhìn lại",
+          "minutes": 10,
+          "body": "Nhớ một việc học trong 4 tuần qua không như ý. Tách thành hai phần.",
+          "fields": [
+            {
+              "key": "kiem_soat",
+              "label": "Phần mình thay đổi hoặc tác động được",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            },
+            {
+              "key": "ngoai_kiem_soat",
+              "label": "Phần mình không tự quyết định được",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": []
+        },
+        {
+          "title": "Chọn một bước nhỏ",
+          "stage": "Nhìn lại",
+          "minutes": 10,
+          "body": "Từ phần có thể thay đổi, chọn việc nhỏ nhất có thể bắt đầu tuần sau.",
+          "fields": [
+            {
+              "key": "nghi_1",
+              "label": "Mình sẽ bắt đầu bằng việc gì?",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": [
+            "Nhớ lại một tình huống cụ thể thay vì trả lời chung chung.",
+            "Nêu điều bạn quan sát được hoặc một ví dụ của chính mình.",
+            "Viết điều mình nhận ra và điều còn chưa chắc; không cần giống bạn khác."
+          ]
+        },
+        {
+          "title": "Sản phẩm của mình — bản 2",
+          "stage": "Phòng tranh",
+          "minutes": 15,
+          "body": "Chọn một sản phẩm tuần 1–3 trên máy này để sửa. Nếu không có, nhập lại từ bản bạn giữ trên giấy.",
+          "fields": [
+            {
+              "key": "dang_san_pham",
+              "label": "Chọn dạng sản phẩm",
+              "min": 0,
+              "kind": "select",
+              "max": 6000,
+              "options": [
+                "Thơ 4 câu",
+                "Tranh 4 khung",
+                "Sơ đồ hình ảnh",
+                "Nhịp đọc / rap ngắn",
+                "Tiểu phẩm 1 phút",
+                "Lời then / sli / lượn",
+                "Họa tiết thổ cẩm",
+                "Ảnh có chú thích"
+              ]
+            },
+            {
+              "key": "san_pham",
+              "label": "Viết phiên bản đã sửa của sản phẩm",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": []
+        },
+        {
+          "title": "Đi xem và học từ bạn",
+          "stage": "Phòng tranh",
+          "minutes": 15,
+          "body": "Xem sản phẩm giấy của các bạn trong lớp.",
+          "fields": [
+            {
+              "key": "chia_se",
+              "label": "Một sản phẩm của bạn khác khiến mình học được gì?",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": []
+        },
+        {
+          "title": "Gửi mình của bốn tuần trước",
+          "stage": "Viết thư",
+          "minutes": 15,
+          "body": "Viết một lá thư ngắn: bây giờ bạn biết thêm điều gì về cách mình học? Ít nhất 30 từ.",
+          "fields": [
+            {
+              "key": "nghi_2",
+              "label": "Lá thư của mình",
+              "min": 30,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": [
+            "Nhớ lại một tình huống cụ thể thay vì trả lời chung chung.",
+            "Nêu điều bạn quan sát được hoặc một ví dụ của chính mình.",
+            "Viết điều mình nhận ra và điều còn chưa chắc; không cần giống bạn khác."
+          ]
+        },
+        {
+          "title": "Một thói quen mang đi tiếp",
+          "stage": "Tổng kết",
+          "minutes": 5,
+          "body": "Chọn một điều cụ thể và vừa sức.",
+          "fields": [
+            {
+              "key": "nghi_3",
+              "label": "Thói quen học mình muốn giữ lại là gì? Vì sao?",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": [
+            "Nhớ lại một tình huống cụ thể thay vì trả lời chung chung.",
+            "Nêu điều bạn quan sát được hoặc một ví dụ của chính mình.",
+            "Viết điều mình nhận ra và điều còn chưa chắc; không cần giống bạn khác."
+          ]
+        },
+        {
+          "title": "Mang thói quen sang nơi khác",
+          "stage": "Tổng kết",
+          "minutes": 5,
+          "body": "Thói quen đó có thể dùng ở môn khác hoặc việc gì ngoài trường học?",
+          "fields": [
+            {
+              "key": "noi",
+              "label": "Mình sẽ áp dụng ở đâu và như thế nào?",
+              "min": 5,
+              "kind": "text",
+              "max": 6000
+            }
+          ],
+          "hints": []
+        },
+        {
+          "title": "Nhìn lại sản phẩm",
+          "stage": "Tự đánh giá",
+          "minutes": 0,
+          "body": "Chọn mức phù hợp với sản phẩm của bạn. Đây là tự đánh giá, không phải điểm số.",
+          "fields": [
+            {
+              "key": "tu_danh_gia",
+              "label": "Mức tự đánh giá",
+              "min": 0,
+              "kind": "rating",
+              "max": 6000
+            }
+          ],
+          "hints": []
+        }
+      ]
+    }
+  ]
+}

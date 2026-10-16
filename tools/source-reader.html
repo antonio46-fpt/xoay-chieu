@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mã nguồn Xoay Chiều</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f6f1e7;color:#253153;font:16px/1.65 system-ui,sans-serif}header{padding:24px max(20px,calc((100vw - 1180px)/2));background:#1e2a5e;color:#fff}h1{font-size:26px;margin:0}header p{margin:6px 0 0;opacity:.85;font-size:14px}main{max-width:1220px;margin:auto;padding:22px 20px}label{font-size:14px;font-weight:650}select,button,a.button{padding:11px 14px;border:1px solid #aab2c5;border-radius:8px;font:inherit;background:#fff;color:#253153}select{width:100%;margin-top:6px}button,a.button{cursor:pointer;font-size:14px;text-decoration:none}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0;align-items:center}.muted{font-size:13px;color:#555f70}pre{tab-size:2;margin:0;background:#fff;border:1px solid #d7dbea;border-radius:12px;overflow:auto;padding:20px;font:13px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;min-height:60vh}footer{padding-top:16px}#feedback{font-size:13px;min-height:22px}button:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #d69036;outline-offset:3px}
+  </style>
+</head>
+<body>
+  <header><h1>Mã nguồn Xoay Chiều</h1><p>HTML · CSS · JavaScript thuần · JSON · Google Apps Script</p></header>
+  <main>
+    <label for="file">Chọn tệp để đọc hoặc sao chép</label>
+    <select id="file"></select>
+    <div class="toolbar"><button id="copy">Sao chép nội dung</button><button id="download">Tải tệp đang mở</button><a class="button" href="XoayChieu_Source.zip" download>Tải toàn bộ ZIP</a><span id="info" class="muted"></span></div>
+    <p id="feedback" role="status" aria-live="polite"></p>
+    <pre><code id="code"></code></pre>
+    <footer class="muted">Đọc README.md trước khi triển khai. src/ là mã chỉnh sửa; Index.html và Schema.gs là đầu ra của build.py. Không có PIN, khóa truy cập hay dữ liệu học sinh trong bộ mã này.</footer>
+  </main>
+  <script>
+    const FILES = /*FILES*/;
+    const select = document.getElementById('file');
+    const feedback = document.getElementById('feedback');
+    for (const name of Object.keys(FILES)) {
+      const option = document.createElement('option');
+      option.value = name;
+      option.textContent = name;
+      select.append(option);
+    }
+    function show() {
+      const source = FILES[select.value];
+      document.getElementById('code').textContent = source;
+      document.getElementById('info').textContent = source.split('\n').length + ' dòng';
+      feedback.textContent = '';
+    }
+    select.onchange = show;
+    document.getElementById('copy').onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(FILES[select.value]);
+        feedback.textContent = 'Đã sao chép ' + select.value;
+      } catch {
+        const selection = getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(document.getElementById('code'));
+        selection.removeAllRanges(); selection.addRange(range);
+        feedback.textContent = 'Trình duyệt không cho tự sao chép. Nội dung đã được chọn; nhấn Ctrl+C hoặc Cmd+C.';
+      }
+    };
+    document.getElementById('download').onclick = () => {
+      const url = URL.createObjectURL(new Blob([FILES[select.value]], {type:'text/plain;charset=utf-8'}));
+      const link = document.createElement('a'); link.href=url; link.download=select.value.split('/').pop(); link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    };
+    show();
+  </script>
+</body>
+</html>
