@@ -1270,3 +1270,24 @@ select:disabled {
   .top > .row { flex-wrap: nowrap; justify-content: flex-end }
   #theme { flex-shrink: 0 }
 }
+
+
+.sync-summary { margin: 12px 0 }
+.journey-continue { margin-top: 4px }
+.week-status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted) }
+.week-status::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0 }
+.week-status.sent { color: var(--green) }
+.week-status.pending, .week-status.draft { color: var(--accent); font-weight: 650 }
+.workflow-steps { display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 0; margin: 20px 0 0; list-style: none }
+.workflow-steps li { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px }
+.workflow-steps li > span { display: grid; place-items: center; width: 26px; height: 26px; border: 1px solid var(--line); border-radius: 50%; background: var(--paper) }
+.workflow-steps li.current { color: var(--ink); font-weight: 700 }
+.workflow-steps li.current > span { border-color: var(--gold); box-shadow: 0 0 0 3px var(--dream-gold) }
+.workflow-steps li.done > span { background: var(--soft); color: var(--green) }
+.revision-note { padding-left: 12px; border-left: 2px solid var(--gold) }
+@media(max-width:640px) {
+  .card > .row:last-child { gap: 12px; align-items: flex-start }
+  .week-status { flex: 1 1 110px }
+  .workflow-steps { gap: 10px; margin-top: 16px }
+  .workflow-steps li { font-size: 11px }
+}
