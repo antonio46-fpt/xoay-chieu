@@ -13,13 +13,15 @@ const $ = id => document.getElementById(id),
   LIVE = !!globalThis.google?.script?.run;
 // Một snapshot dùng để phát hiện tab khác vừa ghi; không ghi đè âm thầm.
 let storageSnapshot = null,
-  storageConflict = false;
+  storageConflict = false,
+  storageUnavailable = false,
+  previewOnly = false;
 try {
   storageSnapshot = localStorage.getItem(KEY);
-} catch {}
+} catch { storageUnavailable = true; }
 let db, loadBroken = false;
 try {
-  db = JSON.parse(localStorage.getItem(KEY) || 'null') || {
+  db = JSON.parse(storageSnapshot || 'null') || {
     profiles: {},
     queue: [],
     theme: 'light'
@@ -49,6 +51,8 @@ const person = () => profile ? (db.profiles[Core.key(profile)] ||= {
 }) : null;
 /** Lưu nguyên trạng toàn bộ dữ liệu cục bộ; thất bại trả false để giữ nháp. */
 function persist() {
+  // Chỉ bật sau khi người xem chủ động chọn demo tạm thời, không áp dụng bản LIVE.
+  if (previewOnly && !LIVE) return true;
   if (loadBroken) {
     toast('Dữ liệu cũ không đọc được. Hãy xuất bản sao trong Cài đặt.');
     return false;
@@ -64,6 +68,7 @@ function persist() {
     storageSnapshot = next;
     return true;
   } catch {
+    storageUnavailable = true;
     toast('Không lưu được trên máy. Hãy xuất bản sao ngay; đừng đóng trang.');
     return false;
   }
@@ -101,7 +106,7 @@ function status() {
   if (!$('net')) return;
   const q = db.queue.length;
   $('net').textContent = LIVE ? (sending ? 'Đang gửi…' : q ? `${q} bản ghi chờ gửi` :
-    'Đã đồng bộ hàng đợi') : 'Bản xem thử · lưu trên máy';
+    'Đã đồng bộ hàng đợi') : previewOnly ? 'Xem thử tạm · không lưu' : 'Bản xem thử · lưu trên máy';
 }
 /**
  * Gửi tuần tự. Hàng đợi vẫn tồn tại trên đĩa trong suốt yêu cầu mạng.
@@ -213,7 +218,7 @@ function render() {
     ['settings', '⚙', 'Cài đặt']
   ];
   $('app').innerHTML =
-    `<div class="shell"><aside class="side"><a class="brand" id="brandHome" href="#home" aria-label="Xoay Chiều — về trang chính">${logo()}<div><strong>Xoay Chiều</strong><small>Mỗi góc nhìn, một điều mới</small></div></a><nav class="nav" aria-label="Chính">${names.map(([k,ic,n])=>`<button data-tab="${k}" class="${tab===k?'on':''}" ${tab===k?'aria-current="page"':''}><span>${ic}</span>${n}</button>`).join('')}</nav><div class="sidefoot"><p>THỬ · NGHĨ · NỐI · CHIA SẺ</p><p>Một hành trình nhỏ.<br>Nhiều cách nhìn mới.</p><div class="profile">${profile?`<strong>${E(profile.ma)}</strong><br>${E(profile.lop)}<br><small>${E(profile.truong)}</small>`:'Chưa chọn mã học sinh'}</div></div></aside><main class="main"><header class="top"><span class="caption">HÀNH TRÌNH HỌC TẬP / ${CONTENT.so_tuan} TUẦN</span><div class="row"><span id="net" class="status" aria-live="polite"></span><button class="small" id="theme" aria-label="Đổi giao diện sáng tối">${db.theme==='dark'?'☀':'☾'}</button></div></header><div id="conflict" class="notice hidden" role="alert">Dữ liệu đã đổi ở một tab khác. Tải bản sao của tab này trước khi tải lại trang. <button id="conflictBackup">Tải bản sao tab này</button><button id="conflictReload">Tải lại trang</button></div><div class="page" id="page"></div></main></div>`;
+    `<div class="shell"><aside class="side"><a class="brand" id="brandHome" href="#home" aria-label="Xoay Chiều — về trang chính">${logo()}<div><strong>Xoay Chiều</strong><small>Mỗi góc nhìn, một điều mới</small></div></a><nav class="nav" aria-label="Chính">${names.map(([k,ic,n])=>`<button data-tab="${k}" class="${tab===k?'on':''}" ${tab===k?'aria-current="page"':''}><span>${ic}</span>${n}</button>`).join('')}</nav><div class="sidefoot"><p>THỬ · NGHĨ · NỐI · CHIA SẺ</p><p>Một hành trình nhỏ.<br>Nhiều cách nhìn mới.</p><div class="profile">${profile?`<strong>${E(profile.ma)}</strong><br>${E(profile.lop)}<br><small>${E(profile.truong)}</small>`:'Chưa chọn mã học sinh'}</div></div></aside><main class="main"><header class="top"><span class="caption">HÀNH TRÌNH HỌC TẬP / ${CONTENT.so_tuan} TUẦN</span><div class="row"><span id="net" class="status" aria-live="polite"></span><button class="small" id="theme" aria-label="Đổi giao diện sáng tối">${db.theme==='dark'?'☀':'☾'}</button></div></header><div id="conflict" class="notice hidden" role="alert">Dữ liệu đã đổi ở một tab khác. Tải bản sao của tab này trước khi tải lại trang. <button id="conflictBackup">Tải bản sao tab này</button><button id="conflictReload">Tải lại trang</button></div>${previewOnly?'<div class="notice preview-notice" role="status">Đang xem thử không lưu. Bài chỉ giữ trong phiên này, mất khi tải lại hoặc đóng trang; không gửi Google Sheets. Muốn lưu lâu dài, hãy tải HTML xuống và mở bằng trình duyệt cho phép lưu dữ liệu.</div>':''}<div class="page" id="page"></div></main></div>`;
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => go(b.dataset.tab));
   $('brandHome').onclick = event => {
     event.preventDefault();
@@ -253,13 +258,13 @@ function go(t) {
 function login() {
   const schools = CONTENT.truong_lop;
   $('page').innerHTML =
-    `<div class="welcome"><p class="eyebrow">Chào bạn, rất vui được gặp</p><h1>Một góc nhìn mới<br>bắt đầu từ bạn.</h1><p class="muted">Không có câu trả lời đúng hay sai. Hãy thử, lắng nghe và ghi lại những điều mình nhận ra.</p><form id="login" class="panel"><label class="field"><span>Mã của bạn</span><input id="code" placeholder="Ví dụ định dạng: AB12-C" maxlength="8" autocomplete="off" autocapitalize="characters" required><small>Dùng đúng mã trên phiếu khảo sát. Không nhập họ tên.</small></label><label class="field"><span>Trường</span><select id="school"><option value="">Chọn trường</option>${schools.map(s=>`<option>${E(s.truong)}</option>`).join('')}</select></label><label class="field"><span>Lớp</span><select id="class"><option value="">Chọn lớp</option></select></label><p id="loginErr" class="error" role="alert"></p><button class="primary" style="width:100%">Bắt đầu hành trình →</button><details style="margin-top:18px"><summary>Cách tạo mã theo phiếu khảo sát</summary>${CONTENT.huong_dan_ma.buoc.map(b=>`<p class="caption">${E(b)}</p>`).join('')}</details></form><p class="caption">Câu trả lời lưu trên trình duyệt này${LIVE?' và được gửi về Google Sheet của nhóm nghiên cứu khi bạn nộp bài':''}. Không nhập số điện thoại, địa chỉ hay thông tin nhận diện người khác. Ô có từ khóa an toàn được thay bằng “[đã ẩn – an toàn]” trước khi gửi; bản gốc vẫn ở trên máy.</p></div>`;
+    `<div class="welcome"><p class="eyebrow">Chào bạn, rất vui được gặp</p><h1>Một góc nhìn mới<br>bắt đầu từ bạn.</h1><p class="muted">Không có câu trả lời đúng hay sai. Hãy thử, lắng nghe và ghi lại những điều mình nhận ra.</p><form id="login" class="panel"><label class="field"><span>Mã của bạn</span><input id="code" placeholder="Ví dụ định dạng: AB12-C" maxlength="8" autocomplete="off" autocapitalize="characters" required><small>Dùng đúng mã trên phiếu khảo sát. Không nhập họ tên.</small></label><label class="field"><span>Trường</span><select id="school"><option value="">Chọn trường</option>${schools.map(s=>`<option>${E(s.truong)}</option>`).join('')}</select></label><label class="field"><span>Lớp</span><select id="class"><option value="">Chọn lớp</option></select></label><p id="loginErr" class="error" role="alert"></p><button id="loginStart" type="button" class="primary" style="width:100%">Bắt đầu hành trình →</button><div id="previewFallback" class="${!LIVE&&storageUnavailable&&!loadBroken&&!storageConflict?'':'hidden'}"><p class="caption">Trình xem không cho lưu dữ liệu. Bạn có thể xem thử tạm thời; bài sẽ mất khi đóng hoặc tải lại trang.</p><button id="previewStart" type="button" class="ghost" style="width:100%">Xem thử không lưu →</button></div><details style="margin-top:18px"><summary>Cách tạo mã theo phiếu khảo sát</summary>${CONTENT.huong_dan_ma.buoc.map(b=>`<p class="caption">${E(b)}</p>`).join('')}</details></form><p class="caption">Câu trả lời lưu trên trình duyệt này${LIVE?' và được gửi về Google Sheet của nhóm nghiên cứu khi bạn nộp bài':''}. Không nhập số điện thoại, địa chỉ hay thông tin nhận diện người khác. Ô có từ khóa an toàn được thay bằng “[đã ẩn – an toàn]” trước khi gửi; bản gốc vẫn ở trên máy.</p></div>`;
   $('school').onchange = () => {
     $('class').innerHTML = '<option value="">Chọn lớp</option>' + (schools.find(s => s.truong ===
       $('school').value)?.lop || []).map(c => `<option>${E(c)}</option>`).join('');
   };
-  $('login').onsubmit = e => {
-    e.preventDefault();
+  const attemptLogin = (temporary = false) => {
+    $('loginErr').textContent = '';
     const ma = Core.normalize($('code').value),
       truong = $('school').value,
       lop = $('class').value;
@@ -272,20 +277,38 @@ function login() {
       $('loginErr').textContent = 'Hãy chọn trường và lớp.';
       return;
     }
-    profile = {
-      ma,
-      truong,
-      lop
-    };
+    if (temporary) {
+      if (LIVE || loadBroken || storageConflict || !storageUnavailable) return;
+      previewOnly = true;
+    }
+    const previousProfile = profile, previousCurrent = db.current;
+    profile = { ma, truong, lop };
     db.current = profile;
     person();
     if (!persist()) {
-      profile = null;
+      profile = previousProfile;
+      db.current = previousCurrent;
+      $('loginErr').textContent = loadBroken ?
+        'Dữ liệu cũ không đọc được. Mở Cài đặt để tải bản sao; trang chưa ghi đè dữ liệu.' :
+        storageConflict ? 'Dữ liệu đã thay đổi ở tab khác. Hãy tải lại trang sau khi giữ bản sao.' :
+        'Trình xem hoặc trình duyệt đang chặn lưu dữ liệu. Tải HTML xuống và mở bằng Chrome/Edge, hoặc chọn Xem thử không lưu bên dưới.';
+      $('previewFallback').classList.toggle('hidden', LIVE || loadBroken || storageConflict || !storageUnavailable);
+      $('loginErr').scrollIntoView?.({ block: 'nearest' });
       return;
     }
     tab = 'home';
     render();
   };
+  $('login').onsubmit = event => { event.preventDefault(); attemptLogin(); };
+  // Một số trình xem cho chạy JS nhưng cấm submit form trong iframe sandbox.
+  $('loginStart').onclick = () => attemptLogin();
+  $('login').onkeydown = event => {
+    if (event.key === 'Enter' && !event.isComposing && event.target.tagName === 'INPUT') {
+      event.preventDefault();
+      attemptLogin();
+    }
+  };
+  $('previewStart').onclick = () => attemptLogin(true);
 }
 
 /** Trạng thái hiển thị của tuần; lưu cục bộ không đồng nghĩa đã được máy chủ nhận. */
@@ -294,7 +317,7 @@ function weekStatus(week) {
   if (p.drafts[week]) return { kind: 'draft', text: history.length ? 'Đang viết lượt mới' : 'Đang viết' };
   if (!history.length) return { kind: 'new', text: 'Chưa bắt đầu' };
   if (history.some(item => !item.sent)) return LIVE ?
-    { kind: 'pending', text: 'Có bài chờ gửi' } : { kind: 'local', text: 'Bài lưu trên máy' };
+    { kind: 'pending', text: 'Có bài chờ gửi' } : { kind: 'local', text: previewOnly ? 'Bài tạm trong phiên' : 'Bài lưu trên máy' };
   return { kind: 'sent', text: 'Máy chủ đã xác nhận' };
 }
 
@@ -312,7 +335,7 @@ function home() {
     confirmed = new Set(p.history.filter(h => h.sent).map(h => h.record.tuan)),
     nextWeek = CONTENT.weeks.find(w => p.drafts[w.tuan]) || CONTENT.weeks.find(w => !done.has(w.tuan));
   $('page').innerHTML =
-    `<section class="hero"><div><p class="eyebrow">SỔ TRẢI NGHIỆM CỦA ${E(profile.ma)}</p><h1>Thử một chút.<br>Hiểu mình thêm.</h1><p>Bốn tuần để rèn cách nhìn, thử và điều chỉnh việc học: chu trình tuần 1–2, tranh luận tuần 3, chỉnh sửa sản phẩm tuần 4. Mỗi lần thử là một cơ hội để bạn tìm ra cách của mình.</p><div class="row between"><span class="caption">Hành trình của bạn</span><strong>${done.size}/${CONTENT.so_tuan} tuần đã lưu</strong></div><div class="progress" style="margin-top:10px"><i style="width:${done.size/CONTENT.so_tuan*100}%"></i></div><p class="caption sync-summary">${LIVE ? `${confirmed.size}/${CONTENT.so_tuan} tuần đã được máy chủ xác nhận` : 'Bản xem thử chỉ lưu trên thiết bị này, chưa gửi Google Sheets.'}</p>${nextWeek ? `<button class="primary journey-continue" id="continueJourney">${p.drafts[nextWeek.tuan] ? 'Viết tiếp' : 'Khám phá'} tuần ${nextWeek.tuan} →</button>` : '<p class="notice">Bạn đã lưu đủ bốn tuần. Mở Sổ của mình để nhìn lại hành trình.</p>'}</div><div class="compass" aria-hidden="true"><span class="n">BỐN TUẦN KHÁM PHÁ</span><span class="s">MỖI BƯỚC LÀ MỘT KHÁM PHÁ</span></div></section><div class="row between titleline"><h3 style="margin:0">Bốn tuần, bốn trải nghiệm</h3><span class="caption">Đi theo nhịp của lớp bạn</span></div><section class="cards">${CONTENT.weeks.map((w,i)=>`<article class="card" style="--cardcolor:${['#b7791f','#0f7c70','#a83f53','#4c51bf'][i]}"><div class="row between"><span class="num">0${w.tuan}</span><span class="tag">${w.duration} phút · ${E(w.focus)}</span></div><h2>${E(w.title)}</h2><p>${E(w.letter.triet_gia)} · ${E(w.letter.tieu_de)}</p><div class="row between"><span class="week-status ${weekStatus(w.tuan).kind}">${E(weekStatus(w.tuan).text)}</span><button data-week="${w.tuan}" class="${i===0?'primary':''}">${p.drafts[w.tuan]?'Viết tiếp':done.has(w.tuan)?'Làm lượt mới':w.tuan===4?'Tạo bản 2':'Khám phá'} →</button></div></article>`).join('')}</section><div class="five">${CONTENT.mat_nang_luc.map(m=>`<div style="border-color:${E(m.mau)}"><strong>${E(m.ten)}</strong><br>${E(m.mo_ta)}</div>`).join('')}</div><p class="caption">${E(CONTENT.scope.trien_lam)}</p><footer>Không xếp hạng · Không chấm đúng sai · Lắng nghe theo cách của bạn</footer>`;
+    `<section class="hero"><div><p class="eyebrow">SỔ TRẢI NGHIỆM CỦA ${E(profile.ma)}</p><h1>Thử một chút.<br>Hiểu mình thêm.</h1><p>Bốn tuần để rèn cách nhìn, thử và điều chỉnh việc học: chu trình tuần 1–2, tranh luận tuần 3, chỉnh sửa sản phẩm tuần 4. Mỗi lần thử là một cơ hội để bạn tìm ra cách của mình.</p><div class="row between"><span class="caption">Hành trình của bạn</span><strong>${done.size}/${CONTENT.so_tuan} tuần đã ${previewOnly?'thử':'lưu'}</strong></div><div class="progress" style="margin-top:10px"><i style="width:${done.size/CONTENT.so_tuan*100}%"></i></div><p class="caption sync-summary">${LIVE ? `${confirmed.size}/${CONTENT.so_tuan} tuần đã được máy chủ xác nhận` : previewOnly ? 'Bài chỉ giữ trong phiên xem thử này. Đóng hoặc tải lại trang sẽ mất bài.' : 'Bản xem thử chỉ lưu trên thiết bị này, chưa gửi Google Sheets.'}</p>${nextWeek ? `<button class="primary journey-continue" id="continueJourney">${p.drafts[nextWeek.tuan] ? 'Viết tiếp' : 'Khám phá'} tuần ${nextWeek.tuan} →</button>` : `<p class="notice">${previewOnly?'Bạn đã thử đủ bốn tuần trong phiên này.':'Bạn đã lưu đủ bốn tuần.'} Mở Sổ của mình để nhìn lại hành trình.</p>`}</div><div class="compass" aria-hidden="true"><span class="n">BỐN TUẦN KHÁM PHÁ</span><span class="s">MỖI BƯỚC LÀ MỘT KHÁM PHÁ</span></div></section><div class="row between titleline"><h3 style="margin:0">Bốn tuần, bốn trải nghiệm</h3><span class="caption">Đi theo nhịp của lớp bạn</span></div><section class="cards">${CONTENT.weeks.map((w,i)=>`<article class="card" style="--cardcolor:${['#b7791f','#0f7c70','#a83f53','#4c51bf'][i]}"><div class="row between"><span class="num">0${w.tuan}</span><span class="tag">${w.duration} phút · ${E(w.focus)}</span></div><h2>${E(w.title)}</h2><p>${E(w.letter.triet_gia)} · ${E(w.letter.tieu_de)}</p><div class="row between"><span class="week-status ${weekStatus(w.tuan).kind}">${E(weekStatus(w.tuan).text)}</span><button data-week="${w.tuan}" class="${i===0?'primary':''}">${p.drafts[w.tuan]?'Viết tiếp':done.has(w.tuan)?'Làm lượt mới':w.tuan===4?'Tạo bản 2':'Khám phá'} →</button></div></article>`).join('')}</section><div class="five">${CONTENT.mat_nang_luc.map(m=>`<div style="border-color:${E(m.mau)}"><strong>${E(m.ten)}</strong><br>${E(m.mo_ta)}</div>`).join('')}</div><p class="caption">${E(CONTENT.scope.trien_lam)}</p><footer>Không xếp hạng · Không chấm đúng sai · Lắng nghe theo cách của bạn</footer>`;
   if ($('continueJourney')) $('continueJourney').onclick = () => start(nextWeek.tuan);
   document.querySelectorAll('[data-week]').forEach(b => b.onclick = () => start(+b.dataset.week));
 }
@@ -378,7 +401,7 @@ function work() {
   const s = w.steps[d.step],
     a = d.answers;
   $('page').innerHTML =
-    `<div class="work"><button class="backlink" id="leave">← Hành trình của mình</button><header class="workhead"><p class="eyebrow">TUẦN ${w.tuan} · ${E(w.focus)}</p><h1>${E(w.title)}</h1><div class="row between"><span class="caption">${E(s.stage)} · ${d.step+1}/${w.steps.length} màn hình</span><span id="stepTimer" class="caption"></span></div><div class="progress" style="margin-top:10px"><i style="width:${(d.step+1)/w.steps.length*100}%"></i></div>${workflowSteps(w, d.step)}</header><section class="panel">${d.step===0?letterHTML(w):`<h2>${E(s.title)}</h2>`}${s.body?`<p>${E(s.body)}</p>`:''}${w.quy_trinh==='trien_lam_45'&&s.fields.some(f=>f.key==='san_pham')?oldProductHTML():''}${s.fields.map(f=>fieldHTML(f,a)).join('')}${s.dao_sau?.length?`<details class="probing"><summary>Thử nghĩ sâu hơn</summary>${s.dao_sau.map(q=>`<p>${E(q)}</p>`).join('')}<p class="caption">Câu hỏi gợi mở, không phải bài kiểm tra hay câu trả lời mẫu.</p></details>`:''}<div id="safety" class="hidden safety" role="status">${E(CONTENT.an_toan.loi_nhan)}${CONTENT.an_toan.lien_he?'<br>'+E(CONTENT.an_toan.lien_he):''}</div>${s.hints.length?`<button id="hint" class="small">Mình chưa biết bắt đầu thế nào</button><div id="hints">${s.hints.slice(0,d.hints[d.step]||0).map(h=>`<p class="hint">${E(h)}</p>`).join('')}</div>`:''}<div class="actions"><button id="prev" ${d.step===0?'disabled':''}>← Quay lại</button><button id="next" class="primary">${d.step===w.steps.length-1?'Lưu & nộp bài ✓':'Tiếp tục →'}</button></div><p class="caption" style="margin:18px 0 0" id="draftStatus">Bản nháp lưu trên máy · Đồng hồ chỉ gợi ý, không khóa bài</p></section></div>`;
+    `<div class="work"><button class="backlink" id="leave">← Hành trình của mình</button><header class="workhead"><p class="eyebrow">TUẦN ${w.tuan} · ${E(w.focus)}</p><h1>${E(w.title)}</h1><div class="row between"><span class="caption">${E(s.stage)} · ${d.step+1}/${w.steps.length} màn hình</span><span id="stepTimer" class="caption"></span></div><div class="progress" style="margin-top:10px"><i style="width:${(d.step+1)/w.steps.length*100}%"></i></div>${workflowSteps(w, d.step)}</header><section class="panel">${d.step===0?letterHTML(w):`<h2>${E(s.title)}</h2>`}${s.body?`<p>${E(s.body)}</p>`:''}${w.quy_trinh==='trien_lam_45'&&s.fields.some(f=>f.key==='san_pham')?oldProductHTML():''}${s.fields.map(f=>fieldHTML(f,a)).join('')}${s.dao_sau?.length?`<details class="probing"><summary>Thử nghĩ sâu hơn</summary>${s.dao_sau.map(q=>`<p>${E(q)}</p>`).join('')}<p class="caption">Câu hỏi gợi mở, không phải bài kiểm tra hay câu trả lời mẫu.</p></details>`:''}<div id="safety" class="hidden safety" role="status">${E(CONTENT.an_toan.loi_nhan)}${CONTENT.an_toan.lien_he?'<br>'+E(CONTENT.an_toan.lien_he):''}</div>${s.hints.length?`<button id="hint" class="small">Mình chưa biết bắt đầu thế nào</button><div id="hints">${s.hints.slice(0,d.hints[d.step]||0).map(h=>`<p class="hint">${E(h)}</p>`).join('')}</div>`:''}<div class="actions"><button id="prev" ${d.step===0?'disabled':''}>← Quay lại</button><button id="next" class="primary">${d.step===w.steps.length-1?'Lưu & nộp bài ✓':'Tiếp tục →'}</button></div><p class="caption" style="margin:18px 0 0" id="draftStatus">${previewOnly?'Bản nháp tạm trong phiên — không lưu sau khi đóng trang':'Bản nháp lưu trên máy'} · Đồng hồ chỉ gợi ý, không khóa bài</p></section></div>`;
   $('leave').onclick = () => go('home');
   $('prev').onclick = () => {
     flushDraft();
@@ -509,7 +532,7 @@ function nextStep(w, s, d) {
   tab = 'notebook';
   render();
   toast(LIVE ? 'Đã lưu trên máy. Đang chờ xác nhận gửi từ máy chủ.' :
-    'Đã lưu bài trên máy. Bản xem thử chưa gửi Google Sheets.');
+    previewOnly ? 'Bài chỉ giữ tạm trong phiên xem thử. Hãy tải bản sao trước khi đóng trang.' : 'Đã lưu bài trên máy. Bản xem thử chưa gửi Google Sheets.');
   sync();
 }
 
@@ -542,7 +565,7 @@ setInterval(() => {
 function notebook() {
   const h = person().history.slice().reverse();
   $('page').innerHTML =
-    `<p class="eyebrow">NHỮNG ĐIỀU BẠN ĐÃ NHẬN RA</p><div class="row between"><h1>Sổ của mình</h1><button id="exportMine">Tải bản sao JSON ↓</button></div><p class="muted">Bài đã nộp được giữ nguyên. Làm lượt mới tạo ID mới; bản 2 tuần 4 giữ liên kết với sản phẩm gốc. Dữ liệu ở đây chỉ thuộc mã đang chọn trên máy này.</p>${h.length?h.map(x=>`<article class="panel" style="margin:18px 0"><div class="row between"><span class="tag">TUẦN ${x.record.tuan}${x.record.ban_goc_id ? ' · BẢN 2' : ''}</span><span class="caption">${new Date(x.record.thoi_gian).toLocaleString('vi-VN')}</span></div><h2 style="margin:15px 0">${E(CONTENT.weeks.find(w=>w.tuan===x.record.tuan)?.title)}</h2>${x.record.ban_goc_id ? '<p class="caption revision-note">Bản chỉnh sửa liên kết với sản phẩm gốc trên máy. Bài gốc được giữ nguyên.</p>' : ''}<p class="badge">${x.sent?'✓ Máy chủ đã xác nhận':LIVE?'◌ Chờ gửi — bài còn trên máy':'◌ Chỉ lưu trên máy ở bản xem thử'}</p><p class="caption">${Math.floor(x.record.thoi_luong_giay/60)} phút ${x.record.thoi_luong_giay%60} giây hoạt động · Tự đánh giá mức ${x.record.tu_danh_gia}</p><details class="historydetails"><summary>Xem câu trả lời và sản phẩm</summary>${['thu_lam','nghi_1','nghi_2','nghi_3','noi','san_pham','chia_se'].map(k=>`<div class="entry"><strong>${({thu_lam:'Thử',nghi_1:'Nghĩ 1',nghi_2:'Nghĩ 2 / Thư gửi mình',nghi_3:'Nghĩ 3',noi:'Nối',san_pham:'Sản phẩm',chia_se:'Chia sẻ / Đổi hoặc giữ ý'})[k]}</strong><pre class="text">${E(x.record[k])}</pre></div>`).join('')}</details></article>`).join(''):'<div class="panel empty"><h2>Trang đầu đang chờ bạn.</h2><p>Hoàn thành một tuần để lưu trải nghiệm của mình ở đây.</p><button id="first" class="primary">Bắt đầu tuần 1 →</button></div>'}`;
+    `<p class="eyebrow">NHỮNG ĐIỀU BẠN ĐÃ NHẬN RA</p><div class="row between"><h1>Sổ của mình</h1><button id="exportMine">Tải bản sao JSON ↓</button></div><p class="muted">Bài đã nộp được giữ nguyên. Làm lượt mới tạo ID mới; bản 2 tuần 4 giữ liên kết với sản phẩm gốc. Dữ liệu ở đây chỉ thuộc mã đang chọn trên máy này.</p>${h.length?h.map(x=>`<article class="panel" style="margin:18px 0"><div class="row between"><span class="tag">TUẦN ${x.record.tuan}${x.record.ban_goc_id ? ' · BẢN 2' : ''}</span><span class="caption">${new Date(x.record.thoi_gian).toLocaleString('vi-VN')}</span></div><h2 style="margin:15px 0">${E(CONTENT.weeks.find(w=>w.tuan===x.record.tuan)?.title)}</h2>${x.record.ban_goc_id ? '<p class="caption revision-note">Bản chỉnh sửa liên kết với sản phẩm gốc trên máy. Bài gốc được giữ nguyên.</p>' : ''}<p class="badge">${x.sent?'✓ Máy chủ đã xác nhận':LIVE?'◌ Chờ gửi — bài còn trên máy':previewOnly?'◌ Chỉ giữ tạm trong phiên xem thử':'◌ Chỉ lưu trên máy ở bản xem thử'}</p><p class="caption">${Math.floor(x.record.thoi_luong_giay/60)} phút ${x.record.thoi_luong_giay%60} giây hoạt động · Tự đánh giá mức ${x.record.tu_danh_gia}</p><details class="historydetails"><summary>Xem câu trả lời và sản phẩm</summary>${['thu_lam','nghi_1','nghi_2','nghi_3','noi','san_pham','chia_se'].map(k=>`<div class="entry"><strong>${({thu_lam:'Thử',nghi_1:'Nghĩ 1',nghi_2:'Nghĩ 2 / Thư gửi mình',nghi_3:'Nghĩ 3',noi:'Nối',san_pham:'Sản phẩm',chia_se:'Chia sẻ / Đổi hoặc giữ ý'})[k]}</strong><pre class="text">${E(x.record[k])}</pre></div>`).join('')}</details></article>`).join(''):'<div class="panel empty"><h2>Trang đầu đang chờ bạn.</h2><p>Hoàn thành một tuần để lưu trải nghiệm của mình ở đây.</p><button id="first" class="primary">Bắt đầu tuần 1 →</button></div>'}`;
   $('exportMine').onclick = () => download('XoayChieu-' + profile.ma + '.json', JSON.stringify({
     profile,
     ...person()
@@ -574,7 +597,7 @@ function download(name, text) {
 
 function settings() {
   $('page').innerHTML =
-    `<h1>Cài đặt & dữ liệu</h1><section class="panel"><h3>${profile?'Mã đang dùng: '+E(profile.ma):'Chưa chọn mã'}</h3><p class="muted">Đổi mã không xóa bài của mã cũ trên máy. Trên máy dùng chung, người khác có quyền truy cập trình duyệt có thể xem dữ liệu đã lưu.</p><button id="change">${profile?'Đổi mã / trường / lớp':'Nhập mã'}</button><div class="divider"></div><h3>${LIVE?'Kết nối Google Sheets':'Bản xem thử trên máy'}</h3><p>${LIVE?'Chỉ xóa bài khỏi hàng đợi sau khi máy chủ xác nhận đúng mã bản ghi.':'Bản này không gửi dữ liệu nghiên cứu. Hãy triển khai bộ Apps Script đi kèm để sử dụng chính thức.'}</p><p>${db.queue.length} bản ghi đang chờ.</p><button id="retry">Thử gửi lại</button>${db.queue.filter(q=>q.error).map(q=>`<p class="error">${E(q.record.loai)}: ${E(q.error)}</p>`).join('')}<div class="divider"></div><h3>Bản sao trên máy</h3><p class="caption">Tải bản sao trước khi đổi máy hoặc xóa dữ liệu trình duyệt. Bản sao toàn bộ có dữ liệu của mọi mã từng dùng trên máy này, hãy giữ riêng.</p><button id="backup">Tải bản sao toàn bộ</button><label class="field"><span>Khôi phục bản sao toàn bộ trên máy mới</span><input type="file" id="import" accept=".json,application/json"></label><p class="caption">Khôi phục chỉ áp dụng trên trình duyệt chưa có dữ liệu; bài chưa gửi được giữ ở trạng thái tạm dừng. Bấm Thử gửi lại để tiếp tục.</p><div class="divider"></div><details><summary>Thông tin phiên bản</summary><p>Ứng dụng ${E(APP_CONFIG.version)} · Nội dung ${E(CONTENT.phien_ban)} · ${E(CONTENT.noi_dung_status)}</p><p>Thời gian hoạt động chỉ tính khi màn hình làm bài đang mở và hiển thị; không phải thước đo mức độ tập trung. Học sinh tự giữ mã; mã không phải mật khẩu.</p></details></section>`;
+    `<h1>Cài đặt & dữ liệu</h1><section class="panel"><h3>${profile?'Mã đang dùng: '+E(profile.ma):'Chưa chọn mã'}</h3><p class="muted">Đổi mã không xóa bài của mã cũ trên máy. Trên máy dùng chung, người khác có quyền truy cập trình duyệt có thể xem dữ liệu đã lưu.</p><button id="change">${profile?'Đổi mã / trường / lớp':'Nhập mã'}</button><div class="divider"></div><h3>${LIVE?'Kết nối Google Sheets':previewOnly?'Bản xem thử tạm thời':'Bản xem thử trên máy'}</h3><p>${LIVE?'Chỉ xóa bài khỏi hàng đợi sau khi máy chủ xác nhận đúng mã bản ghi.':'Bản này không gửi dữ liệu nghiên cứu. Hãy triển khai bộ Apps Script đi kèm để sử dụng chính thức.'}</p><p>${db.queue.length} bản ghi đang chờ.</p><button id="retry">Thử gửi lại</button>${db.queue.filter(q=>q.error).map(q=>`<p class="error">${E(q.record.loai)}: ${E(q.error)}</p>`).join('')}<div class="divider"></div><h3>Bản sao trên máy</h3><p class="caption">Tải bản sao trước khi đổi máy hoặc xóa dữ liệu trình duyệt. Bản sao toàn bộ có dữ liệu của mọi mã từng dùng trên máy này, hãy giữ riêng.</p><button id="backup">Tải bản sao toàn bộ</button><label class="field"><span>Khôi phục bản sao toàn bộ trên máy mới</span><input type="file" id="import" accept=".json,application/json"></label><p class="caption">Khôi phục chỉ áp dụng trên trình duyệt chưa có dữ liệu; bài chưa gửi được giữ ở trạng thái tạm dừng. Bấm Thử gửi lại để tiếp tục.</p><div class="divider"></div><details><summary>Thông tin phiên bản</summary><p>Ứng dụng ${E(APP_CONFIG.version)} · Nội dung ${E(CONTENT.phien_ban)} · ${E(CONTENT.noi_dung_status)}</p><p>Thời gian hoạt động chỉ tính khi màn hình làm bài đang mở và hiển thị; không phải thước đo mức độ tập trung. Học sinh tự giữ mã; mã không phải mật khẩu.</p></details></section>`;
   $('change').onclick = () => {
     flushDraft();
     profile = null;
@@ -755,7 +778,7 @@ function saveCoord(form, data) {
     form.reset();
     delete form.dataset.id;
     persist();
-    toast('Đã lưu phiếu trên máy. ' + (LIVE ? 'Đang chờ gửi.' : 'Bản xem thử chưa gửi.'));
+    toast(previewOnly ? 'Phiếu chỉ giữ tạm trong phiên, chưa lưu lâu dài hoặc gửi đi.' : 'Đã lưu phiếu trên máy. ' + (LIVE ? 'Đang chờ gửi.' : 'Bản xem thử chưa gửi.'));
   }
 }
 

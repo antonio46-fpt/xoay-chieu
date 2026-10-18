@@ -89,3 +89,6 @@ Tất cả tuần đang mở để thử/làm bù. Website không tự ngừng s
 Nội dung thư/gợi ý có phần AI hỗ trợ soạn từ các yêu cầu đã trao đổi. Nhóm nghiên cứu cần duyệt, chốt phiên bản và ghi nhận phần hỗ trợ trước can thiệp. Bộ app không tự chứng minh hiệu quả nghiên cứu; khảo sát trước/sau và phân tích do nhóm thực hiện.
 
 Lời nhắn hỗ trợ dựa trên từ khóa là lời nhắc tìm người hỗ trợ, không chẩn đoán hay tự thông báo người khác. Trước khi gửi, toàn bộ ô văn bản có từ khóa được thay bằng `[đã ẩn – an toàn]`; bản gốc giữ riêng trên máy và trong bản sao cá nhân. Máy chủ kiểm tra và che lại trước khi ghi Sheet. Bộ lọc theo từ khóa không bảo đảm phát hiện mọi tình huống.
+
+
+Nếu trình xem HTML chặn bộ nhớ, nút Bắt đầu hiển thị lỗi ngay trong biểu mẫu. Bản demo có lựa chọn **Xem thử không lưu** sau khi phát hiện lỗi lưu: cần chọn chủ động, bài chỉ ở phiên hiện tại, đóng/tải lại sẽ mất và không gửi Sheet. Bản Apps Script thật không cho bỏ qua yêu cầu lưu. Tải HTML về và mở trong Chrome/Edge cho phép lưu dữ liệu để thử lưu nháp lâu dài.

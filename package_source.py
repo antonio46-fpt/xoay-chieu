@@ -18,7 +18,7 @@ def package():
         "src/app.js", "src/core.js", "src/safety.js", "src/backup.js", "src/config.js", "src/content.json",
         "src/style.css", "src/shell.html", "apps-script/Code.gs", "apps-script/Schema.gs",
         "apps-script/appsscript.json", "build.py", "package_source.py", "package.json",
-        "tests/fe.cjs", "tests/scope.cjs", "tests/test.cjs", "tests/queue.cjs", "tests/recovery.cjs", "tests/ui.cjs", "tests/run.cjs",
+        "tests/preview.cjs", "tests/fe.cjs", "tests/scope.cjs", "tests/test.cjs", "tests/queue.cjs", "tests/recovery.cjs", "tests/ui.cjs", "tests/run.cjs",
         "tools/source-reader.html",
         ".github/ISSUE_TEMPLATE/backend_task.yml", "docs/issues/README.md",
         "docs/issues/be-class-roster.md", "docs/issues/be-progress-permissions.md",
