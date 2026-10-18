@@ -1,0 +1,39 @@
+name: Backend task
+description: Yêu cầu hoặc kiểm chứng BE theo scope Xoay Chiều
+title: "feat(be): "
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Bối cảnh và hiện trạng
+      description: Mô tả vấn đề và phần đã được cài đặt/kiểm thử.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Phạm vi và API
+      description: RPC, payload, response, quyền truy cập; chỉ dùng ví dụ giả.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Tiêu chí nghiệm thu
+      description: Checklist hành vi quan sát được, gồm lỗi và quyền dữ liệu.
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Cách kiểm thử
+      description: Nêu rõ test mock hay Apps Script/Sheet thử, không dùng dữ liệu thật.
+    validations:
+      required: true
+  - type: checkboxes
+    id: data
+    attributes:
+      label: Quyền dữ liệu
+      options:
+        - label: Chỉ dùng dữ liệu giả và Sheet thử; không đưa credential hay dữ liệu thật vào issue.
+          required: true
