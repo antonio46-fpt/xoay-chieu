@@ -1,5 +1,5 @@
 /**
- * XOAY CHIỀU — MÁY CHỦ GOOGLE APPS SCRIPT, phiên bản 2.1.0.
+ * XOAY CHIỀU — MÁY CHỦ GOOGLE APPS SCRIPT, phiên bản 2.2.0.
  *
  * Các điểm vào từ trình duyệt:
  *   doGet()                  → phục vụ giao diện Index.html.
@@ -7,9 +7,9 @@
  *   loginCoordinator(input)  → xác thực PIN của đúng trường/lớp.
  *
  * Các hàm kết thúc bằng '_' là hàm nội bộ, không gọi được qua google.script.run.
- * Không có API đọc danh sách/câu trả lời của học sinh từ Sheet.
+ * API tiến độ chỉ trả mã và tuần, xác thực bằng phiên giáo viên của đúng lớp. Không có API đọc bài riêng tư.
  */
-const SERVER_VERSION = '2.1.0';
+const SERVER_VERSION = '2.2.0';
 
 const HEADERS = {
   chu_trinh: [
@@ -84,7 +84,7 @@ function fail_(message, code = 'INVALID_RECORD') {
 
 /** Chỉ kiểm tra, không trim và không cắt văn bản sẽ được lưu. */
 function text_(value, name, minWords, maxLength) {
-  if (typeof value !== 'string' || count_(value) < minWords || value.length > maxLength) {
+  if (typeof value !== 'string' || (value !== Safety.hidden && count_(value) < minWords) || value.length > maxLength) {
     fail_('Phần ' + name + ' cần ít nhất ' + minWords + ' từ, tối đa ' + maxLength + ' ký tự.');
   }
 }
@@ -193,7 +193,8 @@ function validateDebate_(data) {
 function submitRecord(payload) {
   let lock;
   try {
-    const data = payload && payload.record;
+    valid_(payload && payload.record);
+    const data = Safety.redactRecord(payload.record, SCHEMA.safety);
     valid_(data);
     if (data.loai !== 'chu_trinh') authorizeCoordinator_(payload.token, data);
 
@@ -256,31 +257,79 @@ function submitRecord(payload) {
   }
 }
 
-function authorizeCoordinator_(token, data) {
-  const stored = CacheService.getScriptCache().get('coord:' + String(token || ''));
+function authorizeRole_(token, data, role) {
+  if (typeof token !== 'string' || token.length < 20 || token.length > 160 || !schoolOK_(data)) {
+    fail_('Phiên truy cập không hợp lệ. Hãy đăng nhập lại.', 'AUTH_REQUIRED');
+  }
   let auth;
   try {
-    auth = JSON.parse(stored || 'null');
-  } catch {
-    auth = null;
-  }
-  if (!auth || auth.truong !== data.truong || auth.lop !== data.lop) {
-    fail_('Phiên điều phối hết hạn hoặc không đúng lớp. Hãy nhập lại PIN.', 'AUTH_REQUIRED');
+    auth = JSON.parse(CacheService.getScriptCache().get(role + ':' + token) || 'null');
+  } catch { auth = null; }
+  if (!auth || !Number.isFinite(auth.expires) || auth.expires <= Date.now() ||
+      auth.truong !== data.truong || auth.lop !== data.lop) {
+    fail_('Phiên hết hạn hoặc không có quyền với lớp này. Hãy đăng nhập lại.', 'AUTH_REQUIRED');
   }
 }
 
-/** PIN ở Script Properties, không nằm trong HTML/JSON người học tải về. */
+function authorizeCoordinator_(token, data) {
+  authorizeRole_(token, data, 'coord');
+}
+
 function loginCoordinator(input) {
+  return loginRole_(input, 'coord', 'COORDINATOR_PINS');
+}
+
+function loginTeacher(input) {
+  return loginRole_(input, 'teacher', 'TEACHER_PINS');
+}
+
+/** Giáo viên chỉ được đọc phép chiếu mã + tuần đã xác nhận của đúng lớp. */
+function getClassProgress(input) {
+  try {
+    if (!input) fail_('Thiếu thông tin lớp.', 'AUTH_REQUIRED');
+    authorizeRole_(input.token, input, 'teacher');
+    const spreadsheetId = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
+    if (!spreadsheetId) fail_('Chưa cấu hình Sheet.', 'SETUP_REQUIRED');
+    const sheet = SpreadsheetApp.openById(spreadsheetId).getSheetByName('chu_trinh');
+    const columns = HEADERS.chu_trinh;
+    if (!sheet || !headersMatch_(sheet, columns)) fail_('Cấu trúc Sheet không khớp.', 'SETUP_REQUIRED');
+    const byCode = new Map();
+    const rows = sheet.getLastRow() > 1 ? sheet.getRange(2, 1, sheet.getLastRow() - 1, columns.length).getValues() : [];
+    const index = key => columns.indexOf(key);
+    rows.forEach(row => {
+      if (row[index('truong')] !== input.truong || row[index('lop')] !== input.lop) return;
+      const code = row[index('ma')], week = Number(row[index('tuan')]);
+      if (!/^[A-Z]{2}[0-9]{2}-[A-Z]$/.test(String(code)) || !Number.isInteger(week) || week < 1 || week > 4) return;
+      if (!byCode.has(code)) byCode.set(code, new Set());
+      byCode.get(code).add(week);
+    });
+    return { ok: true, students: Array.from(byCode, ([ma, weeks]) => ({ ma, weeks: [...weeks].sort() }))
+      .sort((a, b) => a.ma.localeCompare(b.ma)) };
+  } catch (error) {
+    return { ok: false, code: error.code || 'SERVER_ERROR',
+      error: error.code ? error.message : 'Chưa tải được tiến độ lớp. Vui lòng thử lại.' };
+  }
+}
+
+function logoutTeacher(token) {
+  if (typeof token === 'string' && token.length >= 20 && token.length <= 160) {
+    CacheService.getScriptCache().remove('teacher:' + token);
+  }
+  return { ok: true };
+}
+
+/** PIN ở Script Properties, không nằm trong HTML/JSON người học tải về. */
+function loginRole_(input, role, property) {
   let lock;
   try {
     if (!input || !schoolOK_(input)) fail_('Lớp không hợp lệ.', 'AUTH_REQUIRED');
     lock = LockService.getScriptLock();
     if (!lock.tryLock(1500)) fail_('Máy chủ đang bận. Thử lại sau vài giây.', 'BUSY');
     const cache = CacheService.getScriptCache();
-    const key = 'login:' + input.truong + '|' + input.lop;
+    const key = 'login:' + role + ':' + input.truong + '|' + input.lop;
     const attempts = Number(cache.get(key) || 0);
     if (attempts >= 8) fail_('Đã thử nhiều lần. Vui lòng đợi 10 phút.', 'AUTH_REQUIRED');
-    const raw = PropertiesService.getScriptProperties().getProperty('COORDINATOR_PINS') || '{}';
+    const raw = PropertiesService.getScriptProperties().getProperty(property) || '{}';
     const pins = JSON.parse(raw);
     const expected = pins[input.truong + '|' + input.lop];
     if (!expected || !/^\d{6,12}$/.test(String(expected)) || String(input.pin) !== String(
@@ -290,20 +339,22 @@ function loginCoordinator(input) {
     }
     cache.remove(key);
     const token = Utilities.getUuid() + Utilities.getUuid();
-    cache.put('coord:' + token, JSON.stringify({
+    const expires = Date.now() + 21600000;
+    cache.put(role + ':' + token, JSON.stringify({
       truong: input.truong,
-      lop: input.lop
+      lop: input.lop,
+      expires
     }), 21600);
     return {
       ok: true,
       token,
-      expires: Date.now() + 21600000
+      expires
     };
   } catch (error) {
     return {
       ok: false,
       code: error.code || 'SERVER_ERROR',
-      error: error.code ? error.message : 'Chưa mở được chế độ điều phối.'
+      error: error.code ? error.message : 'Chưa xác thực được quyền truy cập.'
     };
   } finally {
     if (lock && lock.hasLock()) lock.releaseLock();

@@ -1,6 +1,8 @@
-# Xoay Chiều — mã nguồn đầy đủ 2.1.0
+# Xoay Chiều — mã nguồn đầy đủ 2.2.0
 
-Công cụ hoạt động và thu dữ liệu cho đề tài “Phát triển năng lực linh hoạt trong học tập của học sinh THPT tại Lạng Sơn”. Quy mô dự kiến khoảng 70 học sinh, 4 tuần can thiệp; duy trì website khoảng 8 tuần. Không chấm đúng/sai, không xếp hạng, không tự suy ra điểm năng lực.
+Công cụ hoạt động và thu dữ liệu cho đề tài “Phát triển năng lực linh hoạt trong học tập của học sinh THPT tại Lạng Sơn”. Phạm vi bản bắt buộc: 2 trường, 4 lớp, khoảng 150 học sinh dự kiến, 4 tuần can thiệp. Lịch triển khai và kết thúc chưa chốt. Không chấm đúng/sai, không xếp hạng, không tự suy ra điểm năng lực.
+
+Xem [SCOPE.md](SCOPE.md) để đối chiếu yêu cầu, quyền dữ liệu và những điểm còn chờ chốt.
 
 ## Dùng bộ mã nguồn
 
@@ -24,6 +26,7 @@ Công cụ hoạt động và thu dữ liệu cho đề tài “Phát triển n�
 | Chống trùng | Máy chủ khóa thao tác tìm ID và ghi; ID cũ + nội dung cũ chỉ xác nhận lại |
 | Làm lại | Học sinh chủ động tạo lượt mới → ID mới, dòng mới, không sửa bài đã nộp |
 | Khôi phục | Bản sao toàn bộ giữ bài chờ gửi; tạm dừng đến khi bấm Thử gửi lại |
+| Giáo viên chủ nhiệm | PIN riêng theo lớp; chỉ xem mã và tuần đã nộp, không đọc bài hay mức tự đánh giá |
 | Điều phối | PIN theo lớp, đồng hồ chặng, thẻ hỏi/vai, phiếu buổi, ý kiến nhóm tuần 3 |
 | Giao diện | Điện thoại, chàm–kem, họa tiết thổ cẩm bằng CSS, sáng/tối |
 
@@ -34,6 +37,7 @@ Công cụ hoạt động và thu dữ liệu cho đề tài “Phát triển n�
 | `src/content.json` | Toàn bộ thư, hoạt động, trường/lớp và định nghĩa ô nhập |
 | `src/config.js` | Phiên bản, thời gian chờ RPC, nhịp gửi lại, khóa bộ nhớ |
 | `src/core.js` | Kiểm tra đầu vào, giữ nguyên văn, tạo ID/bản ghi, thời gian gửi lại |
+| `src/safety.js` | Chính sách che nội dung dùng chung cho trình duyệt và máy chủ |
 | `src/backup.js` | Kiểm tra và khôi phục bản sao an toàn |
 | `src/app.js` | Điều hướng, màn hình, nháp, hàng đợi, giao tiếp máy chủ |
 | `src/style.css`, `src/shell.html` | CSS và khung HTML |
@@ -66,7 +70,7 @@ node tests/queue.cjs
 node tests/recovery.cjs
 ```
 
-Các kiểm thử tự động không thay cho thử trên điện thoại, Google Sheet thật và tải nộp của 70 học sinh. Phạm vi chính xác ở `DU_LIEU_VA_TAP_HUAN.md`.
+Các kiểm thử tự động không thay cho thử trên điện thoại, Google Sheet thật và tải nộp của 150 học sinh dự kiến. Phạm vi chính xác ở `DU_LIEU_VA_TAP_HUAN.md`.
 
 ## Những điểm vận hành cần biết
 
@@ -80,8 +84,8 @@ Khi trang đã tải, mất mạng vẫn có thể làm và lưu bài. Bản tĩ
 
 Thời gian hoạt động chỉ tính khi màn hình làm bài hiển thị; thời gian trôi được lưu riêng. Hai số này không đo mức tập trung. Đồng hồ là gợi ý, không tự đóng bài. Tổng thời lượng chặng là 15/45 phút; tự đánh giá được làm theo nhịp lớp.
 
-Tất cả tuần đang mở để thử/làm bù. Website không tự ngừng sau tám tuần; chủ dự án chủ động kết thúc triển khai theo lịch. Danh sách trường/lớp và nội dung hiện là bản cấu hình để duyệt, chưa phải xác nhận đã tuyển đủ 70 mã. App không có danh sách mã được cấp riêng; nó kiểm tra định dạng mã và lớp hợp lệ.
+Tất cả tuần đang mở để thử/làm bù. Website không tự ngừng sau tám tuần; chủ dự án chủ động kết thúc triển khai theo lịch. Danh sách trường/lớp và nội dung hiện là bản cấu hình để duyệt, chưa phải xác nhận đã tuyển đủ số mã dự kiến. App không có danh sách mã được cấp riêng; nó kiểm tra định dạng mã và lớp hợp lệ.
 
 Nội dung thư/gợi ý có phần AI hỗ trợ soạn từ các yêu cầu đã trao đổi. Nhóm nghiên cứu cần duyệt, chốt phiên bản và ghi nhận phần hỗ trợ trước can thiệp. Bộ app không tự chứng minh hiệu quả nghiên cứu; khảo sát trước/sau và phân tích do nhóm thực hiện.
 
-Lời nhắn hỗ trợ dựa trên từ khóa chỉ là lời nhắc tìm người hỗ trợ, không chẩn đoán, không tự thông báo người khác và không chặn câu trả lời.
+Lời nhắn hỗ trợ dựa trên từ khóa là lời nhắc tìm người hỗ trợ, không chẩn đoán hay tự thông báo người khác. Trước khi gửi, toàn bộ ô văn bản có từ khóa được thay bằng `[đã ẩn – an toàn]`; bản gốc giữ riêng trên máy và trong bản sao cá nhân. Máy chủ kiểm tra và che lại trước khi ghi Sheet. Bộ lọc theo từ khóa không bảo đảm phát hiện mọi tình huống.

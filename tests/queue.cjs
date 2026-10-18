@@ -9,7 +9,7 @@ const raw = fs.readFileSync(__dirname + '/../src/app.js', 'utf8').replace("rende
 function harness() {
   const mem = {},
     elements = {};
-  let respond, attempts = 0;
+  let respond, attempts = 0, lastPayload;
   const c = vm.createContext({
     __XOAY_CHIEU_TEST__: true,
     APP_CONFIG: {
@@ -59,7 +59,8 @@ function harness() {
     }
   });
   vm.runInContext(raw, c);
-  c.testRpc = () => {
+  c.testRpc = (name, payload) => {
+    lastPayload = JSON.parse(JSON.stringify(payload));
     attempts++;
     return new Promise((res, rej) => respond = {
       res,
@@ -73,6 +74,7 @@ function harness() {
     get respond() {
       return respond
     },
+    get lastPayload() { return lastPayload; },
     get attempts() {
       return attempts
     }
@@ -82,7 +84,8 @@ function harness() {
   const h = harness();
   h.c.item = {
     id: 'stable-id-123456',
-    loai: 'chu_trinh'
+    loai: 'chu_trinh',
+    noi: 'Mình bị bắt nạt nên cần hỗ trợ'
   };
   vm.runInContext('enqueue(item)', h.c);
   assert.equal(h.attempts, 0);
@@ -92,10 +95,15 @@ function harness() {
   assert.equal(JSON.parse(h.mem.xoaychieu_v2).queue.length, 1, 'queue persists while sending');
   await vm.runInContext('sync()', h.c);
   assert.equal(h.attempts, 1, 'concurrent sync blocked');
+  assert.equal(h.lastPayload.record.noi, '[đã ẩn – an toàn]', 'RPC never sends the sensitive field');
+  assert(h.c.item.noi.includes('bắt nạt'), 'Original object is not overwritten');
+  assert.equal(JSON.parse(h.mem.xoaychieu_v2).queue[0].record.noi, '[đã ẩn – an toàn]');
   h.respond.rej(Error('network failed'));
   await wait;
   assert.equal(JSON.parse(h.mem.xoaychieu_v2).queue.length, 1, 'failed send retained');
+  const firstWire = JSON.stringify(h.lastPayload.record);
   const mismatch = vm.runInContext('sync(true)', h.c);
+  assert.equal(JSON.stringify(h.lastPayload.record), firstWire, 'Retry uses the same redacted payload');
   h.respond.res({
     ok: true,
     id: 'wrong-id'

@@ -1,15 +1,24 @@
 :root {
-  --bg: #f7f5ef;
-  --paper: #fffdf8;
+  --radius-control: 16px;
+  --radius-panel: 26px;
+  --font-ui: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --bg: #eee5d6;
+  --paper: #fffaf0;
   --ink: #202b4b;
   --muted: #646b7c;
-  --line: #e1dfd5;
+  --line: #dbcfbd;
   --accent: #1e2a5e;
   --gold: #c69432;
   --rose: #a83f53;
   --green: #297765;
-  --soft: #eeeee6;
-  --shadow: 0 12px 36px #222c4b08
+  --soft: #efe7da;
+  --shadow: 0 12px 36px #6950380d;
+  --dream-gold: #d5af7052;
+  --dream-rose: #c79baf38;
+  --dream-lilac: #a3a1c742;
+  --dream-sage: #9fb7a42e;
+  --paper-grain: #886a4210;
+  --star: #94734260
 }
 
 * {
@@ -18,9 +27,12 @@
 
 body {
   margin: 0;
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image:
+    repeating-linear-gradient(0deg, var(--paper-grain) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, var(--paper-grain) 0 1px, transparent 1px 7px);
   color: var(--ink);
-  font: 16px/1.65 system-ui, -apple-system, 'Segoe UI', sans-serif
+  font: 16px/1.65 var(--font-ui)
 }
 
 body.dark {
@@ -33,7 +45,13 @@ body.dark {
   --soft: #293548;
   --gold: #edc16e;
   --rose: #f19aaa;
-  --green: #8bd6b8
+  --green: #8bd6b8;
+  --dream-gold: #b9935130;
+  --dream-rose: #af7e9d24;
+  --dream-lilac: #8585ba38;
+  --dream-sage: #6a9b8c20;
+  --paper-grain: #e4cda308;
+  --star: #eed4a46b
 }
 
 button,
@@ -71,7 +89,7 @@ select:focus {
 
 button {
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius-control);
   background: var(--paper);
   color: var(--ink);
   padding: 10px 17px;
@@ -111,9 +129,9 @@ p {
 h1,
 h2,
 .serif {
-  font-family: Georgia, 'Times New Roman', serif;
-  font-weight: 500;
-  line-height: 1.2
+  font-family: var(--font-ui);
+  font-weight: 650;
+  line-height: 1.3
 }
 
 h1 {
@@ -174,7 +192,7 @@ small,
 
 .brand strong {
   font-size: 23px;
-  font-family: Georgia, serif
+  font-family: var(--font-ui)
 }
 
 .brand small {
@@ -185,24 +203,31 @@ small,
 }
 
 .logo {
-  display: grid;
-  grid-template-columns: repeat(3, 9px);
-  gap: 3px;
-  transform: rotate(-8deg)
+  display: block;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  filter: drop-shadow(0 3px 5px #69503814)
 }
 
-.logo i {
-  width: 9px;
-  height: 9px;
-  background: #c69432
+.brand {
+  color: var(--ink);
+  text-decoration: none;
+  border-radius: var(--radius-control)
 }
 
-.logo i:nth-child(3n) {
-  background: #a83f53
+.brand > div {
+  min-width: 0
 }
 
-.logo i:nth-child(2n) {
-  background: #297765
+.brand strong {
+  display: block;
+  white-space: nowrap
+}
+
+.brand:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 6px
 }
 
 .nav {
@@ -298,12 +323,12 @@ small,
   height: 56%;
   border: 1px solid var(--gold);
   transform: rotate(45deg);
-  border-radius: 10px
+  border-radius: var(--radius-control)
 }
 
 .compass:after {
   content: '✦';
-  font: 100px Georgia;
+  font: 100px/1 var(--font-ui);
   color: var(--accent);
   transform: rotate(12deg)
 }
@@ -356,7 +381,7 @@ small,
 .panel {
   background: var(--paper);
   border: 1px solid var(--line);
-  border-radius: 17px;
+  border-radius: var(--radius-panel);
   padding: 26px;
   box-shadow: var(--shadow)
 }
@@ -387,7 +412,7 @@ small,
 }
 
 .card .num {
-  font: 36px Georgia;
+  font: 600 36px/1.2 var(--font-ui);
   color: var(--cardcolor, var(--gold))
 }
 
@@ -407,7 +432,7 @@ small,
 .notice {
   padding: 13px 18px;
   background: var(--soft);
-  border-radius: 10px;
+  border-radius: var(--radius-control);
   font-size: 13px;
   margin: 16px 0
 }
@@ -452,7 +477,7 @@ select,
 textarea {
   width: 100%;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius-control);
   padding: 12px;
   background: var(--bg);
   color: var(--ink);
@@ -504,7 +529,7 @@ input[type=radio] {
 }
 
 .letter {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-ui);
   font-size: 19px;
   line-height: 1.85
 }
@@ -537,7 +562,7 @@ input[type=radio] {
 .rating label {
   padding: 16px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius-control);
   cursor: pointer;
   display: flex;
   gap: 12px;
@@ -559,7 +584,7 @@ input[type=radio] {
 .safety {
   padding: 18px;
   border: 1px solid var(--rose);
-  border-radius: 10px;
+  border-radius: var(--radius-control);
   margin: 15px 0
 }
 
@@ -577,7 +602,7 @@ pre.text {
 }
 
 .timer {
-  font: 46px Georgia;
+  font: 600 46px/1.2 var(--font-ui);
   font-variant-numeric: tabular-nums
 }
 
@@ -656,7 +681,7 @@ dialog {
   background: var(--paper);
   color: var(--ink);
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: var(--radius-panel);
   max-width: 620px;
   width: 92%;
   padding: 28px
@@ -797,13 +822,78 @@ dialog::backdrop {
   }
 }
 
+/* Chuyển động nhẹ; chỉ bật khi người dùng cho phép hiệu ứng. */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(12px) }
+  to { opacity: 1; transform: translateY(0) }
+}
+
+@keyframes compass-turn {
+  from { transform: rotate(-18deg) }
+  to { transform: rotate(12deg) }
+}
+
+@keyframes toast-enter {
+  from { opacity: 0; translate: 0 10px }
+  to { opacity: 1; translate: 0 0 }
+}
+
 @media(prefers-reduced-motion:no-preference) {
-  .card {
-    transition: transform .18s
+  .page > *,
+  .cards > .card {
+    animation: page-enter .4s ease-out backwards
   }
 
+  .cards > .card:nth-child(2) { animation-delay: .06s }
+  .cards > .card:nth-child(3) { animation-delay: .12s }
+  .cards > .card:nth-child(4) { animation-delay: .18s }
+
+  button,
+  .card,
+  .rating label {
+    transition: transform .2s ease, box-shadow .2s ease,
+      border-color .2s ease, background-color .2s ease, color .2s ease
+  }
+
+  input,
+  select,
+  textarea {
+    transition: border-color .2s ease, background-color .2s ease
+  }
+
+  .progress i {
+    transition: width .35s ease
+  }
+
+  .compass:after {
+    animation: compass-turn 1.2s ease-out both
+  }
+
+  .toast:not(.hidden) {
+    animation: toast-enter .22s ease-out
+  }
+
+  dialog[open] {
+    animation: page-enter .25s ease-out
+  }
+
+  button:not(:disabled):active {
+    transform: scale(.98)
+  }
+}
+
+@media(hover:hover) and (prefers-reduced-motion:no-preference) {
   .card:hover {
-    transform: translateY(-3px)
+    transform: translateY(-4px);
+    box-shadow: 0 16px 36px #222c4b14
+  }
+
+  button:not(:disabled):hover {
+    transform: translateY(-2px)
+  }
+
+  .rating label:hover {
+    border-color: var(--gold)
   }
 }
 
@@ -817,4 +907,366 @@ dialog::backdrop {
 .ratingfield legend {
   margin-bottom: 12px;
   font-weight: 600;
+}
+
+/* Lớp trang trí đứng sau nội dung, không nhận thao tác. */
+.main {
+  position: relative;
+  isolation: isolate
+}
+
+.main::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 85% 4%, var(--dream-gold), transparent 35%),
+    radial-gradient(ellipse at 98% 24%, var(--dream-lilac), transparent 36%),
+    radial-gradient(ellipse at 5% 48%, var(--dream-rose), transparent 38%),
+    radial-gradient(ellipse at 80% 85%, var(--dream-sage), transparent 40%);
+  border-radius: 0 0 45% 10%
+}
+
+button {
+  position: relative;
+  overflow: hidden
+}
+
+.button-ripple {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  margin: -12px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none
+}
+
+.nav button.on {
+  box-shadow: inset 3px 0 var(--gold)
+}
+
+.field:focus-within > span {
+  color: var(--accent)
+}
+
+@keyframes ripple-out {
+  from { opacity: .2; transform: scale(0) }
+  to { opacity: 0; transform: scale(var(--ripple-scale, 20)) }
+}
+
+@keyframes ambient-drift {
+  from { opacity: .5; transform: translateY(-8px) }
+  to { opacity: 1; transform: translateY(8px) }
+}
+
+@keyframes compass-orbit {
+  from { transform: rotate(45deg) }
+  to { transform: rotate(135deg) }
+}
+
+@keyframes progress-reveal {
+  from { transform: scaleX(0) }
+  to { transform: scaleX(1) }
+}
+
+@keyframes hint-enter {
+  from { opacity: 0; transform: translateX(-8px) }
+  to { opacity: 1; transform: translateX(0) }
+}
+
+@media(prefers-reduced-motion:no-preference) {
+  .main::before {
+    animation: ambient-drift 5s ease-in-out 2 alternate
+  }
+
+  .logo-orbit {
+    transform-origin: 32px 32px;
+    transition: transform .6s cubic-bezier(.2, .7, .2, 1)
+  }
+
+  .brand:hover .logo-orbit,
+  .brand:focus-visible .logo-orbit {
+    transform: rotate(90deg)
+  }
+
+  .compass:before {
+    animation: compass-orbit 8s ease-in-out 2 alternate
+  }
+
+  .button-ripple {
+    animation: ripple-out .6s ease-out forwards
+  }
+
+  .progress i {
+    transform-origin: left;
+    animation: progress-reveal .7s cubic-bezier(.2, .7, .2, 1) backwards
+  }
+
+  .welcome > *,
+  .hero > div:first-child > *,
+  .work .panel,
+  .five > div {
+    animation: page-enter .45s ease-out backwards
+  }
+
+  .welcome > :nth-child(2),
+  .hero > div:first-child > :nth-child(2),
+  .five > :nth-child(2) { animation-delay: .06s }
+
+  .welcome > :nth-child(3),
+  .hero > div:first-child > :nth-child(3),
+  .five > :nth-child(3) { animation-delay: .12s }
+
+  .welcome > :nth-child(4),
+  .five > :nth-child(4) { animation-delay: .18s }
+
+  .five > :nth-child(5) { animation-delay: .24s }
+
+  .hint,
+  .notice:not(.hidden),
+  .safety:not(.hidden),
+  details[open] > :not(summary) {
+    animation: hint-enter .25s ease-out backwards
+  }
+
+  .field > span,
+  .nav button,
+  .tag {
+    transition: color .2s ease, background-color .2s ease, box-shadow .2s ease
+  }
+
+  .nav button.on span {
+    animation: page-enter .3s ease-out
+  }
+
+  #theme {
+    transition: transform .3s ease, background-color .2s ease
+  }
+}
+
+@media(hover:hover) and (prefers-reduced-motion:no-preference) {
+  .nav button:not(.on):hover {
+    background: var(--soft);
+    color: var(--ink);
+    transform: translateX(3px)
+  }
+
+  button.primary:hover {
+    box-shadow: 0 5px 16px #1e2a5e24
+  }
+
+  #theme:hover {
+    transform: rotate(15deg)
+  }
+
+  .card:hover .tag {
+    background: var(--soft)
+  }
+}
+
+
+/* Giấy cổ, sương màu và những ngôi sao nhỏ chìm dưới nội dung. */
+.main::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(ellipse 1px 5px at 80% 75px, var(--star) 95%, transparent),
+    radial-gradient(ellipse 5px 1px at 80% 75px, var(--star) 95%, transparent),
+    radial-gradient(ellipse 1px 4px at 94% 190px, var(--star) 95%, transparent),
+    radial-gradient(ellipse 4px 1px at 94% 190px, var(--star) 95%, transparent),
+    radial-gradient(circle 2px at 13% 320px, var(--star) 95%, transparent),
+    radial-gradient(circle 1px at 68% 245px, var(--star) 95%, transparent);
+  background-size: 100% 540px
+}
+
+.side {
+  background: linear-gradient(165deg, var(--paper), var(--soft));
+  box-shadow: 5px 0 30px #69503805
+}
+
+.top {
+  background: linear-gradient(90deg, transparent, var(--dream-gold));
+  border-bottom-color: var(--line)
+}
+
+.card,
+.panel {
+  background: linear-gradient(135deg, var(--paper), var(--paper) 65%, var(--soft));
+  box-shadow: var(--shadow), inset 0 0 0 3px var(--paper)
+}
+
+.compass {
+  border: 1px solid var(--gold);
+  outline: 1px solid var(--line);
+  outline-offset: 9px;
+  box-shadow: 0 0 55px 12px var(--dream-gold), inset 0 0 35px var(--dream-rose);
+  background-color: var(--paper)
+}
+
+.compass .n,
+.compass .s {
+  max-width: 85%;
+  text-align: center
+}
+
+.stripe {
+  opacity: .85
+}
+
+
+/* Dùng chung đường cong và trạng thái tương tác cho mọi biểu mẫu. */
+input:not([type=radio]):not([type=checkbox]),
+select,
+textarea {
+  box-shadow: inset 0 1px 2px #69503808
+}
+
+input:not([type=radio]):not([type=checkbox]):focus,
+select:focus,
+textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 4px var(--dream-gold), inset 0 1px 2px #69503808
+}
+
+select {
+  cursor: pointer;
+  padding-right: 36px
+}
+
+select:disabled {
+  cursor: default;
+  opacity: .6
+}
+
+@media(hover:hover) {
+  input:not([type=radio]):not([type=checkbox]):not(:disabled):hover,
+  select:not(:disabled):hover,
+  textarea:not(:disabled):hover {
+    border-color: var(--gold)
+  }
+}
+
+@media(prefers-reduced-motion:no-preference) {
+  input,
+  select,
+  textarea {
+    transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease
+  }
+
+  .panel {
+    transition: box-shadow .25s ease, border-color .25s ease
+  }
+
+  .panel:focus-within {
+    border-color: var(--gold);
+    box-shadow: var(--shadow), 0 0 0 3px var(--dream-gold)
+  }
+}
+
+/* Giữ select gốc và bàn phím/trình đọc màn hình; nâng cấp picker nếu có hỗ trợ. */
+@supports (appearance: base-select) {
+  select,
+  select::picker(select) {
+    appearance: base-select
+  }
+
+  select {
+    align-items: center;
+    padding-right: 14px
+  }
+
+  select::picker(select) {
+    margin-block: 8px;
+    padding: 6px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    background: var(--paper);
+    color: var(--ink);
+    box-shadow: 0 12px 32px #202b4b24;
+    font: inherit;
+    max-height: min(320px, 50vh);
+    overflow-y: auto
+  }
+
+  select::picker-icon {
+    color: var(--accent)
+  }
+
+  select option {
+    min-height: 44px;
+    padding: 10px 14px;
+    border-radius: 11px;
+    white-space: normal;
+    overflow-wrap: anywhere
+  }
+
+  select option:checked {
+    background: var(--soft);
+    color: var(--accent);
+    font-weight: 650
+  }
+
+  select option:hover,
+  select option:focus-visible {
+    background: var(--soft);
+    outline: 2px solid var(--gold);
+    outline-offset: -2px
+  }
+
+  @media(prefers-reduced-motion:no-preference) {
+    select::picker(select) {
+      animation: page-enter .18s ease-out
+    }
+
+    select::picker-icon {
+      transition: rotate .2s ease
+    }
+
+    select:open::picker-icon {
+      rotate: 180deg
+    }
+
+    select option {
+      transition: background-color .15s ease, color .15s ease
+    }
+  }
+}
+
+@media(min-width:641px) and (max-width:900px) {
+  .brand { gap: 8px }
+  .brand .logo { width: 36px; height: 36px; flex-basis: 36px }
+  .brand strong { font-size: 18px }
+  .brand small { font-size: 9px; letter-spacing: .6px }
+}
+
+
+.probing { margin: 20px 0; padding: 16px; background: var(--soft); border-radius: var(--radius-control) }
+.probing summary { cursor: pointer; font-weight: 650 }
+.probing p { margin: 12px 0 0 }
+.table-scroll { overflow-x: auto; margin-top: 18px }
+.progress-table { width: 100%; border-collapse: collapse; font-size: 14px }
+.progress-table caption { text-align: left; color: var(--muted); padding-bottom: 12px }
+.progress-table th, .progress-table td { padding: 12px 8px; border-bottom: 1px solid var(--line); text-align: left }
+@media(max-width:640px) {
+  .welcome h1 { font-size: 34px; overflow-wrap: anywhere }
+  .card .tag { max-width: 100%; white-space: normal }
+  .actions { flex-wrap: wrap }
+  .actions button { flex: 1 1 120px }
+  .top .row { gap: 6px; min-width: 0 }
+  .status { overflow-wrap: anywhere }
+  .progress-table { font-size: 12px }
+  .progress-table th, .progress-table td { padding: 10px 5px }
+}
+
+@media(max-width:640px) {
+  .nav button { flex-shrink: 0 }
+  .top > .row { flex-wrap: nowrap; justify-content: flex-end }
+  #theme { flex-shrink: 0 }
 }

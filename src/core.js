@@ -40,7 +40,7 @@ const Core = (() => {
     'xc-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
 
   /** Tạo gói bất biến cho một lần nộp. Không tạo lại gói khi gửi lại vì lỗi mạng. */
-  function record(draft, profile, week, appVersion = '2.1.0') {
+  function record(draft, profile, week, appVersion = '2.2.0') {
     const answers = draft.answers;
     const result = {
       id: draft.id,
@@ -90,7 +90,10 @@ const Core = (() => {
       Math.floor(random() * 2000);
   }
 
+  const safety = typeof module !== 'undefined' ? require('./safety.js') : Safety;
   return {
+    safeRecord: safety.redactRecord,
+    safetyMatches: safety.matches,
     words,
     normalize,
     validCode,

@@ -97,7 +97,7 @@
       "bị bắt nạt",
       "bị đe dọa"
     ],
-    "loi_nhan": "Cảm ơn bạn đã chia sẻ. Điều bạn đang gặp rất quan trọng. Hãy nói chuyện ngay với thầy cô chủ nhiệm hoặc cán bộ tư vấn học đường của trường – bạn không phải tự mình vượt qua một mình.",
+    "loi_nhan": "Cảm ơn bạn đã chia sẻ. Điều bạn đang gặp rất quan trọng. Hãy nói chuyện ngay với thầy cô chủ nhiệm hoặc cán bộ tư vấn học đường của trường – bạn không phải tự mình vượt qua một mình. Phần trả lời có từ khóa sẽ được thay bằng “[đã ẩn – an toàn]” khi gửi; bản gốc vẫn nằm trên máy và trong bản sao bạn tải về.",
     "lien_he": ""
   },
   "vai": [
@@ -168,7 +168,7 @@
     "Bắt đầu bằng “Mình nghĩ… vì…”",
     "Ai không muốn nói được làm người ghi chép"
   ],
-  "phien_ban": "2.0.0",
+  "phien_ban": "2.2.0",
   "so_tuan": 4,
   "ngay_bat_dau": "",
   "noi_dung_status": "Bản thử nghiệm — nhóm nghiên cứu cần duyệt nội dung trước khi dùng chính thức.",
@@ -222,7 +222,11 @@
               "max": 6000
             }
           ],
-          "hints": []
+          "hints": [],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
+          ]
         },
         {
           "title": "Bạn vấp ở chỗ nào khi giải thích?",
@@ -242,6 +246,10 @@
             "Nhớ lại một tình huống cụ thể trong lần thử vừa rồi.",
             "Bạn đã quan sát hoặc làm điều gì trong tình huống đó?",
             "Kể bằng lời của bạn; không cần trả lời giống người khác."
+          ],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
           ]
         },
         {
@@ -262,6 +270,10 @@
             "Nhớ lại một tình huống cụ thể trong lần thử vừa rồi.",
             "Bạn đã quan sát hoặc làm điều gì trong tình huống đó?",
             "Kể bằng lời của bạn; không cần trả lời giống người khác."
+          ],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
           ]
         },
         {
@@ -282,6 +294,10 @@
             "Nhớ lại một tình huống cụ thể trong lần thử vừa rồi.",
             "Bạn đã quan sát hoặc làm điều gì trong tình huống đó?",
             "Kể bằng lời của bạn; không cần trả lời giống người khác."
+          ],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
           ]
         },
         {
@@ -298,7 +314,11 @@
               "max": 6000
             }
           ],
-          "hints": []
+          "hints": [],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
+          ]
         },
         {
           "title": "Biến suy nghĩ thành sản phẩm",
@@ -331,7 +351,11 @@
               "max": 6000
             }
           ],
-          "hints": []
+          "hints": [],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
+          ]
         },
         {
           "title": "Lắng nghe một người bạn",
@@ -347,7 +371,11 @@
               "max": 6000
             }
           ],
-          "hints": []
+          "hints": [],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
+          ]
         },
         {
           "title": "Nhìn lại sản phẩm",
@@ -409,7 +437,11 @@
               "max": 6000
             }
           ],
-          "hints": []
+          "hints": [],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
+          ]
         },
         {
           "title": "Cách thứ hai khác cách quen thuộc ở điểm nào? Bạn thấy thế nào khi làm theo cách lạ?",
@@ -429,6 +461,10 @@
             "Nhớ lại điều bạn vừa làm, thay vì tìm một câu trả lời chung.",
             "So sánh một chi tiết giữa hai cách học.",
             "Nêu một dấu hiệu bạn có thể tự quan sát."
+          ],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
           ]
         },
         {
@@ -449,6 +485,10 @@
             "Nhớ lại điều bạn vừa làm, thay vì tìm một câu trả lời chung.",
             "So sánh một chi tiết giữa hai cách học.",
             "Nêu một dấu hiệu bạn có thể tự quan sát."
+          ],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
           ]
         },
         {
@@ -469,6 +509,10 @@
             "Nhớ lại điều bạn vừa làm, thay vì tìm một câu trả lời chung.",
             "So sánh một chi tiết giữa hai cách học.",
             "Nêu một dấu hiệu bạn có thể tự quan sát."
+          ],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
           ]
         },
         {
@@ -485,7 +529,11 @@
               "max": 6000
             }
           ],
-          "hints": []
+          "hints": [],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
+          ]
         },
         {
           "title": "Dòng sông cách học của mình",
@@ -518,7 +566,11 @@
               "max": 6000
             }
           ],
-          "hints": []
+          "hints": [],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
+          ]
         },
         {
           "title": "Nghe thêm một cách học",
@@ -534,7 +586,11 @@
               "max": 6000
             }
           ],
-          "hints": []
+          "hints": [],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
+          ]
         },
         {
           "title": "Nhìn lại sản phẩm",
@@ -596,7 +652,11 @@
               "max": 6000
             }
           ],
-          "hints": []
+          "hints": [],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
+          ]
         },
         {
           "title": "Chuẩn bị lý lẽ",
@@ -627,6 +687,10 @@
             "Nhận định nói “không bao giờ”: bạn hiểu phạm vi đó thế nào?",
             "Nhớ một lần bạn hiểu đúng hoặc hiểu sai người khác.",
             "Giải thích vì sao ví dụ hỗ trợ lý do của bạn."
+          ],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
           ]
         },
         {
@@ -655,6 +719,10 @@
             "Nhắc lại điều phía kia thực sự nói.",
             "Chọn lý lẽ bạn thấy đáng cân nhắc nhất.",
             "Giải thích như thể bạn đang giúp họ trình bày."
+          ],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
           ]
         },
         {
@@ -675,6 +743,10 @@
             "Nhớ lại một tình huống cụ thể thay vì trả lời chung chung.",
             "Nêu điều bạn quan sát được hoặc một ví dụ của chính mình.",
             "Viết điều mình nhận ra và điều còn chưa chắc; không cần giống bạn khác."
+          ],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
           ]
         },
         {
@@ -702,7 +774,11 @@
               "max": 6000
             }
           ],
-          "hints": []
+          "hints": [],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
+          ]
         },
         {
           "title": "Tạo một kết nối",
@@ -718,7 +794,11 @@
               "max": 6000
             }
           ],
-          "hints": []
+          "hints": [],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
+          ]
         },
         {
           "title": "Hai tiếng nói cùng một trang giấy",
@@ -751,7 +831,11 @@
               "max": 6000
             }
           ],
-          "hints": []
+          "hints": [],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
+          ]
         },
         {
           "title": "Chia sẻ với cả lớp",
@@ -828,7 +912,11 @@
               "max": 6000
             }
           ],
-          "hints": []
+          "hints": [],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
+          ]
         },
         {
           "title": "Chọn một bước nhỏ",
@@ -848,6 +936,10 @@
             "Nhớ lại một tình huống cụ thể thay vì trả lời chung chung.",
             "Nêu điều bạn quan sát được hoặc một ví dụ của chính mình.",
             "Viết điều mình nhận ra và điều còn chưa chắc; không cần giống bạn khác."
+          ],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
           ]
         },
         {
@@ -881,7 +973,11 @@
               "max": 6000
             }
           ],
-          "hints": []
+          "hints": [],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
+          ]
         },
         {
           "title": "Đi xem và học từ bạn",
@@ -897,7 +993,11 @@
               "max": 6000
             }
           ],
-          "hints": []
+          "hints": [],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
+          ]
         },
         {
           "title": "Gửi mình của bốn tuần trước",
@@ -917,6 +1017,10 @@
             "Nhớ lại một tình huống cụ thể thay vì trả lời chung chung.",
             "Nêu điều bạn quan sát được hoặc một ví dụ của chính mình.",
             "Viết điều mình nhận ra và điều còn chưa chắc; không cần giống bạn khác."
+          ],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
           ]
         },
         {
@@ -937,6 +1041,10 @@
             "Nhớ lại một tình huống cụ thể thay vì trả lời chung chung.",
             "Nêu điều bạn quan sát được hoặc một ví dụ của chính mình.",
             "Viết điều mình nhận ra và điều còn chưa chắc; không cần giống bạn khác."
+          ],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
           ]
         },
         {
@@ -953,7 +1061,11 @@
               "max": 6000
             }
           ],
-          "hints": []
+          "hints": [],
+          "dao_sau": [
+            "Điều gì trong trải nghiệm của bạn khiến bạn nghĩ như vậy?",
+            "Nếu thử một góc nhìn khác, bạn sẽ giữ hoặc thay đổi điều gì?"
+          ]
         },
         {
           "title": "Nhìn lại sản phẩm",
@@ -973,5 +1085,22 @@
         }
       ]
     }
-  ]
+  ],
+  "scope": {
+    "muc_tieu": "Rèn luyện năng lực linh hoạt trong học tập của học sinh THPT qua hoạt động bốn tuần.",
+    "giai_doan": "Bản bắt buộc: chu trình tuần 1–2, tranh luận tuần 3, chỉnh sửa sản phẩm tuần 4.",
+    "trien_lam": "App chỉ cho xem và chỉnh sửa sản phẩm của chính mình. Hình thức triển lãm chờ chốt với nhóm nghiên cứu; không hiển thị bài của học sinh khác.",
+    "quy_mo_du_kien": "2 trường, 4 lớp, khoảng 150 học sinh dự kiến.",
+    "ngoai_pham_vi": [
+      "Tuần 5–8",
+      "Ứng dụng Android/iOS riêng",
+      "Phân tích nghiên cứu tự động",
+      "Chatbot AI tạo sinh"
+    ],
+    "lam_sau": [
+      "La bàn cá nhân trên máy, không gửi điểm lên Sheet",
+      "Bản ghi thanh_to",
+      "Chatbot kịch bản"
+    ]
+  }
 }

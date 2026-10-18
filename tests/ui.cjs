@@ -78,6 +78,10 @@ try {
         }
       }
       if (week.tuan === 1 && step.fields.some(field => field.key === 'thu_lam')) {
+        $('brandHome').click();
+        assert.equal(app.get('tab'), 'home', 'Brand returns home while writing');
+        window.document.querySelector('[data-week="1"]').click();
+        assert.equal($('f_thu_lam').value, raw, 'Brand navigation preserves the current draft');
         $('prev').click();
         $('next').click();
         assert.equal($('f_thu_lam').value, raw, 'Rerender preserves leading newline and spaces');
@@ -106,7 +110,8 @@ try {
     assert.equal(app.get('person().history.length'), week.tuan);
     assert.equal(app.get('db.queue.length'), week.tuan);
     assert.equal(window.injected, undefined, 'User HTML is displayed as text');
-    window.document.querySelector('[data-tab="home"]').click();
+    $('brandHome').querySelector('.logo').dispatchEvent(new window.MouseEvent('click', { bubbles: true, cancelable: true }));
+    assert.equal(app.get('tab'), 'home', 'Clicking the logo returns home');
   }
   assert.equal(app.get('person().history[0].record.thu_lam'), raw);
   assert.equal(app.get('person().history[3].record.ban_goc_id'), app.get(
@@ -123,7 +128,7 @@ try {
   assert.equal($('coordWeek').value, '3');
   assert.equal($('sessionForm').elements.dieu_tot.value, raw, 'Coordinator draft persists');
   console.log(
-    'PASS DOM: four week flows, required fields, explicit rating, draft reload, raw newlines, HTML escaping, week 4 revision, new attempt ID, coordinator draft'
+    'PASS DOM: four week flows, required fields, explicit rating, draft reload, raw newlines, HTML escaping, week 4 revision, new attempt ID, coordinator draft, brand navigation'
     );
 } finally {
   app.dom.window.close();

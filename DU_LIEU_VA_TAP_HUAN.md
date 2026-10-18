@@ -61,4 +61,11 @@ Có kiểm tra cú pháp, build, hàm kiểm tra đầu vào và ánh xạ bốn
 
 Kiểm thử DOM bằng jsdom đi qua giao diện bốn tuần, kiểm tra không bỏ trống, tự đánh giá không chọn sẵn, quay lại và tải lại nháp, giữ dòng trống đầu, hiển thị văn bản có thẻ HTML, tạo lượt mới và sửa sản phẩm tuần 4. Đây là mô phỏng DOM trong Node.js, không phải kiểm tra bố cục bằng trình duyệt thật.
 
-Chưa kiểm tra trực quan bằng trình duyệt trong môi trường tạo bản này; chưa xác thực trên Google Apps Script/Sheet thật của bạn và chưa đo tải 70 máy. Các bước đó nằm trong checklist triển khai, phải hoàn thành trước dùng nghiên cứu thật.
+Bản 2.2.0 đã kiểm tra bằng Chromium ở viewport 360×800, sáng/tối, bốn tuần và giao diện giáo viên với RPC giả; chưa kiểm tra điện thoại vật lý; chưa xác thực trên Google Apps Script/Sheet thật của bạn và chưa đo tải 150 máy. Các bước đó nằm trong checklist triển khai, phải hoàn thành trước dùng nghiên cứu thật.
+
+
+## Thay đổi chính sách dữ liệu 2.2.0
+
+“Nguyên văn” chỉ áp dụng cho ô không chứa từ khóa an toàn. Ô có từ khóa được thay toàn bộ bằng `[đã ẩn – an toàn]` trước khi gửi, kiểm tra lại ở máy chủ. Tiền tố tuần 3 và cột tổng hợp tuần 4 được dựng lại từ phần đã che. Điều này áp dụng cả ghi chú điều phối. Bản nháp, lịch sử trên máy và bản sao cá nhân vẫn có thể chứa nội dung gốc: lưu riêng, không gửi chung cho lớp. Dữ liệu đã ghi ở phiên bản cũ không được tự động sửa hay xóa.
+
+Giáo viên chủ nhiệm chỉ có mã + tuần qua API tiến độ, không nhận mức tự đánh giá hoặc nội dung bài. Nhóm nghiên cứu/GV hướng dẫn xem/xuất Sheet theo quyền Google do chủ dự án cấp. Không dùng các mức 1–3 hay tiến độ làm điểm nghiên cứu. La bàn, `thanh_to`, chatbot kịch bản để giai đoạn sau; không dùng AI tạo sinh.

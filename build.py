@@ -49,6 +49,7 @@ def build():
         "CSS": read(SRC / "style.css"),
         "CONFIG": read(SRC / "config.js"),
         "DATA": data_js,
+        "SAFETY": read(SRC / "safety.js"),
         "CORE": read(SRC / "core.js"),
         "BACKUP": read(SRC / "backup.js"),
         "APP": read(SRC / "app.js"),
@@ -64,11 +65,13 @@ def build():
     # Cùng định nghĩa ô nhập cho kiểm tra cả phía học sinh và máy chủ.
     schema = {
         "schools": content["truong_lop"],
+        "safety": content["an_toan"],
         "weeks": [[field for step in week["steps"] for field in step["fields"]]
                   for week in content["weeks"]],
     }
     (SERVER / "Schema.gs").write_text(
-        "// Tự sinh bởi build.py từ src/content.json; không sửa trực tiếp.\n"
+        "// Tự sinh bởi build.py; không sửa trực tiếp.\n"
+        + read(SRC / "safety.js") + "\n"
         + "const SCHEMA = " + json.dumps(schema, ensure_ascii=False, indent=2) + ";\n",
         encoding="utf-8",
     )

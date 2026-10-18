@@ -14,11 +14,11 @@ DIST = ROOT / "dist"
 
 def package():
     paths = [
-        "README.md", "MA_NGUON_CHI_TIET.md", "HUONG_DAN_TRIEN_KHAI.md", "DU_LIEU_VA_TAP_HUAN.md",
-        "src/app.js", "src/core.js", "src/backup.js", "src/config.js", "src/content.json",
+        "SCOPE.md", "README.md", "MA_NGUON_CHI_TIET.md", "HUONG_DAN_TRIEN_KHAI.md", "DU_LIEU_VA_TAP_HUAN.md",
+        "src/app.js", "src/core.js", "src/safety.js", "src/backup.js", "src/config.js", "src/content.json",
         "src/style.css", "src/shell.html", "apps-script/Code.gs", "apps-script/Schema.gs",
         "apps-script/appsscript.json", "build.py", "package_source.py", "package.json",
-        "tests/test.cjs", "tests/queue.cjs", "tests/recovery.cjs", "tests/ui.cjs", "tests/run.cjs",
+        "tests/scope.cjs", "tests/test.cjs", "tests/queue.cjs", "tests/recovery.cjs", "tests/ui.cjs", "tests/run.cjs",
         "tools/source-reader.html",
     ]
     files = {name: (ROOT / name).read_text(encoding="utf-8") for name in paths}

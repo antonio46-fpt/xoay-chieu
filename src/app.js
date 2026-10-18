@@ -38,6 +38,7 @@ let profile = db.current || null,
   activeWeek = 1,
   coordToken = '',
   coordUntil = 0,
+  teacherAuth = null,
   sending = false,
   lastTick = Date.now(),
   saveTimer = null,
@@ -131,6 +132,8 @@ async function sync(force = false) {
         continue;
       }
       try {
+        item.record = Core.safeRecord(item.record, CONTENT.an_toan);
+        if (!persist()) throw new Error('Chưa lưu được gói an toàn; chưa gửi.');
         const result = await rpc('submitRecord', {
           record: item.record,
           token: item.record.loai === 'chu_trinh' ? '' : coordToken,
@@ -185,7 +188,18 @@ function enqueue(record) {
 }
 
 function logo() {
-  return '<div class="logo" aria-hidden="true">' + ('<i></i>'.repeat(9)) + '</div>';
+  return `<svg class="logo" viewBox="0 0 64 64" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="32" cy="32" r="29" fill="var(--paper)" stroke="var(--gold)" stroke-width="1.2"/>
+    <circle cx="32" cy="32" r="25" fill="none" stroke="var(--gold)" stroke-opacity=".35" stroke-dasharray="1 4"/>
+    <g class="logo-orbit">
+      <path d="M32 9C44 16 46 24 32 32C37 23 34 18 32 9Z" fill="var(--gold)"/>
+      <path d="M55 32C48 44 40 46 32 32C41 37 46 34 55 32Z" fill="var(--green)"/>
+      <path d="M32 55C20 48 18 40 32 32C27 41 30 46 32 55Z" fill="var(--rose)"/>
+      <path d="M9 32C16 20 24 18 32 32C23 27 18 30 9 32Z" fill="var(--accent)"/>
+    </g>
+    <path d="M32 25L39 32L32 39L25 32Z" fill="var(--paper)" stroke="var(--gold)" stroke-width="1.2"/>
+    <circle cx="32" cy="32" r="2.5" fill="var(--gold)"/>
+  </svg>`;
 }
 
 function render() {
@@ -195,11 +209,16 @@ function render() {
     ['notebook', '▤', 'Sổ của mình'],
     ['letters', '✉', 'Hộp thư'],
     ['coord', '◷', 'Điều phối'],
+    ['teacher', '▦', 'Tiến độ lớp'],
     ['settings', '⚙', 'Cài đặt']
   ];
   $('app').innerHTML =
-    `<div class="shell"><aside class="side"><div class="brand">${logo()}<div><strong>Xoay Chiều</strong><small>Mỗi góc nhìn, một điều mới</small></div></div><nav class="nav" aria-label="Chính">${names.map(([k,ic,n])=>`<button data-tab="${k}" class="${tab===k?'on':''}"><span>${ic}</span>${n}</button>`).join('')}</nav><div class="sidefoot"><p>THỬ · NGHĨ · NỐI · CHIA SẺ</p><p>Một hành trình nhỏ.<br>Nhiều cách nhìn mới.</p><div class="profile">${profile?`<strong>${E(profile.ma)}</strong><br>${E(profile.lop)}<br><small>${E(profile.truong)}</small>`:'Chưa chọn mã học sinh'}</div></div></aside><main class="main"><header class="top"><span class="caption">HÀNH TRÌNH HỌC TẬP / ${CONTENT.so_tuan} TUẦN</span><div class="row"><span id="net" class="status" aria-live="polite"></span><button class="small" id="theme" aria-label="Đổi giao diện sáng tối">${db.theme==='dark'?'☀':'☾'}</button></div></header><div id="conflict" class="notice hidden" role="alert">Dữ liệu đã đổi ở một tab khác. Tải bản sao của tab này trước khi tải lại trang. <button id="conflictBackup">Tải bản sao tab này</button><button id="conflictReload">Tải lại trang</button></div><div class="page" id="page"></div></main></div>`;
+    `<div class="shell"><aside class="side"><a class="brand" id="brandHome" href="#home" aria-label="Xoay Chiều — về trang chính">${logo()}<div><strong>Xoay Chiều</strong><small>Mỗi góc nhìn, một điều mới</small></div></a><nav class="nav" aria-label="Chính">${names.map(([k,ic,n])=>`<button data-tab="${k}" class="${tab===k?'on':''}"><span>${ic}</span>${n}</button>`).join('')}</nav><div class="sidefoot"><p>THỬ · NGHĨ · NỐI · CHIA SẺ</p><p>Một hành trình nhỏ.<br>Nhiều cách nhìn mới.</p><div class="profile">${profile?`<strong>${E(profile.ma)}</strong><br>${E(profile.lop)}<br><small>${E(profile.truong)}</small>`:'Chưa chọn mã học sinh'}</div></div></aside><main class="main"><header class="top"><span class="caption">HÀNH TRÌNH HỌC TẬP / ${CONTENT.so_tuan} TUẦN</span><div class="row"><span id="net" class="status" aria-live="polite"></span><button class="small" id="theme" aria-label="Đổi giao diện sáng tối">${db.theme==='dark'?'☀':'☾'}</button></div></header><div id="conflict" class="notice hidden" role="alert">Dữ liệu đã đổi ở một tab khác. Tải bản sao của tab này trước khi tải lại trang. <button id="conflictBackup">Tải bản sao tab này</button><button id="conflictReload">Tải lại trang</button></div><div class="page" id="page"></div></main></div>`;
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => go(b.dataset.tab));
+  $('brandHome').onclick = event => {
+    event.preventDefault();
+    go('home');
+  };
   $('theme').onclick = () => {
     db.theme = db.theme === 'dark' ? 'light' : 'dark';
     persist();
@@ -210,13 +229,14 @@ function render() {
     2));
   $('conflictReload').onclick = () => location.reload();
   if (storageConflict) showStorageConflict();
-  if (!profile && !['settings', 'letters'].includes(tab)) login();
+  if (!profile && !['settings', 'letters', 'teacher'].includes(tab)) login();
   else({
     home,
     notebook,
     letters,
     coord,
     settings,
+    teacher,
     work
   } [tab] || home)();
 }
@@ -233,7 +253,7 @@ function go(t) {
 function login() {
   const schools = CONTENT.truong_lop;
   $('page').innerHTML =
-    `<div class="welcome"><p class="eyebrow">Chào bạn, rất vui được gặp</p><h1>Một góc nhìn mới<br>bắt đầu từ bạn.</h1><p class="muted">Không có câu trả lời đúng hay sai. Hãy thử, lắng nghe và ghi lại những điều mình nhận ra.</p><form id="login" class="panel"><label class="field"><span>Mã của bạn</span><input id="code" placeholder="Ví dụ định dạng: AB12-C" maxlength="8" autocomplete="off" autocapitalize="characters" required><small>Dùng đúng mã trên phiếu khảo sát. Không nhập họ tên.</small></label><label class="field"><span>Trường</span><select id="school"><option value="">Chọn trường</option>${schools.map(s=>`<option>${E(s.truong)}</option>`).join('')}</select></label><label class="field"><span>Lớp</span><select id="class"><option value="">Chọn lớp</option></select></label><p id="loginErr" class="error" role="alert"></p><button class="primary" style="width:100%">Bắt đầu hành trình →</button><details style="margin-top:18px"><summary>Cách tạo mã theo phiếu khảo sát</summary>${CONTENT.huong_dan_ma.buoc.map(b=>`<p class="caption">${E(b)}</p>`).join('')}</details></form><p class="caption">Câu trả lời lưu trên trình duyệt này${LIVE?' và được gửi về Google Sheet của nhóm nghiên cứu khi bạn nộp bài':''}. Không nhập số điện thoại, địa chỉ hay thông tin nhận diện người khác.</p></div>`;
+    `<div class="welcome"><p class="eyebrow">Chào bạn, rất vui được gặp</p><h1>Một góc nhìn mới<br>bắt đầu từ bạn.</h1><p class="muted">Không có câu trả lời đúng hay sai. Hãy thử, lắng nghe và ghi lại những điều mình nhận ra.</p><form id="login" class="panel"><label class="field"><span>Mã của bạn</span><input id="code" placeholder="Ví dụ định dạng: AB12-C" maxlength="8" autocomplete="off" autocapitalize="characters" required><small>Dùng đúng mã trên phiếu khảo sát. Không nhập họ tên.</small></label><label class="field"><span>Trường</span><select id="school"><option value="">Chọn trường</option>${schools.map(s=>`<option>${E(s.truong)}</option>`).join('')}</select></label><label class="field"><span>Lớp</span><select id="class"><option value="">Chọn lớp</option></select></label><p id="loginErr" class="error" role="alert"></p><button class="primary" style="width:100%">Bắt đầu hành trình →</button><details style="margin-top:18px"><summary>Cách tạo mã theo phiếu khảo sát</summary>${CONTENT.huong_dan_ma.buoc.map(b=>`<p class="caption">${E(b)}</p>`).join('')}</details></form><p class="caption">Câu trả lời lưu trên trình duyệt này${LIVE?' và được gửi về Google Sheet của nhóm nghiên cứu khi bạn nộp bài':''}. Không nhập số điện thoại, địa chỉ hay thông tin nhận diện người khác. Ô có từ khóa an toàn được thay bằng “[đã ẩn – an toàn]” trước khi gửi; bản gốc vẫn ở trên máy.</p></div>`;
   $('school').onchange = () => {
     $('class').innerHTML = '<option value="">Chọn lớp</option>' + (schools.find(s => s.truong ===
       $('school').value)?.lop || []).map(c => `<option>${E(c)}</option>`).join('');
@@ -272,7 +292,7 @@ function home() {
   const p = person(),
     done = new Set(p.history.map(h => h.record.tuan));
   $('page').innerHTML =
-    `<section class="hero"><div><p class="eyebrow">SỔ TRẢI NGHIỆM CỦA ${E(profile.ma)}</p><h1>Thử một chút.<br>Hiểu mình thêm.</h1><p>Bốn tuần để nhìn việc học từ những phía khác nhau. Mỗi lần thử là một cơ hội để bạn tìm ra cách của mình.</p><div class="row between"><span class="caption">Hành trình của bạn</span><strong>${done.size}/${CONTENT.so_tuan} tuần đã lưu</strong></div><div class="progress" style="margin-top:10px"><i style="width:${done.size/CONTENT.so_tuan*100}%"></i></div></div><div class="compass" aria-hidden="true"><span class="n">LA BÀN HỌC HỎI</span><span class="s">MỖI BƯỚC LÀ MỘT KHÁM PHÁ</span></div></section><div class="row between titleline"><h3 style="margin:0">Bốn tuần, bốn trải nghiệm</h3><span class="caption">Đi theo nhịp của lớp bạn</span></div><section class="cards">${CONTENT.weeks.map((w,i)=>`<article class="card" style="--cardcolor:${['#b7791f','#0f7c70','#a83f53','#4c51bf'][i]}"><div class="row between"><span class="num">0${w.tuan}</span><span class="tag">${w.duration} phút · ${E(w.focus)}</span></div><h2>${E(w.title)}</h2><p>${E(w.letter.triet_gia)} · ${E(w.letter.tieu_de)}</p><div class="row between"><span class="badge">${done.has(w.tuan)?'✓ Đã có bài nộp':p.drafts[w.tuan]?'◌ Đang viết':'Chưa bắt đầu'}</span><button data-week="${w.tuan}" class="${i===0?'primary':''}">${p.drafts[w.tuan]?'Viết tiếp':done.has(w.tuan)?'Làm lượt mới':'Khám phá'} →</button></div></article>`).join('')}</section><div class="five">${CONTENT.mat_nang_luc.map(m=>`<div style="border-color:${E(m.mau)}"><strong>${E(m.ten)}</strong><br>${E(m.mo_ta)}</div>`).join('')}</div><footer>Không xếp hạng · Không chấm đúng sai · Lắng nghe theo cách của bạn</footer>`;
+    `<section class="hero"><div><p class="eyebrow">SỔ TRẢI NGHIỆM CỦA ${E(profile.ma)}</p><h1>Thử một chút.<br>Hiểu mình thêm.</h1><p>Bốn tuần để rèn cách nhìn, thử và điều chỉnh việc học: chu trình tuần 1–2, tranh luận tuần 3, chỉnh sửa sản phẩm tuần 4. Mỗi lần thử là một cơ hội để bạn tìm ra cách của mình.</p><div class="row between"><span class="caption">Hành trình của bạn</span><strong>${done.size}/${CONTENT.so_tuan} tuần đã lưu</strong></div><div class="progress" style="margin-top:10px"><i style="width:${done.size/CONTENT.so_tuan*100}%"></i></div></div><div class="compass" aria-hidden="true"><span class="n">BỐN TUẦN KHÁM PHÁ</span><span class="s">MỖI BƯỚC LÀ MỘT KHÁM PHÁ</span></div></section><div class="row between titleline"><h3 style="margin:0">Bốn tuần, bốn trải nghiệm</h3><span class="caption">Đi theo nhịp của lớp bạn</span></div><section class="cards">${CONTENT.weeks.map((w,i)=>`<article class="card" style="--cardcolor:${['#b7791f','#0f7c70','#a83f53','#4c51bf'][i]}"><div class="row between"><span class="num">0${w.tuan}</span><span class="tag">${w.duration} phút · ${E(w.focus)}</span></div><h2>${E(w.title)}</h2><p>${E(w.letter.triet_gia)} · ${E(w.letter.tieu_de)}</p><div class="row between"><span class="badge">${done.has(w.tuan)?'✓ Đã có bài nộp':p.drafts[w.tuan]?'◌ Đang viết':'Chưa bắt đầu'}</span><button data-week="${w.tuan}" class="${i===0?'primary':''}">${p.drafts[w.tuan]?'Viết tiếp':done.has(w.tuan)?'Làm lượt mới':'Khám phá'} →</button></div></article>`).join('')}</section><div class="five">${CONTENT.mat_nang_luc.map(m=>`<div style="border-color:${E(m.mau)}"><strong>${E(m.ten)}</strong><br>${E(m.mo_ta)}</div>`).join('')}</div><p class="caption">${E(CONTENT.scope.trien_lam)}</p><footer>Không xếp hạng · Không chấm đúng sai · Lắng nghe theo cách của bạn</footer>`;
   document.querySelectorAll('[data-week]').forEach(b => b.onclick = () => start(+b.dataset.week));
 }
 
@@ -337,7 +357,7 @@ function work() {
   const s = w.steps[d.step],
     a = d.answers;
   $('page').innerHTML =
-    `<div class="work"><button class="backlink" id="leave">← Hành trình của mình</button><header class="workhead"><p class="eyebrow">TUẦN ${w.tuan} · ${E(w.focus)}</p><h1>${E(w.title)}</h1><div class="row between"><span class="caption">${E(s.stage)} · ${d.step+1}/${w.steps.length} màn hình</span><span id="stepTimer" class="caption"></span></div><div class="progress" style="margin-top:10px"><i style="width:${(d.step+1)/w.steps.length*100}%"></i></div></header><section class="panel">${d.step===0?letterHTML(w):`<h2>${E(s.title)}</h2>`}${s.body?`<p>${E(s.body)}</p>`:''}${w.quy_trinh==='trien_lam_45'&&s.fields.some(f=>f.key==='san_pham')?oldProductHTML():''}${s.fields.map(f=>fieldHTML(f,a)).join('')}<div id="safety" class="hidden safety" role="status">${E(CONTENT.an_toan.loi_nhan)}${CONTENT.an_toan.lien_he?'<br>'+E(CONTENT.an_toan.lien_he):''}</div>${s.hints.length?`<button id="hint" class="small">Mình chưa biết bắt đầu thế nào</button><div id="hints">${s.hints.slice(0,d.hints[d.step]||0).map(h=>`<p class="hint">${E(h)}</p>`).join('')}</div>`:''}<div class="actions"><button id="prev" ${d.step===0?'disabled':''}>← Quay lại</button><button id="next" class="primary">${d.step===w.steps.length-1?'Lưu & nộp bài ✓':'Tiếp tục →'}</button></div><p class="caption" style="margin:18px 0 0" id="draftStatus">Bản nháp lưu trên máy · Đồng hồ chỉ gợi ý, không khóa bài</p></section></div>`;
+    `<div class="work"><button class="backlink" id="leave">← Hành trình của mình</button><header class="workhead"><p class="eyebrow">TUẦN ${w.tuan} · ${E(w.focus)}</p><h1>${E(w.title)}</h1><div class="row between"><span class="caption">${E(s.stage)} · ${d.step+1}/${w.steps.length} màn hình</span><span id="stepTimer" class="caption"></span></div><div class="progress" style="margin-top:10px"><i style="width:${(d.step+1)/w.steps.length*100}%"></i></div></header><section class="panel">${d.step===0?letterHTML(w):`<h2>${E(s.title)}</h2>`}${s.body?`<p>${E(s.body)}</p>`:''}${w.quy_trinh==='trien_lam_45'&&s.fields.some(f=>f.key==='san_pham')?oldProductHTML():''}${s.fields.map(f=>fieldHTML(f,a)).join('')}${s.dao_sau?.length?`<details class="probing"><summary>Thử nghĩ sâu hơn</summary>${s.dao_sau.map(q=>`<p>${E(q)}</p>`).join('')}<p class="caption">Câu hỏi gợi mở, không phải bài kiểm tra hay câu trả lời mẫu.</p></details>`:''}<div id="safety" class="hidden safety" role="status">${E(CONTENT.an_toan.loi_nhan)}${CONTENT.an_toan.lien_he?'<br>'+E(CONTENT.an_toan.lien_he):''}</div>${s.hints.length?`<button id="hint" class="small">Mình chưa biết bắt đầu thế nào</button><div id="hints">${s.hints.slice(0,d.hints[d.step]||0).map(h=>`<p class="hint">${E(h)}</p>`).join('')}</div>`:''}<div class="actions"><button id="prev" ${d.step===0?'disabled':''}>← Quay lại</button><button id="next" class="primary">${d.step===w.steps.length-1?'Lưu & nộp bài ✓':'Tiếp tục →'}</button></div><p class="caption" style="margin:18px 0 0" id="draftStatus">Bản nháp lưu trên máy · Đồng hồ chỉ gợi ý, không khóa bài</p></section></div>`;
   $('leave').onclick = () => go('home');
   $('prev').onclick = () => {
     flushDraft();
@@ -389,8 +409,8 @@ function work() {
 function safety() {
   const d = current();
   if (!$('safety') || !d) return;
-  const text = Object.values(d.answers).join(' ').toLowerCase();
-  $('safety').classList.toggle('hidden', !CONTENT.an_toan.tu_khoa.some(k => text.includes(k)));
+  const text = Object.values(d.answers).join(' ');
+  $('safety').classList.toggle('hidden', !Core.safetyMatches(text, CONTENT.an_toan));
 }
 
 function oldProductHTML() {
@@ -501,7 +521,7 @@ setInterval(() => {
 function notebook() {
   const h = person().history.slice().reverse();
   $('page').innerHTML =
-    `<p class="eyebrow">NHỮNG ĐIỀU BẠN ĐÃ NHẬN RA</p><div class="row between"><h1>Sổ của mình</h1><button id="exportMine">Tải bản sao JSON ↓</button></div><p class="muted">Bài nộp được giữ theo từng lượt. Dữ liệu ở đây chỉ thuộc mã đang chọn trên máy này.</p>${h.length?h.map(x=>`<article class="panel" style="margin:18px 0"><div class="row between"><span class="tag">TUẦN ${x.record.tuan}</span><span class="caption">${new Date(x.record.thoi_gian).toLocaleString('vi-VN')}</span></div><h2 style="margin:15px 0">${E(CONTENT.weeks.find(w=>w.tuan===x.record.tuan)?.title)}</h2><p class="badge">${x.sent?'✓ Máy chủ đã xác nhận':LIVE?'◌ Chờ gửi — bài còn trên máy':'◌ Chỉ lưu trên máy ở bản xem thử'}</p><p class="caption">${Math.floor(x.record.thoi_luong_giay/60)} phút ${x.record.thoi_luong_giay%60} giây hoạt động · Tự đánh giá mức ${x.record.tu_danh_gia}</p><details class="historydetails"><summary>Xem câu trả lời và sản phẩm</summary>${['thu_lam','nghi_1','nghi_2','nghi_3','noi','san_pham','chia_se'].map(k=>`<div class="entry"><strong>${({thu_lam:'Thử',nghi_1:'Nghĩ 1',nghi_2:'Nghĩ 2 / Thư gửi mình',nghi_3:'Nghĩ 3',noi:'Nối',san_pham:'Sản phẩm',chia_se:'Chia sẻ / Đổi hoặc giữ ý'})[k]}</strong><pre class="text">${E(x.record[k])}</pre></div>`).join('')}</details></article>`).join(''):'<div class="panel empty"><h2>Trang đầu đang chờ bạn.</h2><p>Hoàn thành một tuần để lưu trải nghiệm của mình ở đây.</p><button id="first" class="primary">Bắt đầu tuần 1 →</button></div>'}`;
+    `<p class="eyebrow">NHỮNG ĐIỀU BẠN ĐÃ NHẬN RA</p><div class="row between"><h1>Sổ của mình</h1><button id="exportMine">Tải bản sao JSON ↓</button></div><p class="muted">Bài đã nộp được giữ nguyên. Làm lượt mới tạo ID mới; bản 2 tuần 4 giữ liên kết với sản phẩm gốc. Dữ liệu ở đây chỉ thuộc mã đang chọn trên máy này.</p>${h.length?h.map(x=>`<article class="panel" style="margin:18px 0"><div class="row between"><span class="tag">TUẦN ${x.record.tuan}</span><span class="caption">${new Date(x.record.thoi_gian).toLocaleString('vi-VN')}</span></div><h2 style="margin:15px 0">${E(CONTENT.weeks.find(w=>w.tuan===x.record.tuan)?.title)}</h2><p class="badge">${x.sent?'✓ Máy chủ đã xác nhận':LIVE?'◌ Chờ gửi — bài còn trên máy':'◌ Chỉ lưu trên máy ở bản xem thử'}</p><p class="caption">${Math.floor(x.record.thoi_luong_giay/60)} phút ${x.record.thoi_luong_giay%60} giây hoạt động · Tự đánh giá mức ${x.record.tu_danh_gia}</p><details class="historydetails"><summary>Xem câu trả lời và sản phẩm</summary>${['thu_lam','nghi_1','nghi_2','nghi_3','noi','san_pham','chia_se'].map(k=>`<div class="entry"><strong>${({thu_lam:'Thử',nghi_1:'Nghĩ 1',nghi_2:'Nghĩ 2 / Thư gửi mình',nghi_3:'Nghĩ 3',noi:'Nối',san_pham:'Sản phẩm',chia_se:'Chia sẻ / Đổi hoặc giữ ý'})[k]}</strong><pre class="text">${E(x.record[k])}</pre></div>`).join('')}</details></article>`).join(''):'<div class="panel empty"><h2>Trang đầu đang chờ bạn.</h2><p>Hoàn thành một tuần để lưu trải nghiệm của mình ở đây.</p><button id="first" class="primary">Bắt đầu tuần 1 →</button></div>'}`;
   $('exportMine').onclick = () => download('XoayChieu-' + profile.ma + '.json', JSON.stringify({
     profile,
     ...person()
@@ -738,6 +758,71 @@ setInterval(() => {
   paintCoord();
 }, 500);
 
+/** Tiến độ lớp không tải câu trả lời hay điểm tự đánh giá về trình duyệt. */
+function teacher() {
+  const page = $('page');
+  const active = teacherAuth && Date.now() < teacherAuth.expires;
+  if (!active) teacherAuth = null;
+  page.innerHTML = `<p class="eyebrow">DÀNH CHO GIÁO VIÊN CHỦ NHIỆM</p><h1>Tiến độ lớp</h1><p class="muted">Chỉ xem mã và tuần đã được máy chủ xác nhận. Không đọc câu trả lời, sản phẩm hay mức tự đánh giá.</p>${!LIVE ? '<div class="notice">Bản xem thử chưa kết nối Sheet. Bảng dưới đây chỉ dùng dữ liệu giả để minh họa.</div>' : ''}${active ? `<section class="panel"><div class="row between"><h2>${E(teacherAuth.lop)}</h2><button id="teacherLogout">Đăng xuất</button></div><p>${E(teacherAuth.truong)}</p><button id="teacherRefresh">Làm mới tiến độ</button><div id="teacherResult" aria-live="polite"></div></section>` : `<form id="teacherLogin" class="panel"><label class="field"><span>Trường phụ trách</span><select id="teacherSchool">${CONTENT.truong_lop.map(s => `<option>${E(s.truong)}</option>`).join('')}</select></label><label class="field"><span>Lớp phụ trách</span><select id="teacherClass"></select></label><label class="field"><span>PIN giáo viên</span><input id="teacherPin" type="password" inputmode="numeric" pattern="[0-9]{6,12}" required autocomplete="off" ${LIVE ? '' : 'disabled'}></label><button class="primary" ${LIVE ? '' : 'disabled'}>Xem tiến độ lớp</button><p id="teacherError" class="error" role="alert"></p></form>${!LIVE ? '<section class="panel" style="margin-top:20px"><h2>Minh họa bằng dữ liệu giả</h2><div id="teacherResult"></div></section>' : ''}`}<p class="caption">Bảng chỉ liệt kê mã đã có ít nhất một bài được xác nhận. Chưa có danh sách mã được cấp để kết luận các mã chưa xuất hiện là chưa làm bài. Giáo viên không được chia sẻ PIN hoặc dùng chung thiết bị đang mở Sổ của mình với học sinh.</p>`;
+  function showStudents(students) {
+    const result = $('teacherResult');
+    if (!result || $('page') !== page) return;
+    result.innerHTML = students.length ? `<div class="table-scroll"><table class="progress-table"><caption>Tuần đã nộp — ${LIVE ? 'dữ liệu được xác nhận' : 'dữ liệu giả'}</caption><thead><tr><th scope="col">Mã</th>${[1,2,3,4].map(w => `<th scope="col">Tuần ${w}</th>`).join('')}</tr></thead><tbody>${students.map(student => `<tr><th scope="row">${E(student.ma)}</th>${[1,2,3,4].map(w => `<td>${student.weeks.includes(w) ? '<span class="badge">Đã nộp</span>' : '—'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : '<p class="notice">Chưa có bài được máy chủ xác nhận cho lớp này.</p>';
+  }
+  async function refresh() {
+    const auth = teacherAuth;
+    const button = $('teacherRefresh');
+    button.disabled = true;
+    $('teacherResult').textContent = 'Đang tải tiến độ…';
+    try {
+      const response = await rpc('getClassProgress', { token: auth.token, truong: auth.truong, lop: auth.lop });
+      if ($('page') !== page || teacherAuth !== auth) return;
+      if (!response?.ok) {
+        if (response?.code === 'AUTH_REQUIRED') { teacherAuth = null; teacher(); toast('Phiên giáo viên hết hạn. Hãy đăng nhập lại.'); return; }
+        throw Error(response?.error || 'Chưa tải được tiến độ.');
+      }
+      showStudents(response.students);
+    } catch (error) {
+      if ($('page') === page && $('teacherResult')) $('teacherResult').textContent = error.message;
+    } finally { if (button.isConnected) button.disabled = false; }
+  }
+  if (active) {
+    $('teacherRefresh').onclick = refresh;
+    $('teacherLogout').onclick = () => {
+      const token = teacherAuth.token;
+      teacherAuth = null;
+      teacher();
+      rpc('logoutTeacher', token).catch(() => {});
+    };
+    refresh();
+  } else {
+    const school = $('teacherSchool'), klass = $('teacherClass');
+    const choose = () => {
+      klass.innerHTML = CONTENT.truong_lop.find(s => s.truong === school.value).lop.map(lop => `<option>${E(lop)}</option>`).join('');
+    };
+    school.onchange = choose;
+    choose();
+    $('teacherLogin').onsubmit = async event => {
+      event.preventDefault();
+      if (!LIVE) return;
+      const button = event.target.querySelector('button');
+      button.disabled = true;
+      const input = { truong: school.value, lop: klass.value, pin: $('teacherPin').value };
+      $('teacherPin').value = '';
+      $('teacherError').textContent = '';
+      try {
+        const response = await rpc('loginTeacher', input);
+        if ($('page') !== page) return;
+        if (!response?.ok) throw Error(response?.error || 'Chưa đăng nhập được.');
+        teacherAuth = { token: response.token, expires: response.expires, truong: input.truong, lop: input.lop };
+        teacher();
+      } catch (error) { if ($('page') === page) $('teacherError').textContent = error.message; }
+      finally { if (button.isConnected) button.disabled = false; }
+    };
+    if (!LIVE) showStudents([{ ma: 'ZZ01-A', weeks: [1, 2] }, { ma: 'ZZ02-B', weeks: [1] }]);
+  }
+}
+
 function coordLogin() {
   $('page').innerHTML =
     `<div class="welcome panel"><h2>Chế độ điều phối</h2><p>${E(profile.truong)} · ${E(profile.lop)}</p><p class="muted">Nhập PIN được giáo viên cấp cho lớp. PIN được kiểm tra trên máy chủ.</p><form id="pinForm"><label class="field"><span>PIN điều phối</span><input id="pin" type="password" inputmode="numeric" minlength="6" maxlength="12" required autocomplete="off"></label><button class="primary">Mở chế độ điều phối</button><p id="pinErr" class="error" role="alert"></p></form></div>`;
@@ -763,8 +848,27 @@ function coordLogin() {
     }
   };
 }
+/** Hiệu ứng nhấn dùng chung; không can thiệp xử lý nút hay dữ liệu bài làm. */
+function showButtonRipple(event) {
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  const button = event.target.closest?.('button');
+  if (!button || button.disabled) return;
+  const rect = button.getBoundingClientRect();
+  const ripple = document.createElement('span');
+  ripple.className = 'button-ripple';
+  ripple.setAttribute('aria-hidden', 'true');
+  // Click từ bàn phím đặt vòng sáng ở giữa nút.
+  ripple.style.left = `${event.detail ? event.clientX - rect.left : rect.width / 2}px`;
+  ripple.style.top = `${event.detail ? event.clientY - rect.top : rect.height / 2}px`;
+  ripple.style.setProperty('--ripple-scale', Math.max(2, Math.hypot(rect.width, rect.height) / 6));
+  button.querySelectorAll('.button-ripple').forEach(node => node.remove());
+  button.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 650);
+}
+
 /** Đăng ký vòng đời sau khi giao diện được dựng. */
 function boot() {
+  document.addEventListener('click', showButtonRipple);
   window.addEventListener('online', () => {
     status();
     sync();

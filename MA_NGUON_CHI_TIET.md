@@ -1,4 +1,4 @@
-# Hướng dẫn đọc và sửa mã nguồn Xoay Chiều 2.1.0
+# Hướng dẫn đọc và sửa mã nguồn Xoay Chiều 2.2.0
 
 ## 1. Kiến trúc và nơi dữ liệu đi qua
 
@@ -133,7 +133,7 @@ Bản sao toàn bộ gồm profiles, queue, theme và hồ sơ đang chọn. `Ba
 | `recovery.cjs` | Khôi phục giữ gói, không tự gửi, chống ID lặp, phát hiện tab khác |
 | `ui.cjs` | DOM bốn tuần, bắt buộc chọn mức, trở lại/reload nháp, dòng trống, escape HTML, sửa bản 2 |
 
-Google services trong test được mô phỏng. jsdom chạy DOM trong Node, không dựng giao diện điện thoại, không phải trình duyệt thật. Chưa có kiểm tra trên tài khoản Google thật hay đo 70 thiết bị đồng thời. Dùng hướng dẫn triển khai để hoàn tất hai bước này trước buổi thực nghiệm.
+Google services trong test được mô phỏng. jsdom chạy DOM trong Node, không dựng giao diện điện thoại, không phải trình duyệt thật. Chưa có kiểm tra trên tài khoản Google thật hay đo 150 thiết bị đồng thời. Dùng hướng dẫn triển khai để hoàn tất hai bước này trước buổi thực nghiệm.
 
 ## 8. Những thay đổi thường gặp
 
@@ -152,3 +152,10 @@ Google services trong test được mô phỏng. jsdom chạy DOM trong Node, kh
 Không đổi `storageKey` chỉ để tăng số phiên bản: sẽ làm app không nhìn thấy nháp cũ. Không xóa queue để bỏ lỗi. Không chỉnh ID khi retry. Không thêm khóa hoặc PIN vào JSON công khai.
 
 Tài liệu nền tảng chính thức: [HTML Service communication](https://developers.google.com/apps-script/guides/html/communication), [Web Apps](https://developers.google.com/apps-script/guides/web), [Sheets values](https://developers.google.com/workspace/sheets/api/guides/values).
+
+
+## Chính sách và quyền trong 2.2.0
+
+`src/safety.js` là chính sách dùng chung: build nhúng vào HTML và `Schema.gs`. `sync()` thay gói hàng đợi bằng bản đã che trước khi lưu và gọi RPC; lịch sử cục bộ vẫn giữ nguyên bản gốc. Máy chủ kiểm tra cấu trúc, che nội dung và kiểm tra lại trước ghi Sheet. Ô có từ khóa thay toàn bộ bằng `[đã ẩn – an toàn]`; các mô tả giữ nguyên văn ở trên chỉ áp dụng cho ô không có từ khóa.
+
+`loginTeacher()` và `getClassProgress()` sử dụng `TEACHER_PINS`/phiên `teacher:` độc lập với `COORDINATOR_PINS`/phiên `coord:`. API tiến độ chỉ trả `ma`, `weeks` của đúng trường/lớp; không có API đọc bài nghiên cứu. Xem SCOPE.md và hướng dẫn triển khai về quyền Sheet.
