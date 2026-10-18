@@ -1,20 +1,12 @@
-# Backend issue drafts
+# Backend issues
 
-Trạng thái: **chưa đăng lên GitHub**. Git push hoạt động nhưng GitHub API trả `Forbidden`. Đề xuất mở `api.github.com` đã được lưu trong cấu hình môi trường; cần áp dụng và kiểm tra lại quyền API. Không đưa credential vào các tệp này.
+Đã đăng và xác minh 4 issue thật trên GitHub. Mỗi issue có bối cảnh, phạm vi/API, tiêu chí nghiệm thu và cách kiểm thử; các tệp bên cạnh giữ bản nội dung tham chiếu.
 
-| Tiêu đề issue theo convention | Nội dung |
-|---|---|
-| `feat(be): support approved class rosters in progress reports` | [Roster lớp](be-class-roster.md) |
-| `test(be): verify class-scoped teacher permissions on Apps Script` | [Quyền tiến độ](be-progress-permissions.md) |
-| `test(be): verify redaction and idempotent submissions on test Sheets` | [An toàn và chống trùng](be-submission-integrity.md) |
-| `test(be): measure Apps Script capacity for the planned cohort` | [Tải dự kiến](be-capacity.md) |
+| Issue | Tiêu đề | Nội dung tham chiếu |
+|---|---|---|
+| [#1](https://github.com/antonio46-fpt/xoay-chieu/issues/1) | `feat(be): support approved class rosters in progress reports` | [Nội dung](be-class-roster.md) |
+| [#2](https://github.com/antonio46-fpt/xoay-chieu/issues/2) | `test(be): verify class-scoped teacher permissions on Apps Script` | [Nội dung](be-progress-permissions.md) |
+| [#3](https://github.com/antonio46-fpt/xoay-chieu/issues/3) | `test(be): verify redaction and idempotent submissions on test Sheets` | [Nội dung](be-submission-integrity.md) |
+| [#4](https://github.com/antonio46-fpt/xoay-chieu/issues/4) | `test(be): measure Apps Script capacity for the planned cohort` | [Nội dung](be-capacity.md) |
 
-Sau khi API hoạt động, kiểm tra issue đã có để tránh trùng trước khi tạo. Ví dụ:
-
-```bash
-gh issue create --repo antonio46-fpt/xoay-chieu \
-  --title 'feat(be): support approved class rosters in progress reports' \
-  --body-file docs/issues/be-class-roster.md
-```
-
-Không đánh dấu các bản nháp là issue đã đăng khi chưa có URL/số issue từ GitHub. Không cần viết lại backend hiện có chỉ để đóng issue kiểm chứng; ghi rõ lỗi thật nếu kiểm thử tích hợp phát hiện vấn đề.
+Theo dõi tiến độ và thảo luận tại các issue trên GitHub. Mẫu trong `.github/ISSUE_TEMPLATE/` chỉ hỗ trợ tạo issue mới, không thay thế các issue đã đăng. Kiểm thử chỉ dùng dữ liệu giả và Sheet thử; không đưa credential hoặc dữ liệu học sinh thật vào issue.

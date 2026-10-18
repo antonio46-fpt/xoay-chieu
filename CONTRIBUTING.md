@@ -26,6 +26,6 @@ Mọi kiểm thử triển khai dùng Sheet thử và dữ liệu giả. Không 
 
 Chạy `python build.py`, `npm test`, sau đó `python package_source.py`. Tệp đầu ra phải được cập nhật cùng source. Kiểm tra 360px ở sáng/tối, bàn phím và giảm chuyển động. Bài lưu cục bộ/chờ gửi/đã được xác nhận phải hiển thị khác nhau. Không xóa nháp hay đổi ID chỉ để làm test đạt.
 
-## Issue đang chờ đăng
+## Theo dõi issue BE
 
-Xem [danh sách bản nháp BE](docs/issues/README.md). Chỉ đánh dấu đã đăng sau khi nhận được số và URL issue từ GitHub. Nếu API bị chặn, giữ nguyên bản nháp và báo đúng blocker.
+Xem [danh sách issue BE](docs/issues/README.md) để mở các issue đã đăng và nội dung tham chiếu. Chỉ đánh dấu đã đăng sau khi nhận được số và URL issue từ GitHub. Nếu API bị chặn, giữ nguyên bản nháp và báo đúng blocker.
