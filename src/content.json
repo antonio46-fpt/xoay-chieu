@@ -8,7 +8,7 @@
       ]
     },
     {
-      "truong": "THPT Dân tộc nội trú tỉnh",
+      "truong": "THPT Chi Lăng",
       "lop": [
         "10A6",
         "10A7"
@@ -168,7 +168,7 @@
     "Bắt đầu bằng “Mình nghĩ… vì…”",
     "Ai không muốn nói được làm người ghi chép"
   ],
-  "phien_ban": "2.2.0",
+  "phien_ban": "2.2.1",
   "so_tuan": 4,
   "ngay_bat_dau": "",
   "noi_dung_status": "Bản thử nghiệm — nhóm nghiên cứu cần duyệt nội dung trước khi dùng chính thức.",

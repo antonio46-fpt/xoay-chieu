@@ -27,8 +27,8 @@ Bộ `apps-script/` đã có bản build sẵn; không cần cài Python hoặc 
 {
  "THPT Chuyên Chu Văn An|10 Trung": "PIN_RIENG_1",
  "THPT Chuyên Chu Văn An|10D2": "PIN_RIENG_2",
- "THPT Dân tộc nội trú tỉnh|10A6": "PIN_RIENG_3",
- "THPT Dân tộc nội trú tỉnh|10A7": "PIN_RIENG_4"
+ "THPT Chi Lăng|10A6": "PIN_RIENG_3",
+ "THPT Chi Lăng|10A7": "PIN_RIENG_4"
 }
 ```
 

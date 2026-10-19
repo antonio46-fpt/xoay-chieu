@@ -43,7 +43,7 @@ const SCHEMA = {
       ]
     },
     {
-      "truong": "THPT Dân tộc nội trú tỉnh",
+      "truong": "THPT Chi Lăng",
       "lop": [
         "10A6",
         "10A7"

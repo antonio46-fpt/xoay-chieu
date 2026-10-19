@@ -1,6 +1,6 @@
 # Phạm vi Xoay Chiều 2.2.0
 
-Mục tiêu: giúp học sinh THPT rèn năng lực linh hoạt trong học tập qua trải nghiệm, phản tư và điều chỉnh. Bản đầu có 4 tuần, 2 trường và **4 lớp đã chốt**: THPT Chuyên Chu Văn An (10 Trung, 10D2), THPT Dân tộc nội trú tỉnh (10A6, 10A7). Khoảng 150 học sinh là quy mô dự kiến, chưa phải số người dùng đồng thời đã kiểm chứng.
+Mục tiêu: giúp học sinh THPT rèn năng lực linh hoạt trong học tập qua trải nghiệm, phản tư và điều chỉnh. Bản đầu có 4 tuần, 2 trường và **4 lớp đã chốt**: THPT Chuyên Chu Văn An (10 Trung, 10D2), THPT Chi Lăng (10A6, 10A7). Khoảng 150 học sinh là quy mô dự kiến, chưa phải số người dùng đồng thời đã kiểm chứng.
 
 | Yêu cầu bắt buộc | Thực hiện |
 |---|---|
