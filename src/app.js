@@ -221,7 +221,7 @@ function render() {
     ['settings', '⚙', 'Cài đặt']
   ];
   $('app').innerHTML =
-    `<div class="shell"><aside class="side"><a class="brand" id="brandHome" href="#home" aria-label="Xoay Chiều — về trang chính">${logo()}<div><strong>Xoay Chiều</strong><small>Mỗi góc nhìn, một điều mới</small></div></a><nav class="nav" aria-label="Chính">${names.map(([k,ic,n])=>`<button data-tab="${k}" class="${tab===k?'on':''}" ${tab===k?'aria-current="page"':''}><span>${ic}</span>${n}</button>`).join('')}</nav><div class="sidefoot"><p>THỬ · NGHĨ · NỐI · CHIA SẺ</p><p>Một hành trình nhỏ.<br>Nhiều cách nhìn mới.</p><div class="profile">${profile?`<strong>${E(profile.ma)}</strong><br>${E(profile.lop)}<br><small>${E(profile.truong)}</small>`:'Chưa chọn mã học sinh'}</div></div></aside><main class="main"><header class="top"><span class="caption">HÀNH TRÌNH HỌC TẬP / ${CONTENT.so_tuan} TUẦN</span><div class="row"><span id="net" class="status" aria-live="polite"></span><button class="small" id="theme" aria-label="Đổi giao diện sáng tối">${db.theme==='dark'?'☀':'☾'}</button></div></header><div id="conflict" class="notice hidden" role="alert">Dữ liệu đã đổi ở một tab khác. Tải bản sao của tab này trước khi tải lại trang. <button id="conflictBackup">Tải bản sao tab này</button><button id="conflictReload">Tải lại trang</button></div>${previewOnly?'<div class="notice preview-notice" role="status">Đang xem thử không lưu. Bài chỉ giữ trong phiên này, mất khi tải lại hoặc đóng trang; không gửi Google Sheets. Muốn lưu lâu dài, hãy tải HTML xuống và mở bằng trình duyệt cho phép lưu dữ liệu.</div>':''}<div class="page" id="page"></div></main></div>`;
+    `<div class="shell"><aside class="side"><a class="brand" id="brandHome" href="#home" aria-label="Xoay Chiều — về trang chính">${logo()}<div><strong>Xoay Chiều</strong><small>Mỗi góc nhìn, một điều mới</small></div></a><nav class="nav" aria-label="Chính">${names.map(([k,ic,n])=>`<button data-tab="${k}" class="${tab===k?'on':''}" ${tab===k?'aria-current="page"':''}><span>${ic}</span>${n}</button>`).join('')}</nav><div class="sidefoot"><p>THỬ · NGHĨ · NỐI · CHIA SẺ</p><p>Một hành trình nhỏ.<br>Nhiều cách nhìn mới.</p><div class="profile">${profile?`<strong>${E(profile.ma)}</strong><br>${E(profile.lop)}<br><small>${E(profile.truong)}</small>`:'Chưa chọn mã học sinh'}</div></div></aside><main class="main"><header class="top"><span class="caption">HÀNH TRÌNH HỌC TẬP / ${CONTENT.so_tuan} TUẦN</span><div class="row"><span id="net" class="status" aria-live="polite"></span><button class="small" id="theme" aria-label="Đổi giao diện sáng tối">${db.theme==='dark'?'☀':'☾'}</button></div></header><section id="sessionBar" class="session-bar ${profile||teacherAuth?'':'hidden'}" aria-label="Phiên đang sử dụng"><span id="sessionIdentity"></span><button id="logout" class="small" type="button">Đăng xuất <span aria-hidden="true">↗</span></button></section><div id="conflict" class="notice hidden" role="alert">Dữ liệu đã đổi ở một tab khác. Tải bản sao của tab này trước khi tải lại trang. <button id="conflictBackup">Tải bản sao tab này</button><button id="conflictReload">Tải lại trang</button></div>${previewOnly?'<div class="notice preview-notice" role="status">Đang xem thử không lưu. Bài chỉ giữ trong phiên này, mất khi tải lại hoặc đóng trang; không gửi Google Sheets. Muốn lưu lâu dài, hãy tải HTML xuống và mở bằng trình duyệt cho phép lưu dữ liệu.</div>':''}<div class="page" id="page"></div></main></div>`;
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => go(b.dataset.tab));
   $('brandHome').onclick = event => {
     event.preventDefault();
@@ -232,6 +232,8 @@ function render() {
     persist();
     render();
   };
+  $('logout').onclick = logout;
+  updateSessionControls();
   status();
   $('conflictBackup').onclick = () => download('XoayChieu-tab-backup.json', JSON.stringify(db, null,
     2));
@@ -247,6 +249,50 @@ function render() {
     teacher,
     work
   } [tab] || home)();
+}
+
+/** Kết thúc phiên hiện tại, giữ bài và hàng đợi; không xóa dữ liệu hồ sơ. */
+function logout() {
+  collect();
+  clearTimeout(saveTimer);
+  if (profile) {
+    const previous = db.current;
+    delete db.current;
+    if (!persist()) {
+      db.current = previous;
+      toast('Chưa đăng xuất vì không lưu được nháp. Hãy giữ trang mở và tải bản sao trong Cài đặt.');
+      return false;
+    }
+  }
+  const teacherToken = teacherAuth?.token, coordinatorToken = coordToken;
+  profile = null;
+  teacherAuth = null;
+  teacherSelection = null;
+  coordToken = '';
+  coordUntil = 0;
+  stageClock = null;
+  activeWeek = 1;
+  tab = 'home';
+  const dialog = $('letterDialog');
+  if (dialog?.open) dialog.close();
+  render();
+  window.scrollTo({ top: 0 });
+  toast(previewOnly ? 'Đã đăng xuất. Bài xem thử chỉ còn trong phiên này; đóng hoặc tải lại trang sẽ mất.' :
+    'Đã đăng xuất. Nháp, bài cũ và bài chờ gửi vẫn được giữ trên thiết bị.');
+  if (LIVE) {
+    // Trả giao diện về nhập mã ngay; yêu cầu thu hồi phiên khi mạng cho phép.
+    if (teacherToken) rpc('logoutTeacher', teacherToken).catch(() => {});
+    if (coordinatorToken) rpc('logoutCoordinator', coordinatorToken).catch(() => {});
+  }
+  return true;
+}
+
+function updateSessionControls() {
+  const bar = $('sessionBar'), identity = $('sessionIdentity');
+  if (!bar || !identity) return;
+  bar.classList.toggle('hidden', !profile && !teacherAuth);
+  identity.textContent = tab === 'teacher' && teacherAuth ?
+    `Giáo viên · ${teacherAuth.lop}` : profile ? `Mã ${profile.ma} · ${profile.lop}` : teacherAuth ? `Giáo viên · ${teacherAuth.lop}` : '';
 }
 
 function go(t) {
@@ -601,15 +647,7 @@ function download(name, text) {
 function settings() {
   $('page').innerHTML =
     `<h1>Cài đặt & dữ liệu</h1><section class="panel"><h3>${profile?'Mã đang dùng: '+E(profile.ma):'Chưa chọn mã'}</h3><p class="muted">Đổi mã không xóa bài của mã cũ trên máy. Trên máy dùng chung, người khác có quyền truy cập trình duyệt có thể xem dữ liệu đã lưu.</p><button id="change">${profile?'Đổi mã / trường / lớp':'Nhập mã'}</button><div class="divider"></div><h3>${LIVE?'Kết nối Google Sheets':previewOnly?'Bản xem thử tạm thời':'Bản xem thử trên máy'}</h3><p>${LIVE?'Chỉ xóa bài khỏi hàng đợi sau khi máy chủ xác nhận đúng mã bản ghi.':'Bản này không gửi dữ liệu nghiên cứu. Hãy triển khai bộ Apps Script đi kèm để sử dụng chính thức.'}</p><p>${db.queue.length} bản ghi đang chờ.</p><button id="retry">Thử gửi lại</button>${db.queue.filter(q=>q.error).map(q=>`<p class="error">${E(q.record.loai)}: ${E(q.error)}</p>`).join('')}<div class="divider"></div><h3>Bản sao trên máy</h3><p class="caption">Tải bản sao trước khi đổi máy hoặc xóa dữ liệu trình duyệt. Bản sao toàn bộ có dữ liệu của mọi mã từng dùng trên máy này, hãy giữ riêng.</p><button id="backup">Tải bản sao toàn bộ</button><label class="field"><span>Khôi phục bản sao toàn bộ trên máy mới</span><input type="file" id="import" accept=".json,application/json"></label><p class="caption">Khôi phục chỉ áp dụng trên trình duyệt chưa có dữ liệu; bài chưa gửi được giữ ở trạng thái tạm dừng. Bấm Thử gửi lại để tiếp tục.</p><div class="divider"></div><details><summary>Thông tin phiên bản</summary><p>Ứng dụng ${E(APP_CONFIG.version)} · Nội dung ${E(CONTENT.phien_ban)} · ${E(CONTENT.noi_dung_status)}</p><p>Thời gian hoạt động chỉ tính khi màn hình làm bài đang mở và hiển thị; không phải thước đo mức độ tập trung. Học sinh tự giữ mã; mã không phải mật khẩu.</p></details></section>`;
-  $('change').onclick = () => {
-    flushDraft();
-    profile = null;
-    delete db.current;
-    coordToken = '';
-    persist();
-    tab = 'home';
-    render();
-  };
+  $('change').onclick = () => { if (profile || teacherAuth) logout(); else go('home'); };
   $('retry').onclick = () => LIVE ? sync(true) : toast('Bản xem thử chưa kết nối Google Sheets.');
   $('backup').onclick = () => download('XoayChieu-backup.json', loadBroken ? (localStorage.getItem(
     KEY) || '{}') : JSON.stringify(db, null, 2));
@@ -814,6 +852,7 @@ function teacher() {
     if (teacherAuth) teacherSelection = { truong: teacherAuth.truong, lop: teacherAuth.lop };
     teacherAuth = null;
   }
+  updateSessionControls();
   page.innerHTML = `<p class="eyebrow">DÀNH CHO GIÁO VIÊN CHỦ NHIỆM</p><h1>Tiến độ lớp</h1><p class="muted">Chỉ xem mã và tuần đã được máy chủ xác nhận. Không đọc câu trả lời, sản phẩm hay mức tự đánh giá.</p>${!LIVE ? '<div class="notice">Bản xem thử chưa kết nối Sheet. Bảng dưới đây chỉ dùng dữ liệu giả để minh họa.</div>' : ''}${active ? `<section class="panel"><div class="row between"><h2>${E(teacherAuth.lop)}</h2><button id="teacherLogout">Đăng xuất</button></div><p>${E(teacherAuth.truong)}</p><button id="teacherRefresh">Làm mới tiến độ</button><div id="teacherResult" aria-live="polite"></div></section>` : `<form id="teacherLogin" class="panel"><label class="field"><span>Trường phụ trách</span><select id="teacherSchool">${CONTENT.truong_lop.map(s => `<option>${E(s.truong)}</option>`).join('')}</select></label><label class="field"><span>Lớp phụ trách</span><select id="teacherClass"></select></label><label class="field"><span>PIN giáo viên</span><input id="teacherPin" type="password" inputmode="numeric" pattern="[0-9]{6,12}" required autocomplete="off" ${LIVE ? '' : 'disabled'}></label><button class="primary" ${LIVE ? '' : 'disabled'}>Xem tiến độ lớp</button><p id="teacherError" class="error" role="alert"></p></form>${!LIVE ? '<section class="panel" style="margin-top:20px"><h2>Minh họa bằng dữ liệu giả</h2><div id="teacherResult"></div></section>' : ''}`}<p class="caption">Bảng chỉ liệt kê mã đã có ít nhất một bài được xác nhận. Chưa có danh sách mã được cấp để kết luận các mã chưa xuất hiện là chưa làm bài. Giáo viên không được chia sẻ PIN hoặc dùng chung thiết bị đang mở Sổ của mình với học sinh.</p>`;
   function showStudents(students) {
     const result = $('teacherResult');
