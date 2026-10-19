@@ -38,6 +38,8 @@ Không để PIN trong content.json, không gửi vào nhóm học sinh chung. L
 
 Tạo Script Property `TEACHER_PINS` cùng cấu trúc `Tên trường|Tên lớp` như `COORDINATOR_PINS`, nhưng dùng PIN riêng 6–12 chữ số. Không dùng chung PIN với học sinh điều phối. Không đặt PIN trong JSON nội dung, HTML hoặc Git. Trong app, giáo viên vào **Tiến độ lớp**, chọn đúng trường/lớp và nhập PIN. Phiên chỉ nằm trong bộ nhớ trình duyệt, tối đa 6 giờ theo cache máy chủ; nút Đăng xuất thu hồi phiên trên máy chủ khi có mạng. Đóng trang không tự thu hồi token còn hạn trên máy chủ.
 
+Danh sách mã theo lớp (tùy chọn): tạo Script Property `CLASS_ROSTERS`, ví dụ `{"Tên trường|Tên lớp":["AB01-A","AB02-A"]}`. Chỉ nhập mã đã được nhóm nghiên cứu duyệt, không có họ tên, số điện thoại hay ảnh; để ngoài Git và HTML. Lớp có roster hiển thị đủ mã, mã chưa nộp có `weeks:[]`; mã đã có bài nhưng chưa nằm trong roster vẫn hiện để không ẩn dữ liệu đã ghi. Lớp chưa có roster giữ chế độ chỉ liệt kê mã đã có bài. Cùng một mã được phép ở lớp khác; mã trùng trong cùng lớp, mã sai định dạng hoặc JSON sai cấu trúc làm `getClassProgress` trả `SETUP_REQUIRED` thay vì tự suy đoán. Cập nhật roster bằng cách sửa Script Property, không cần phát hành lại HTML.
+
 Giáo viên chỉ nhận `ma` và `weeks` của đúng lớp. Không trả câu trả lời, sản phẩm, thời lượng hay mức tự đánh giá. Bảng chỉ có mã đã nộp ít nhất một bài; không phải danh sách toàn bộ học sinh được cấp mã. Không cấp quyền Sheet nguồn cho giáo viên chủ nhiệm nếu họ chỉ được xem tiến độ: quyền chia sẻ Google Sheet cho phép đọc các trang trong tệp, không phải cơ chế hạn chế từng cột. Dùng thiết bị/hồ sơ trình duyệt riêng khi xem tiến độ; Sổ của mình là dữ liệu cục bộ, mã học sinh không phải mật khẩu.
 
 Chỉ nhóm nghiên cứu và giáo viên hướng dẫn đã được chủ dự án cấp quyền mới xem/xuất dữ liệu ẩn danh từ Sheet. Trong phát triển chỉ dùng Sheet thử và dữ liệu giả. Sau khi chạy chính thức, người hỗ trợ lập trình không truy cập Sheet thật. Không đưa quyền truy cập dữ liệu thật hoặc credential vào bản bàn giao.
@@ -79,6 +81,19 @@ Tài liệu Google: https://developers.google.com/apps-script/guides/html/commun
 3. Dán lại `Index.html` và `Schema.gs`; nếu sửa máy chủ thì cập nhật `Code.gs`.
 4. Deploy → Manage deployments → Edit → New version → Deploy để giữ URL cũ. Chỉ Save code chưa cập nhật bản `/exec`.
 5. Không đổi cấu trúc câu hỏi/phiên bản giữa lúc học sinh đang làm. Thử trước trên bản sao.
+
+## E2. Tự động deploy: thử trước, thật sau
+
+Workflow `.github/workflows/deploy-apps-script.yml` chạy khi `main` đổi `apps-script/`: (1) `verify` build lại và báo lỗi nếu bản commit không khớp `src/`, rồi `npm test`; (2) `deploy-test` đẩy mã và cập nhật deployment của dự án THỬ; (3) `deploy-prod` làm tương tự cho dự án THẬT, chỉ chạy sau khi người duyệt đồng ý. Deployment được cập nhật theo ID nên URL web app không đổi. Script Properties (PIN, `CLASS_ROSTERS`, `SPREADSHEET_ID`) không bị ảnh hưởng.
+
+Thiết lập một lần:
+1. Bật Apps Script API tại https://script.google.com/home/usersettings (tài khoản dùng để đẩy mã).
+2. Mỗi dự án (thử, thật) tạo sẵn một Web App deployment bằng tay, cấp quyền lần đầu, rồi ghi lại Deployment ID.
+3. Trên máy: `npx @google/clasp login`, lấy nội dung `~/.clasprc.json`.
+4. GitHub → Settings → Environments, tạo `apps-script-test` và `apps-script-prod`. Mỗi environment có ba secret: `CLASPRC_JSON`, `SCRIPT_ID` (Project Settings), `DEPLOYMENT_ID`.
+5. Ở `apps-script-prod` bật **Required reviewers**.
+
+`CLASPRC_JSON` cho quyền ghi vào tài khoản Google; dùng tài khoản riêng của dự án, không đưa vào Git hay log. Không sửa mã trên web editor vì lần deploy sau sẽ ghi đè. Đổi `oauthScopes` trong `appsscript.json` cần cấp quyền lại bằng tay. Kiểm thử trên Google thật (issue #2–#4) vẫn làm thủ công trên dự án thử trước khi duyệt bản thật.
 
 ## F. Sao lưu và xử lý lỗi
 

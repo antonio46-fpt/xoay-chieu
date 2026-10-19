@@ -1,0 +1,63 @@
+name: Deploy Apps Script
+
+# main thay đổi apps-script/ → kiểm tra → deploy bản THỬ → (người duyệt) → deploy bản THẬT.
+# Mỗi environment có secret riêng: CLASPRC_JSON, SCRIPT_ID, DEPLOYMENT_ID.
+# Deployment được cập nhật theo ID nên URL web app không đổi.
+on:
+  push:
+    branches: [main]
+    paths: ['apps-script/**']
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-apps-script
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - name: Bản build đã commit phải khớp src/
+        run: |
+          python build.py
+          git diff --exit-code -- apps-script dist || { echo "Hãy chạy python build.py và commit kết quả."; exit 1; }
+      - run: npm test
+
+  deploy-test:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: apps-script-test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/clasp-deploy
+        with:
+          clasprc: ${{ secrets.CLASPRC_JSON }}
+          script-id: ${{ secrets.SCRIPT_ID }}
+          deployment-id: ${{ secrets.DEPLOYMENT_ID }}
+          description: ${{ github.sha }}
+
+  deploy-prod:
+    needs: deploy-test
+    runs-on: ubuntu-latest
+    # Bật Required reviewers cho environment này để cần người bấm duyệt.
+    environment: apps-script-prod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/clasp-deploy
+        with:
+          clasprc: ${{ secrets.CLASPRC_JSON }}
+          script-id: ${{ secrets.SCRIPT_ID }}
+          deployment-id: ${{ secrets.DEPLOYMENT_ID }}
+          description: ${{ github.sha }}

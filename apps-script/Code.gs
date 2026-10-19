@@ -303,12 +303,37 @@ function getClassProgress(input) {
       if (!byCode.has(code)) byCode.set(code, new Set());
       byCode.get(code).add(week);
     });
-    return { ok: true, students: Array.from(byCode, ([ma, weeks]) => ({ ma, weeks: [...weeks].sort() }))
+    // Roster chỉ nằm ở Script Properties; chỉ mã của đúng lớp được thêm vào kết quả.
+    const roster = rosterFor_(input.truong, input.lop);
+    if (roster) roster.forEach(code => { if (!byCode.has(code)) byCode.set(code, new Set()); });
+    return { ok: true, roster: !!roster, students: Array.from(byCode, ([ma, weeks]) => ({ ma, weeks: [...weeks].sort() }))
       .sort((a, b) => a.ma.localeCompare(b.ma)) };
   } catch (error) {
     return { ok: false, code: error.code || 'SERVER_ERROR',
       error: error.code ? error.message : 'Chưa tải được tiến độ lớp. Vui lòng thử lại.' };
   }
+}
+
+/**
+ * Roster do chủ dự án duyệt, lưu ở Script Property CLASS_ROSTERS:
+ * {"<trường>|<lớp>": ["AB01-A", ...]}. Trả null khi lớp chưa cấu hình (chỉ liệt kê mã đã có bài).
+ * Cấu hình sai cấu trúc hoặc có mã trùng trong cùng lớp bị từ chối, không đoán thay.
+ */
+function rosterFor_(truong, lop) {
+  const raw = PropertiesService.getScriptProperties().getProperty('CLASS_ROSTERS');
+  if (!raw) return null;
+  let rosters;
+  try { rosters = JSON.parse(raw); } catch { rosters = null; }
+  if (!rosters || typeof rosters !== 'object' || Array.isArray(rosters)) {
+    fail_('Danh sách lớp chưa đúng cấu trúc.', 'SETUP_REQUIRED');
+  }
+  const codes = rosters[truong + '|' + lop];
+  if (codes === undefined) return null;
+  if (!Array.isArray(codes) || codes.some(code => !/^[A-Z]{2}[0-9]{2}-[A-Z]$/.test(String(code))) ||
+      new Set(codes).size !== codes.length) {
+    fail_('Danh sách lớp sai cấu trúc hoặc có mã trùng.', 'SETUP_REQUIRED');
+  }
+  return codes;
 }
 
 function logoutTeacher(token) {
