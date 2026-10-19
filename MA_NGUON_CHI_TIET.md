@@ -159,3 +159,10 @@ Tài liệu nền tảng chính thức: [HTML Service communication](https://dev
 `src/safety.js` là chính sách dùng chung: build nhúng vào HTML và `Schema.gs`. `sync()` thay gói hàng đợi bằng bản đã che trước khi lưu và gọi RPC; lịch sử cục bộ vẫn giữ nguyên bản gốc. Máy chủ kiểm tra cấu trúc, che nội dung và kiểm tra lại trước ghi Sheet. Ô có từ khóa thay toàn bộ bằng `[đã ẩn – an toàn]`; các mô tả giữ nguyên văn ở trên chỉ áp dụng cho ô không có từ khóa.
 
 `loginTeacher()` và `getClassProgress()` sử dụng `TEACHER_PINS`/phiên `teacher:` độc lập với `COORDINATOR_PINS`/phiên `coord:`. API tiến độ chỉ trả `ma`, `weeks` của đúng trường/lớp; không có API đọc bài nghiên cứu. Xem SCOPE.md và hướng dẫn triển khai về quyền Sheet.
+
+
+## Thay đổi 2.3.0
+
+`submitRecord` giữ script lock, dùng `Sheets.Spreadsheets.Values.get` với `UNFORMATTED_VALUE` cho tiêu đề/ID/dòng có sẵn và dùng `Values.append` RAW cho ghi. So sánh không dùng `String()` hay trim: giữ kiểu số/boolean, chuẩn hóa ô trống cuối hàng, giữ nguyên chuỗi. Không còn dùng `createTextFinder` trong đường submit.
+
+`build.py` chặn field và cột tổng hợp vượt mức nội bộ 13.000 UTF-16 code units; `Schema.gs` sinh cùng mức để server kiểm tra. `showCoordinatorReauth()` chèn form PIN mà không dựng lại phiếu điều phối. RATE_LIMITED có `retryAfterSeconds`; thời gian khóa không bị kéo dài khi người dùng nhấn lại. Roster không được triển khai trước quyết định nghiên cứu.

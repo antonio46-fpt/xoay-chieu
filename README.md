@@ -1,4 +1,4 @@
-# Xoay Chiều — mã nguồn đầy đủ 2.2.0
+# Xoay Chiều — mã nguồn đầy đủ 2.3.0
 
 Công cụ hoạt động và thu dữ liệu cho đề tài “Phát triển năng lực linh hoạt trong học tập của học sinh THPT tại Lạng Sơn”. Phạm vi bản bắt buộc: 2 trường, 4 lớp, khoảng 150 học sinh dự kiến, 4 tuần can thiệp. Lịch triển khai và kết thúc chưa chốt. Không chấm đúng/sai, không xếp hạng, không tự suy ra điểm năng lực.
 
@@ -92,3 +92,8 @@ Lời nhắn hỗ trợ dựa trên từ khóa là lời nhắc tìm người h�
 
 
 Nếu trình xem HTML chặn bộ nhớ, nút Bắt đầu hiển thị lỗi ngay trong biểu mẫu. Bản demo có lựa chọn **Xem thử không lưu** sau khi phát hiện lỗi lưu: cần chọn chủ động, bài chỉ ở phiên hiện tại, đóng/tải lại sẽ mất và không gửi Sheet. Bản Apps Script thật không cho bỏ qua yêu cầu lưu. Tải HTML về và mở trong Chrome/Edge cho phép lưu dữ liệu để thử lưu nháp lâu dài.
+
+
+## Rà Backend theo góp ý chốt
+
+Bản 2.3.0 chuyển đường đọc/ghi chống trùng sang cùng Sheets API, kiểm tra kích thước cả cột dẫn xuất và cho nhập lại PIN điều phối ngay trên phiếu khi cache mất. Xem [đối chiếu góp ý](docs/BACKEND_REVIEW.md), [issue thật](docs/issues/README.md), [checklist cấu hình](docs/DEPLOYMENT_CHECKLIST.md), [kế hoạch tải](docs/LOAD_TEST_PLAN.md) và [hướng dẫn học sinh](docs/HUONG_DAN_HOC_SINH.md). Không coi kiểm thử mô phỏng là xác nhận đạt tải hoặc đã triển khai Google.

@@ -1,4 +1,4 @@
-# Triển khai Xoay Chiều 2.2.0 vào Google Sheets
+# Triển khai Xoay Chiều 2.3.0 vào Google Sheets
 
 Bộ `apps-script/` đã có bản build sẵn; không cần cài Python hoặc Node chỉ để dán và triển khai. Bản Sites/HTML tĩnh dành cho xem thử, không phải link thu dữ liệu Google Sheets. Không sử dụng dữ liệu thật trong bước thử.
 
@@ -90,3 +90,10 @@ Tài liệu Google: https://developers.google.com/apps-script/guides/html/commun
 - Không xóa hàng đợi để làm mất thông báo lỗi. Với phiếu điều phối hết phiên, vào Điều phối nhập lại PIN.
 - Lỗi ID xung đột hoặc dữ liệu không hợp lệ làm gói tạm dừng. Xuất bản sao, đối chiếu Sheet và phiên bản nội dung trước khi gửi lại; không đổi ID để né lỗi vì có thể tạo dữ liệu lặp.
 - Ngày bắt đầu/chạy thử/kết thúc chờ chủ dự án xác nhận. App không tự khóa theo ngày; không triển khai tuần 5–8.
+
+
+## Cập nhật bản 2.3.0
+
+Cập nhật đồng bộ `Code.gs`, `Schema.gs`, `Index.html`, giữ nguyên manifest có Sheets API và triển khai New version. Cấu trúc cột không đổi, không chạy lệnh xóa/ghi đè dữ liệu cũ. Nếu có gói 2.1 đang chờ hoặc đã ghi mà mất ACK, làm theo quyết định của nhóm nghiên cứu tại issue vận hành trước khi nâng cấp dữ liệu; không đổi ID để né xung đột.
+
+PIN sai 8 lần sẽ trả thời gian chờ còn lại, không có PIN dự phòng tự tạo. Cache có thể rớt trước 6 giờ: màn hình điều phối cho nhập lại PIN và giữ phiếu/đồng hồ. Dùng [checklist cấu hình](docs/DEPLOYMENT_CHECKLIST.md) để xác nhận quyền Sheet, deployment và người chỉnh Script Properties; các thiết lập đó chưa được xác minh trong môi trường lập trình này.

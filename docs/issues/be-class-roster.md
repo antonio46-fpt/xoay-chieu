@@ -18,3 +18,15 @@ Bổ sung nguồn danh sách mã được chủ dự án duyệt, gắn với đ
 ## Kiểm thử
 
 Fixture hai trường, bốn lớp; có mã chưa nộp, nộp nhiều lượt, trùng mã khác lớp, roster sai cấu trúc. Test cả quyền giáo viên, PIN sai và đổi lớp. Kiểm thử tích hợp trên Sheet thử; không truy cập Sheet thật.
+
+## Trạng thái: tạm dừng triển khai, chờ quyết định nghiên cứu
+
+- Ưu tiên **P3**. Không lập trình roster ở đợt sửa này; giữ API chỉ liệt kê mã đã có bài xác nhận.
+- Người phụ trách, hạn: chờ phân công và quyết định bằng văn bản của nhóm nghiên cứu.
+- [ ] Có quyết định cho phép/không cho phép GVCN xem mã chưa nộp, khớp phiếu đồng thuận và nguyên tắc tham gia tự nguyện.
+- [ ] Xác định ai giữ bảng mã ↔ họ tên và nơi lưu ngoài hệ thống.
+- [ ] Bảng mã ↔ họ tên không nằm trong Sheet nghiên cứu, Script Properties, HTML, Git hoặc issue.
+- [ ] Nếu GVCN giữ bảng đối chiếu, đánh giá rõ việc xem tiến độ theo mã có thể trở thành xem theo tên và gây áp lực.
+- [ ] Chỉ sau khi được duyệt, chọn nguồn roster chỉ gồm mã và quy trình chủ dự án cấp mã sẵn để tránh trùng. Không tự đưa danh sách học sinh vào repo.
+
+Nguồn roster chỉ gồm mã có thể được thiết kế sau quyết định; bảng đối chiếu có họ tên luôn nằm ngoài hệ thống. Đây là hai loại dữ liệu khác nhau.

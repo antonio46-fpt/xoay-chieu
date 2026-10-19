@@ -1,4 +1,4 @@
-# Phạm vi Xoay Chiều 2.2.0
+# Phạm vi Xoay Chiều 2.3.0
 
 Mục tiêu: giúp học sinh THPT rèn năng lực linh hoạt trong học tập qua trải nghiệm, phản tư và điều chỉnh. Bản đầu có 4 tuần, 2 trường và **4 lớp đã chốt**: THPT Chuyên Chu Văn An (10 Trung, 10D2), THPT Chi Lăng (10A6, 10A7). Khoảng 150 học sinh là quy mô dự kiến, chưa phải số người dùng đồng thời đã kiểm chứng.
 
@@ -40,3 +40,8 @@ Mục tiêu: giúp học sinh THPT rèn năng lực linh hoạt trong học tậ
 `tests/scope.cjs` kiểm tra che nội dung cả bốn tuần và cột dẫn xuất, giữ nguyên bản cục bộ, chống trùng, phân tách quyền điều phối/giáo viên, ngăn xem sang lớp khác, thu hồi phiên, giới hạn thử PIN và bản demo chỉ dùng dữ liệu giả. Các test sẵn có kiểm tra quy trình bốn tuần, hàng đợi, khôi phục và DOM.
 
 Đã kiểm tra phiên bản này bằng Chromium thật ở viewport 360×800: đăng nhập học sinh, bốn tuần, lời nhắn an toàn, sáng/tối, điều phối, cài đặt và demo tiến độ không tràn chiều ngang. Đăng nhập PIN sai/đúng, hết phiên và đăng xuất giáo viên đã được kiểm tra trong trình duyệt với RPC giả. Không có truy cập Sheet thật, đo tải 150 người đồng thời hoặc thử thiết bị điện thoại vật lý.
+
+
+## Chốt kỹ thuật theo góp ý Backend
+
+Theo dõi thứ tự #3 → #2 → #4 → #1 và hai issue bổ sung tại [danh sách issue](docs/issues/README.md). Roster chưa lập trình vì cần quyết định tự nguyện/đồng thuận. Bảng mã–họ tên phải ở ngoài hệ thống. Người phụ trách, hạn và lịch chưa được tự gán. Các sửa mã 2.3.0 đã có test cục bộ; deployment Google, tải thật và điện thoại vật lý vẫn cần thực hiện theo checklist.

@@ -21,3 +21,20 @@
 ## Kiểm thử
 
 Tạo Sheet/deployment thử, cấu hình PIN thử bằng Script Properties ngoài Git, dùng trình duyệt riêng cho từng vai trò. Test luồng đăng nhập/làm mới/hết phiên/đăng xuất. Không kiểm thử với Sheet chính thức hoặc dữ liệu học sinh thật.
+
+## Ưu tiên, phụ thuộc và cấu hình
+
+- Ưu tiên **P1**, sau #3 có deployment thử đạt các kiểm tra nền tảng.
+- Người phụ trách và hạn dự kiến: chờ chủ dự án phân công/chốt lịch.
+- Quyền Drive, Execute as, Who has access, Script Properties và người được sửa thuộc [checklist cấu hình](../DEPLOYMENT_CHECKLIST.md), không được coi là hoàn tất chỉ bằng sửa mã.
+
+## Bổ sung nghiệm thu
+
+- [ ] Sai PIN 8 lần từ máy học sinh: lần thứ 8 trả RATE_LIMITED và retryAfterSeconds; thử trong thời gian khóa trả số giây còn lại, không kéo dài hạn khóa vì nhấn lại.
+- [ ] Hết thời gian chờ, PIN hợp lệ đăng nhập được; mô tả rõ phương án vận hành cho GVCN.
+- [ ] Xóa token cache giữa buổi: điều phối được nhập lại PIN ngay trên màn hình; các phiếu, hàng đợi và đồng hồ giữ nguyên. Giáo viên trở lại đúng trường/lớp đã chọn khi yêu cầu PIN lại.
+- [ ] Có ảnh chụp hoặc mô tả cấu hình deployment/Sheet thử đã loại thông tin nhận diện và credential.
+
+## Phương án hiện tại
+
+Giữ giới hạn 8 lần/10 phút, chọn cách **hiển thị thời gian chờ còn lại** và chờ hết khóa; không tự thêm PIN dự phòng. Bộ đếm vẫn theo lớp nên chưa loại bỏ được nguy cơ bị cố tình khóa lớp. Cần nhóm nghiên cứu chấp thuận phương án hoặc yêu cầu quy trình dự phòng trước triển khai thật. Cache token/bộ đếm có thể bị Google loại sớm: không bảo đảm phiên đủ 6 giờ hay giữ bộ đếm đủ 10 phút. Test cục bộ đã kiểm tra hết phiên và khôi phục phiếu, tích hợp Google vẫn để mở.

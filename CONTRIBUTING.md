@@ -14,7 +14,7 @@ Dùng Conventional Commits: `<type>(<scope>): <mô tả ngắn>`.
 - Scope: `fe`, `be`, `build`, `repo`.
 - Ví dụ: `fix(fe): distinguish pending submissions from confirmed records`.
 - Body nêu lý do, hành vi thay đổi và cách kiểm tra khi cần.
-- Chỉ ghi `Closes #123` khi đã có issue thật và commit giải quyết đủ tiêu chí. Tệp trong `docs/issues/` là bản nháp, không phải issue đã đăng.
+- Chỉ ghi `Closes #123` khi đã có issue thật và commit giải quyết đủ tiêu chí. Trạng thái đăng issue và URL thật được ghi tại `docs/issues/README.md`; không suy ra đã đăng chỉ từ việc có tệp Markdown.
 
 ## Issue BE
 
