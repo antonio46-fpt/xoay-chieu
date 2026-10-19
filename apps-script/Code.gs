@@ -1,5 +1,5 @@
 /**
- * XOAY CHIỀU — MÁY CHỦ GOOGLE APPS SCRIPT, phiên bản 2.3.0.
+ * XOAY CHIỀU — MÁY CHỦ GOOGLE APPS SCRIPT, phiên bản 2.4.0.
  *
  * Các điểm vào từ trình duyệt:
  *   doGet()                  → phục vụ giao diện Index.html.
@@ -9,7 +9,7 @@
  * Các hàm kết thúc bằng '_' là hàm nội bộ, không gọi được qua google.script.run.
  * API tiến độ chỉ trả mã và tuần, xác thực bằng phiên giáo viên của đúng lớp. Không có API đọc bài riêng tư.
  */
-const SERVER_VERSION = '2.3.0';
+const SERVER_VERSION = '2.4.0';
 
 const HEADERS = {
   chu_trinh: [
@@ -317,8 +317,16 @@ function getClassProgress(input) {
 }
 
 function logoutTeacher(token) {
+  return logoutRole_(token, 'teacher');
+}
+
+function logoutCoordinator(token) {
+  return logoutRole_(token, 'coord');
+}
+
+function logoutRole_(token, role) {
   if (typeof token === 'string' && token.length >= 20 && token.length <= 160) {
-    CacheService.getScriptCache().remove('teacher:' + token);
+    CacheService.getScriptCache().remove(role + ':' + token);
   }
   return { ok: true };
 }
