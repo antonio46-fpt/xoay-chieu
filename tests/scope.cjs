@@ -31,6 +31,7 @@ const context = {
 };
 c = vm.createContext(context);
 vm.runInContext(fs.readFileSync('apps-script/Schema.gs','utf8') + '\n' + fs.readFileSync('apps-script/Code.gs','utf8'),c);
+require('./helpers/sheets.cjs').installStudentFixture(c,{school,klass,ma:'ZZ01-A',rows:()=>records});
 function call(name, payload) { c.input = payload; return vm.runInContext(`${name}(input)`, c); }
 function record(week) {
   const answers = Object.fromEntries(week.steps.flatMap(s => s.fields).map(f => [f.key, f.kind === 'rating' ? 2 : f.options ? f.options[0] : 'Mình đã thử thay đổi cách học để hiểu bài rõ hơn. '.repeat(5)]));
@@ -46,9 +47,9 @@ for (const week of content.weeks) {
   assert.deepEqual(Core.safeRecord(safe, content.an_toan), safe, 'Redaction is repeatable');
   c.record = safe;
   vm.runInContext('valid_(record)', c);
-  const result = call('submitRecord', { record: original });
+  const result = call('submitRecord', { record: original, token: c.studentFixtureToken });
   assert(result.ok, result.error);
-  assert(call('submitRecord', { record: original }).duplicate, 'Redacted retry does not create a new row');
+  assert(call('submitRecord', { record: original, token: c.studentFixtureToken }).duplicate, 'Redacted retry does not create a new row');
 }
 assert.equal(records.length,4);
 assert(!JSON.stringify(records).includes('bắt nạt'), 'Server redacts even when client is bypassed');

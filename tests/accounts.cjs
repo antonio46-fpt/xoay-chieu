@@ -1,0 +1,83 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),crypto=require('node:crypto');
+const Core=require('../src/core.js'),content=require('../src/content.json');
+let now=Date.now(),locked=false,failProgress=false,batchCalls=0,display='',selected=2;
+class Clock extends Date {static now(){return now;}}
+const school=content.truong_lop[0].truong,klass=content.truong_lop[0].lop[0];
+const props={SPREADSHEET_ID:'fake-account-sheet'},cache=new Map(),tables={tai_khoan:[],tien_do:[],chu_trinh:[]};
+const ui={showModalDialog:html=>display=html.value,alert:()=>{}};
+const api={
+ get:(id,range,opts)=>{
+  assert(locked);assert.equal(opts.valueRenderOption,'UNFORMATTED_VALUE');assert.equal(opts.dateTimeRenderOption,'SERIAL_NUMBER');
+  const [name,cells]=range.replaceAll("'",'').split('!'),table=tables[name]; assert(table,range);
+  if(cells==='E2:H')return {values:table.slice(1).map(row=>row.slice(4,8))};
+  if(/^A1:[A-Z]$/.test(cells))return {values:table};
+  if(cells==='1:1')return {values:[table[0]]};
+  if(cells==='A2:A')return {values:table.slice(1).map(row=>[row[0]])};
+  const match=cells.match(/^(\d+):\d+$/);assert(match,range);return {values:table[Number(match[1])-1]?[table[Number(match[1])-1]]:[]};
+ },
+ update:(body,id,range,opts)=>{
+  assert(locked);assert.equal(opts.valueInputOption,'RAW');const [name,cells]=range.replaceAll("'",'').split('!');
+  if(name==='tien_do'&&failProgress)throw Error('fixture progress write failed');
+  tables[name][Number(cells.match(/^A(\d+)/)[1])-1]=body.values[0];
+ },
+ append:(body,id,range,opts)=>{
+  assert(locked);assert.equal(opts.valueInputOption,'RAW');const name=range.split('!')[0].replaceAll("'",'');
+  if(name==='tien_do'&&failProgress)throw Error('fixture progress write failed');
+  tables[name].push(...body.values);
+ },
+ batchUpdate:(body,id)=>{assert(locked);batchCalls++;for(const data of body.data)api.update(data,id,data.range,{valueInputOption:body.valueInputOption});}
+};
+const c=vm.createContext({Date:Clock,console:{error(){}},
+ PropertiesService:{getScriptProperties:()=>({getProperty:key=>props[key],setProperty:(k,v)=>props[k]=v})},
+ CacheService:{getScriptCache:()=>({get:key=>cache.get(key)||null,put:(k,v)=>cache.set(k,v),remove:k=>cache.delete(k)})},
+ Utilities:{getUuid:()=>crypto.randomUUID(),Charset:{UTF_8:'UTF-8'},computeHmacSha256Signature:(message,secret)=>Array.from(crypto.createHmac('sha256',secret).update(message).digest())},
+ LockService:{getScriptLock:()=>({tryLock:()=>locked=true,hasLock:()=>locked,releaseLock:()=>locked=false})},
+ Sheets:{Spreadsheets:{Values:api}},
+ SpreadsheetApp:{getUi:()=>ui,getActiveSpreadsheet:()=>({getId:()=>props.SPREADSHEET_ID,getActiveSheet:()=>({getName:()=> 'tai_khoan',getActiveRange:()=>({getNumRows:()=>1,getRow:()=>selected})})})},
+ HtmlService:{createHtmlOutput:value=>({value,setWidth(){return this;},setHeight(){return this;}})}
+});
+for(const file of ['Schema.gs','Code.gs','Accounts.gs'])vm.runInContext(fs.readFileSync('apps-script/'+file,'utf8'),c);
+tables.tai_khoan=[Array.from(vm.runInContext('ACCOUNT_HEADERS',c)),['ZZ01-A',school,klass],['ZZ02-B',school,klass]];
+tables.tien_do=[Array.from(vm.runInContext('PROGRESS_HEADERS',c))];tables.chu_trinh=[Array.from(vm.runInContext('HEADERS.chu_trinh',c))];
+function call(name,input){c.input=input;return vm.runInContext(name+'(input)',c);}
+function login(ma,pin,extra={}){return call('loginStudent',{ma,truong:school,lop:klass,pin,...extra});}
+const provision=call('provisionStudentAccounts_');assert.equal(provision.created,2);assert.equal(batchCalls,1);
+const lines=display.match(/<textarea[^>]*>([\s\S]*?)<\/textarea>/)[1].replaceAll('&quot;','"').split('\n');
+const pins=Object.fromEntries(lines.slice(1).map(line=>{const cells=JSON.parse('['+line+']');return [cells[0],cells[3]];}));
+assert.match(pins['ZZ01-A'],/^\d{8}$/);assert.notEqual(tables.tai_khoan[1][4],tables.tai_khoan[2][4]);
+assert(!JSON.stringify(tables).includes(pins['ZZ01-A']),'Plain PIN is never stored in Sheets');
+const hash=tables.tai_khoan[1][5],secret=props.STUDENT_PIN_SECRET;
+assert.equal(call('provisionStudentAccounts_').created,0);assert.equal(tables.tai_khoan[1][5],hash);assert.equal(props.STUDENT_PIN_SECRET,secret);
+const owner=login('ZZ01-A',pins['ZZ01-A']);assert(owner.ok);const other=login('ZZ02-B',pins['ZZ02-B']);assert(other.ok);
+const auth={ma:'ZZ01-A',truong:school,lop:klass,token:owner.token};
+assert.equal(call('getStudentProgress',{...auth,token:other.token}).code,'AUTH_REQUIRED');
+cache.set('teacher:fake-teacher-token-1234567890',JSON.stringify({...auth,expires:now+60000}));
+assert.equal(call('getStudentProgress',{...auth,token:'fake-teacher-token-1234567890'}).code,'AUTH_REQUIRED');
+assert.equal(call('getClassProgress',auth).code,'AUTH_REQUIRED','Student session cannot be used as teacher');
+assert.equal(call('getStudentProgress',{...auth,lop:content.truong_lop[0].lop[1]}).code,'AUTH_REQUIRED');
+assert.deepEqual(Array.from(call('getStudentProgress',auth).weeks),[]);
+function record(week){const answers=Object.fromEntries(week.steps.flatMap(s=>s.fields).map(f=>[f.key,f.kind==='rating'?2:f.options?f.options[0]:'Mình đã thử thay đổi cách học để hiểu rõ hơn. '.repeat(5)]));answers.noi+=' Mình bị bắt nạt.';return Core.record({id:crypto.randomUUID(),started:new Date().toISOString(),activeMs:1000,version:content.phien_ban,answers},auth,week);}
+const data=record(content.weeks[0]);
+assert.equal(call('submitRecord',{record:data}).code,'AUTH_REQUIRED');
+assert.equal(call('submitRecord',{record:data,token:other.token}).code,'AUTH_REQUIRED');
+failProgress=true;assert.equal(call('submitRecord',{record:data,token:owner.token}).code,'SERVER_ERROR');assert.equal(tables.chu_trinh.length,2);
+failProgress=false;const retry=call('submitRecord',{record:data,token:owner.token});assert(retry.ok&&retry.duplicate);assert.equal(tables.chu_trinh.length,2,'Retry repairs projection without another raw row');
+assert(!JSON.stringify(tables.chu_trinh).includes('bắt nạt'));
+assert.deepEqual(Array.from(call('getStudentProgress',auth).weeks),[1]);
+assert.equal(tables.tien_do.length,2);assert.equal(tables.tien_do[1][3],true);assert.equal(tables.tien_do[1][7],1);
+for(const week of content.weeks.slice(1))assert(call('submitRecord',{record:record(week),token:owner.token}).ok);
+const newDevice=login('ZZ01-A',pins['ZZ01-A']);assert.deepEqual(Array.from(call('getStudentProgress',{...auth,token:newDevice.token}).weeks),[1,2,3,4]);
+assert.deepEqual(Object.keys(call('getStudentProgress',auth)).sort(),['ok','ma','truong','lop','weeks','updatedAt'].sort(),'No work text or PIN digest returned');
+call('logoutStudent',newDevice.token);assert.equal(call('getStudentProgress',{...auth,token:newDevice.token}).code,'AUTH_REQUIRED');
+tables.tai_khoan[1][3]='khoa';assert.equal(call('getStudentProgress',auth).code,'AUTH_REQUIRED');assert.equal(login('ZZ01-A',pins['ZZ01-A']).code,'AUTH_REQUIRED');tables.tai_khoan[1][3]='hoat_dong';
+call('resetSelectedStudentPin_');assert.notEqual(tables.tai_khoan[1][5],hash);assert.equal(call('getStudentProgress',auth).code,'AUTH_REQUIRED');assert.equal(login('ZZ01-A',pins['ZZ01-A']).code,'AUTH_REQUIRED');
+for(let i=0;i<7;i++)login('ZZ02-B','000000');const blocked=login('ZZ02-B','000000');assert.equal(blocked.code,'RATE_LIMITED');assert.equal(blocked.retryAfterSeconds,600);
+now+=120000;assert.equal(login('ZZ02-B',pins['ZZ02-B']).retryAfterSeconds,480);now+=480001;assert(login('ZZ02-B',pins['ZZ02-B']).ok);
+now+=21600001;assert.equal(call('getStudentProgress',{...auth,ma:'ZZ02-B',token:other.token}).code,'AUTH_REQUIRED');
+const before=JSON.stringify(tables.tai_khoan);tables.tai_khoan.push([...tables.tai_khoan[1]]);assert.throws(()=>call('provisionStudentAccounts_'));tables.tai_khoan.pop();assert.equal(JSON.stringify(tables.tai_khoan),before);
+// Full planned cohort uses one write request, without copying any real roster.
+tables.tai_khoan=[tables.tai_khoan[0],...Array.from({length:150},(_,i)=>['AA'+String(Math.floor(i/26)).padStart(2,'0')+'-'+String.fromCharCode(65+i%26),school,klass])];
+const batchesBefore=batchCalls;assert.equal(call('provisionStudentAccounts_').created,150);assert.equal(batchCalls-batchesBefore,1);
+assert(tables.tai_khoan.slice(1).every(row=>/^[a-f0-9]{64}$/.test(row[5])));
+assert(!locked);
+console.log('PASS student accounts: batched one-time PIN provisioning, HMAC, exact account scope, lock/reset/revoke/expiry, cooldown, safe submission, progress recovery after partial failure, four-week progress on new device, duplicate roster rejection');

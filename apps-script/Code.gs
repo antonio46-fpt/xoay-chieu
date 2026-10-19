@@ -1,5 +1,5 @@
 /**
- * XOAY CHIỀU — MÁY CHỦ GOOGLE APPS SCRIPT, phiên bản 2.4.0.
+ * XOAY CHIỀU — MÁY CHỦ GOOGLE APPS SCRIPT, phiên bản 2.5.0.
  *
  * Các điểm vào từ trình duyệt:
  *   doGet()                  → phục vụ giao diện Index.html.
@@ -9,7 +9,7 @@
  * Các hàm kết thúc bằng '_' là hàm nội bộ, không gọi được qua google.script.run.
  * API tiến độ chỉ trả mã và tuần, xác thực bằng phiên giáo viên của đúng lớp. Không có API đọc bài riêng tư.
  */
-const SERVER_VERSION = '2.4.0';
+const SERVER_VERSION = '2.5.0';
 
 const HEADERS = {
   chu_trinh: [
@@ -52,6 +52,7 @@ function setup_() {
       throw new Error('Cột ' + name + ' không khớp. Dùng Sheet mới; không ghi đè dữ liệu cũ.');
     }
   }
+  setupStudentStorage_(spreadsheet);
   PropertiesService.getScriptProperties()
     .setProperty('SPREADSHEET_ID', spreadsheet.getId());
 }
@@ -216,6 +217,7 @@ function submitRecord(payload) {
       error: 'Máy chủ đang bận; bài được giữ để gửi lại.'
     };
 
+    const student = data.loai === 'chu_trinh' ? authorizeStudent_(payload.token, data, spreadsheetId) : null;
     // Đọc ID, đọc bản ghi và append qua cùng Sheets API; khóa giữ đến khi append trả về.
     const columns = HEADERS[data.loai], range = "'" + data.loai + "'!";
     const readOptions = { valueRenderOption: 'UNFORMATTED_VALUE', dateTimeRenderOption: 'SERIAL_NUMBER' };
@@ -231,6 +233,7 @@ function submitRecord(payload) {
       const identical = columns.every((key, index) => key === 'thoi_gian_nhan' ||
         sameCell_(existing[index], data[key]));
       if (!identical) fail_('ID đã tồn tại với nội dung khác. Không ghi đè.', 'ID_CONFLICT');
+      if (student) projectStudentProgress_(spreadsheetId, student);
       return { ok: true, id: data.id, duplicate: true };
     }
 
@@ -243,6 +246,7 @@ function submitRecord(payload) {
       valueInputOption: 'RAW',
       insertDataOption: 'INSERT_ROWS'
     }, );
+    if (student) projectStudentProgress_(spreadsheetId, student);
     return {
       ok: true,
       id: data.id,

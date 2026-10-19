@@ -23,11 +23,12 @@ const c=vm.createContext({console,Date:TestDate,
  SpreadsheetApp:{openById(){throw Error('Mixed read/write path is forbidden in submission');}}
 });
 vm.runInContext(fs.readFileSync('apps-script/Schema.gs','utf8')+'\n'+fs.readFileSync('apps-script/Code.gs','utf8'),c);
+require('./helpers/sheets.cjs').installStudentFixture(c,{school,klass,ma:'ZZ01-A',rows:()=>rows,onRead:()=>assert(locked)});
 function record(week,max=false){
  const answers=Object.fromEntries(week.steps.flatMap(s=>s.fields).map(f=>[f.key,f.kind==='rating'?2:f.options?f.options[0]:max?('x '.repeat(Math.ceil(f.max/2))).slice(0,f.max):'Mình thay đổi cách học và thử giải thích bằng ví dụ mới. '.repeat(5)]));
  return Core.record({id:crypto.randomUUID(),started:new Date().toISOString(),activeMs:12000,version:content.phien_ban,answers},{ma:'ZZ01-A',truong:school,lop:klass},week);
 }
-function submit(record){c.payload={record};return vm.runInContext('submitRecord(payload)',c);}
+function submit(record){c.payload={record,token:c.studentFixtureToken};return vm.runInContext('submitRecord(payload)',c);}
 const special=record(content.weeks[0]);
 special.san_pham="'Một dòng đầu\nMột dòng sau có khoảng trắng cuối   \n";
 special.ban_goc_id='';special.thoi_luong_giay=12.5;

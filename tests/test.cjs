@@ -159,16 +159,17 @@ test('Server RAW append, retry deduplication, conflicting IDs and unauthorized c
   });
   vm.runInContext(fs.readFileSync(root + '/apps-script/Schema.gs', 'utf8') + '\n' + fs
     .readFileSync(root + '/apps-script/Code.gs', 'utf8'), c);
+  require('./helpers/sheets.cjs').installStudentFixture(c,{school:D.truong_lop[0].truong,klass:D.truong_lop[0].lop[0],ma:'BI08-T',rows:()=>rows});
   c.r = rec(D.weeks[0]);
   c.r.san_pham = '=HYPERLINK("https://example.invalid", "nội dung văn bản không chạy")';
-  let out = vm.runInContext('submitRecord({record:r})', c);
+  let out = vm.runInContext('submitRecord({record:r,token:studentFixtureToken})', c);
   assert(out.ok);
   assert.equal(options.valueInputOption, 'RAW');
   assert.equal(rows[0][14], c.r.san_pham);
-  assert(vm.runInContext('submitRecord({record:r})', c).duplicate);
+  assert(vm.runInContext('submitRecord({record:r,token:studentFixtureToken})', c).duplicate);
   assert.equal(rows.length, 1);
   c.r.noi += ' thay đổi';
-  assert(!vm.runInContext('submitRecord({record:r})', c).ok);
+  assert(!vm.runInContext('submitRecord({record:r,token:studentFixtureToken})', c).ok);
   assert.equal(rows.length, 1);
   c.r = {
     id: 'coord-record-123',
