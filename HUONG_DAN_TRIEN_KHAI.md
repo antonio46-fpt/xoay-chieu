@@ -1,4 +1,4 @@
-# Triển khai Xoay Chiều 2.3.0 vào Google Sheets
+# Triển khai Xoay Chiều 2.4.0 vào Google Sheets
 
 Bộ `apps-script/` đã có bản build sẵn; không cần cài Python hoặc Node chỉ để dán và triển khai. Bản Sites/HTML tĩnh dành cho xem thử, không phải link thu dữ liệu Google Sheets. Không sử dụng dữ liệu thật trong bước thử.
 
@@ -97,3 +97,8 @@ Tài liệu Google: https://developers.google.com/apps-script/guides/html/commun
 Cập nhật đồng bộ `Code.gs`, `Schema.gs`, `Index.html`, giữ nguyên manifest có Sheets API và triển khai New version. Cấu trúc cột không đổi, không chạy lệnh xóa/ghi đè dữ liệu cũ. Nếu có gói 2.1 đang chờ hoặc đã ghi mà mất ACK, làm theo quyết định của nhóm nghiên cứu tại issue vận hành trước khi nâng cấp dữ liệu; không đổi ID để né xung đột.
 
 PIN sai 8 lần sẽ trả thời gian chờ còn lại, không có PIN dự phòng tự tạo. Cache có thể rớt trước 6 giờ: màn hình điều phối cho nhập lại PIN và giữ phiếu/đồng hồ. Dùng [checklist cấu hình](docs/DEPLOYMENT_CHECKLIST.md) để xác nhận quyền Sheet, deployment và người chỉnh Script Properties; các thiết lập đó chưa được xác minh trong môi trường lập trình này.
+
+
+## Đăng xuất 2.4.0
+
+Cập nhật `Index.html` và `Code.gs` rồi Deploy New version để có nút Đăng xuất chung và RPC `logoutCoordinator` mới. `Schema.gs` không đổi so với 2.3.0. Kiểm tra đăng xuất/làm mới vẫn ở màn hình nhập mã, vào lại cùng hồ sơ còn nháp và bài chờ, đổi hồ sơ không lẫn bài. Thử thu hồi token giáo viên/điều phối trên deployment thử; không coi test mock là đã xác minh Google thật.

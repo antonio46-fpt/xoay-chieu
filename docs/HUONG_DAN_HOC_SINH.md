@@ -6,7 +6,7 @@
 4. Dùng cùng thiết bị, trình duyệt và link trong bốn tuần. Đừng xóa dữ liệu trình duyệt, dọn bộ nhớ app, đổi trình duyệt hoặc đóng chế độ ẩn danh khi còn bài chưa gửi.
 5. Mất mạng khi trang đã tải: tiếp tục làm nếu trạng thái lưu không báo lỗi. “Chờ gửi” chưa phải đã nộp thành công; chờ “Máy chủ đã xác nhận”. Không bấm Làm lượt mới chỉ để thử gửi lại bài cũ.
 6. Nếu máy báo không lưu được: dừng nhập thêm, giữ trang mở và tải bản sao trong Cài đặt/Sổ của mình nếu trình duyệt cho phép; nhờ giáo viên hỗ trợ. “Xem thử không lưu” chỉ để thử giao diện, mất bài khi đóng/tải lại, không dùng cho bài thật.
-7. Trên máy chung, chọn đúng mã của mình; đổi mã không xóa dữ liệu người trước. Người được dùng trình duyệt có thể xem dữ liệu trên máy, nên không ghi thông tin riêng tư. Không khôi phục bản sao của bạn lên trình duyệt đang có dữ liệu người khác.
+7. Khi xong, bấm **Đăng xuất** ở thanh thông tin phiên để trở về màn hình nhập mã. Nháp/bài cũ vẫn còn; lần sau nhập đúng mã, trường và lớp để tiếp tục. Trên máy chung, chọn đúng mã của mình; đổi mã không xóa dữ liệu người trước. Người được dùng trình duyệt có thể xem dữ liệu trên máy, nên không ghi thông tin riêng tư. Không khôi phục bản sao của bạn lên trình duyệt đang có dữ liệu người khác.
 8. Nội dung có từ khóa an toàn sẽ được che trước khi gửi, nhưng bản gốc/bản sao vẫn có trên máy. Nếu đang gặp chuyện cần hỗ trợ, nói với thầy cô hoặc người lớn tin cậy; app không tự thông báo thay bạn.
 
 Trước buổi học, giáo viên cần thử trên điện thoại thực tế. Hướng dẫn này chưa thay thế kiểm tra Zalo/Facebook, tiết kiệm pin, tắt màn hình và 4G mất/kết nối lại.

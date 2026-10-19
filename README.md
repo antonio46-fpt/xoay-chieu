@@ -1,4 +1,4 @@
-# Xoay Chiều — mã nguồn đầy đủ 2.3.0
+# Xoay Chiều — mã nguồn đầy đủ 2.4.0
 
 Công cụ hoạt động và thu dữ liệu cho đề tài “Phát triển năng lực linh hoạt trong học tập của học sinh THPT tại Lạng Sơn”. Phạm vi bản bắt buộc: 2 trường, 4 lớp, khoảng 150 học sinh dự kiến, 4 tuần can thiệp. Lịch triển khai và kết thúc chưa chốt. Không chấm đúng/sai, không xếp hạng, không tự suy ra điểm năng lực.
 
@@ -97,3 +97,10 @@ Nếu trình xem HTML chặn bộ nhớ, nút Bắt đầu hiển thị lỗi ng
 ## Rà Backend theo góp ý chốt
 
 Bản 2.3.0 chuyển đường đọc/ghi chống trùng sang cùng Sheets API, kiểm tra kích thước cả cột dẫn xuất và cho nhập lại PIN điều phối ngay trên phiếu khi cache mất. Xem [đối chiếu góp ý](docs/BACKEND_REVIEW.md), [issue thật](docs/issues/README.md), [checklist cấu hình](docs/DEPLOYMENT_CHECKLIST.md), [kế hoạch tải](docs/LOAD_TEST_PLAN.md) và [hướng dẫn học sinh](docs/HUONG_DAN_HOC_SINH.md). Không coi kiểm thử mô phỏng là xác nhận đạt tải hoặc đã triển khai Google.
+
+
+## Đăng xuất (2.4.0)
+
+Sau khi vào bằng mã, nút **Đăng xuất** xuất hiện trên thanh phiên ở cả máy tính và điện thoại. App thu lại nội dung đang nhập, lưu nháp và bỏ hồ sơ đang chọn trước khi về màn hình nhập mã. Nháp, lịch sử và hàng đợi không bị xóa; dùng lại đúng mã/trường/lớp để tiếp tục. Nếu không lưu được, app giữ màn hình để người dùng tải bản sao thay vì âm thầm mất bài.
+
+Đăng xuất chung xóa token điều phối/giáo viên trong trình duyệt và yêu cầu máy chủ thu hồi token khi kết nối cho phép. Mất mạng hoặc deployment cũ có thể khiến việc thu hồi chưa được xác nhận; token máy chủ còn hạn vẫn tuân theo thời gian hết phiên. Đây không phải mật khẩu bảo vệ dữ liệu cục bộ: người có quyền dùng trình duyệt và biết mã vẫn có thể vào hồ sơ trên máy. Với Xem thử không lưu, dữ liệu chỉ còn đến khi đóng/tải lại trang.

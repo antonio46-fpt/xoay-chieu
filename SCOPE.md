@@ -1,10 +1,11 @@
-# Phạm vi Xoay Chiều 2.3.0
+# Phạm vi Xoay Chiều 2.4.0
 
 Mục tiêu: giúp học sinh THPT rèn năng lực linh hoạt trong học tập qua trải nghiệm, phản tư và điều chỉnh. Bản đầu có 4 tuần, 2 trường và **4 lớp đã chốt**: THPT Chuyên Chu Văn An (10 Trung, 10D2), THPT Chi Lăng (10A6, 10A7). Khoảng 150 học sinh là quy mô dự kiến, chưa phải số người dùng đồng thời đã kiểm chứng.
 
 | Yêu cầu bắt buộc | Thực hiện |
 |---|---|
 | Vào bằng mã + trường/lớp | Không hỏi họ tên, số điện thoại; không tải ảnh/âm thanh/video |
+| Đăng xuất | Lưu nháp rồi về nhập mã, bỏ hồ sơ đang chọn, giữ bài/hàng đợi; vào lại cùng mã/trường/lớp để tiếp tục |
 | Tuần 1–2 | Thử – Nghĩ – Nối – Chia sẻ, từng bước, gợi ý và câu hỏi đào sâu cấu hình trong JSON |
 | Tuần 3 | Tranh luận, đổi góc nhìn, giữ/đổi ý và ghi lý lẽ |
 | Tuần 4 | Chọn bài của mình, tạo bản 2 có `ban_goc_id`; không sửa bản gốc |
