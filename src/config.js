@@ -7,7 +7,7 @@
  * Nội dung giáo dục được sửa riêng trong content.json.
  */
 const APP_CONFIG = Object.freeze({
-  version: '2.4.0',
+  version: '2.5.0',
   storageKey: 'xoaychieu_v2', // Giữ khóa cũ để không mất bài phiên bản 2.0.
   rpcTimeoutMs: 30000,
   retryBaseMs: 5000,

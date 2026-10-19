@@ -1,4 +1,4 @@
-# Xoay Chiều — mã nguồn đầy đủ 2.4.0
+# Xoay Chiều — mã nguồn đầy đủ 2.5.0
 
 Công cụ hoạt động và thu dữ liệu cho đề tài “Phát triển năng lực linh hoạt trong học tập của học sinh THPT tại Lạng Sơn”. Phạm vi bản bắt buộc: 2 trường, 4 lớp, khoảng 150 học sinh dự kiến, 4 tuần can thiệp. Lịch triển khai và kết thúc chưa chốt. Không chấm đúng/sai, không xếp hạng, không tự suy ra điểm năng lực.
 
@@ -42,6 +42,7 @@ Xem [SCOPE.md](SCOPE.md) để đối chiếu yêu cầu, quyền dữ liệu v�
 | `src/app.js` | Điều hướng, màn hình, nháp, hàng đợi, giao tiếp máy chủ |
 | `src/style.css`, `src/shell.html` | CSS và khung HTML |
 | `apps-script/Code.gs` | Máy chủ kiểm tra dữ liệu, xác thực điều phối, ghi Sheet RAW |
+| `apps-script/Accounts.gs` | Cấp PIN riêng, xác thực học sinh, tổng hợp tiến độ trên Sheet |
 | `apps-script/Schema.gs` | Schema kiểm tra tự sinh từ JSON; không sửa tay |
 | `apps-script/Index.html` | App đã ghép để dán vào HTML Service |
 | `apps-script/appsscript.json` | Manifest V8 và dịch vụ Google Sheets v4 |
@@ -104,3 +105,7 @@ Bản 2.3.0 chuyển đường đọc/ghi chống trùng sang cùng Sheets API, 
 Sau khi vào bằng mã, nút **Đăng xuất** xuất hiện trên thanh phiên ở cả máy tính và điện thoại. App thu lại nội dung đang nhập, lưu nháp và bỏ hồ sơ đang chọn trước khi về màn hình nhập mã. Nháp, lịch sử và hàng đợi không bị xóa; dùng lại đúng mã/trường/lớp để tiếp tục. Nếu không lưu được, app giữ màn hình để người dùng tải bản sao thay vì âm thầm mất bài.
 
 Đăng xuất chung xóa token điều phối/giáo viên trong trình duyệt và yêu cầu máy chủ thu hồi token khi kết nối cho phép. Mất mạng hoặc deployment cũ có thể khiến việc thu hồi chưa được xác nhận; token máy chủ còn hạn vẫn tuân theo thời gian hết phiên. Đây không phải mật khẩu bảo vệ dữ liệu cục bộ: người có quyền dùng trình duyệt và biết mã vẫn có thể vào hồ sơ trên máy. Với Xem thử không lưu, dữ liệu chỉ còn đến khi đóng/tải lại trang.
+
+## Tài khoản học sinh (2.5.0)
+
+Bản Apps Script đăng nhập bằng mã có sẵn + PIN riêng được cấp, kiểm tra đúng trường/lớp trước khi nhận bài; Sheet lưu bài đã che an toàn và bảng tiến độ bốn tuần. Đăng xuất giữ nháp/hàng đợi; đăng nhập trên máy mới tải tiến độ, còn Sổ bài gốc vẫn trên thiết bị cũ/bản sao. Xem [cấp tài khoản và triển khai](docs/TAI_KHOAN_HOC_SINH.md), [issue #8](https://github.com/antonio46-fpt/xoay-chieu/issues/8). Chưa triển khai hay kiểm thử vào Sheet thật.

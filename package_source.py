@@ -16,16 +16,16 @@ def package():
     paths = [
         "CONTRIBUTING.md", "SCOPE.md", "README.md", "MA_NGUON_CHI_TIET.md", "HUONG_DAN_TRIEN_KHAI.md", "DU_LIEU_VA_TAP_HUAN.md",
         "src/app.js", "src/core.js", "src/safety.js", "src/backup.js", "src/config.js", "src/content.json",
-        "src/style.css", "src/shell.html", "apps-script/Code.gs", "apps-script/Schema.gs",
+        "src/style.css", "src/shell.html", "apps-script/Code.gs", "apps-script/Accounts.gs", "apps-script/Schema.gs",
         "apps-script/appsscript.json", "build.py", "package_source.py", "package.json",
-        "tests/logout.cjs", "tests/helpers/sheets.cjs", "tests/backend-review.cjs", "tests/reauth.cjs", "tests/preview.cjs", "tests/fe.cjs", "tests/scope.cjs", "tests/test.cjs", "tests/queue.cjs", "tests/recovery.cjs", "tests/ui.cjs", "tests/run.cjs",
+        "tests/accounts.cjs", "tests/student-ui.cjs", "tests/logout.cjs", "tests/helpers/sheets.cjs", "tests/backend-review.cjs", "tests/reauth.cjs", "tests/preview.cjs", "tests/fe.cjs", "tests/scope.cjs", "tests/test.cjs", "tests/queue.cjs", "tests/recovery.cjs", "tests/ui.cjs", "tests/run.cjs",
         "tools/source-reader.html",
         ".github/ISSUE_TEMPLATE/backend_task.yml", "docs/issues/README.md",
         "docs/issues/be-class-roster.md", "docs/issues/be-progress-permissions.md",
         "docs/issues/be-submission-integrity.md", "docs/issues/be-capacity.md",
         "docs/issues/qa-real-devices.md", "docs/issues/ops-legacy-21.md",
         "docs/BACKEND_REVIEW.md", "docs/DEPLOYMENT_CHECKLIST.md", "docs/LOAD_TEST_PLAN.md",
-        "docs/HUONG_DAN_HOC_SINH.md",
+        "docs/HUONG_DAN_HOC_SINH.md", "docs/TAI_KHOAN_HOC_SINH.md",
     ]
     files = {name: (ROOT / name).read_text(encoding="utf-8") for name in paths}
     data = json.dumps(files, ensure_ascii=False).replace("<", "\\u003c")

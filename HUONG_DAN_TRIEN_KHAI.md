@@ -1,4 +1,4 @@
-# Triển khai Xoay Chiều 2.4.0 vào Google Sheets
+# Triển khai Xoay Chiều 2.5.0 vào Google Sheets
 
 Bộ `apps-script/` đã có bản build sẵn; không cần cài Python hoặc Node chỉ để dán và triển khai. Bản Sites/HTML tĩnh dành cho xem thử, không phải link thu dữ liệu Google Sheets. Không sử dụng dữ liệu thật trong bước thử.
 
@@ -8,14 +8,18 @@ Bộ `apps-script/` đã có bản build sẵn; không cần cài Python hoặc 
 2. Trong Share / Chia sẻ, để Restricted / Hạn chế. Chỉ mời đúng tài khoản nhóm nghiên cứu cần xem/chỉnh sửa. Học sinh không cần quyền truy cập Sheet.
 3. Mở Tiện ích mở rộng → Apps Script.
 4. Thay nội dung `Code.gs` bằng `apps-script/Code.gs` của bộ này.
-5. Tạo thêm tệp Script tên `Schema` rồi dán `apps-script/Schema.gs`.
+5. Tạo thêm tệp Script tên `Schema` rồi dán `apps-script/Schema.gs`; tạo Script **Accounts** rồi dán `apps-script/Accounts.gs`.
 6. Tạo thêm tệp HTML tên **Index** rồi dán toàn bộ `apps-script/Index.html` (tên phải đúng chữ hoa).
 7. Bên trái, Services / Dịch vụ → dấu + → Google Sheets API → Add. Máy chủ dùng dịch vụ này để ghi RAW sau khi xử lý nội dung an toàn, không biến câu trả lời thành công thức. Nếu dự án Google Cloud riêng yêu cầu bật API, bật Google Sheets API cho chính dự án đó.
 
    Tệp `apps-script/appsscript.json` là manifest mẫu tương ứng. Với dự án MỚI, có thể bật “Show appsscript.json manifest file in editor” trong Project Settings rồi dán tệp này để đặt V8, múi giờ GMT+7 và Sheets v4. Không dán đè manifest của dự án đang có dịch vụ khác. Nếu đã thêm Sheets API bằng giao diện, giữ manifest Google tự tạo cũng được.
 
 8. Lưu. Ở danh sách hàm trên thanh công cụ, chọn **setup_**, bấm Run và cấp quyền cho dự án do bạn quản lý. Hàm có dấu gạch dưới cuối để trình duyệt không gọi được qua google.script.run.
-9. Kiểm tra Sheet có 3 trang: `chu_trinh`, `phieu_buoi`, `doi_y`. `SPREADSHEET_ID` tự lưu trong Script Properties. Nếu báo cột không khớp, dùng Sheet mới; đừng xóa dữ liệu cũ để chữa lỗi.
+9. Kiểm tra Sheet có 5 trang: `chu_trinh`, `phieu_buoi`, `doi_y`, `tai_khoan`, `tien_do`. `SPREADSHEET_ID` tự lưu trong Script Properties. Nếu báo cột không khớp, dùng Sheet mới; đừng xóa dữ liệu cũ để chữa lỗi.
+
+## A2. Cấp tài khoản học sinh trước khi triển khai
+
+Làm theo [hướng dẫn mã + PIN và tiến độ](docs/TAI_KHOAN_HOC_SINH.md): chép mã/trường/lớp vào `tai_khoan`, chạy `provisionStudentAccounts_`, nhận hộp thoại PIN và cấp riêng từng học sinh. Không nhập PIN rõ vào Sheet. Bản thật từ 2.5.0 yêu cầu tài khoản đã cấp PIN; đăng nhập mới cần mạng. `tien_do` tổng hợp từ bài đã nhận, không phải điểm năng lực. Thử Sheet giả trước; không kết nối tự động vào Sheet có dữ liệu thật.
 
 ## B. PIN của điều phối viên
 
@@ -76,7 +80,7 @@ Tài liệu Google: https://developers.google.com/apps-script/guides/html/commun
 
 1. Sửa nội dung trong `src/content.json` trên máy. Nên tăng `phien_ban` khi thay nội dung chính thức.
 2. Chạy `python build.py`. Lần đầu cài thư viện kiểm thử bằng `npm ci --ignore-scripts`, sau đó chạy `npm test`. Chạy `python package_source.py` nếu cần tạo lại ZIP và trang đọc mã.
-3. Dán lại `Index.html` và `Schema.gs`; nếu sửa máy chủ thì cập nhật `Code.gs`.
+3. Dán lại `Index.html` và `Schema.gs`; nếu sửa máy chủ thì cập nhật `Code.gs` và `Accounts.gs`.
 4. Deploy → Manage deployments → Edit → New version → Deploy để giữ URL cũ. Chỉ Save code chưa cập nhật bản `/exec`.
 5. Không đổi cấu trúc câu hỏi/phiên bản giữa lúc học sinh đang làm. Thử trước trên bản sao.
 
@@ -102,3 +106,7 @@ PIN sai 8 lần sẽ trả thời gian chờ còn lại, không có PIN dự ph�
 ## Đăng xuất 2.4.0
 
 Cập nhật `Index.html` và `Code.gs` rồi Deploy New version để có nút Đăng xuất chung và RPC `logoutCoordinator` mới. `Schema.gs` không đổi so với 2.3.0. Kiểm tra đăng xuất/làm mới vẫn ở màn hình nhập mã, vào lại cùng hồ sơ còn nháp và bài chờ, đổi hồ sơ không lẫn bài. Thử thu hồi token giáo viên/điều phối trên deployment thử; không coi test mock là đã xác minh Google thật.
+
+## Nâng cấp 2.5.0
+
+Cập nhật đủ `Code.gs`, `Accounts.gs`, `Schema.gs`, `Index.html`; giữ Script Properties và dữ liệu cũ. Thực hiện mục A2 trên bản thử, sau đó chủ dự án chuẩn bị tài khoản ở bản thật trước khi New version. Đăng nhập trên máy mới tải tiến độ các tuần đã nộp; nháp/bài gốc trong Sổ vẫn cần thiết bị cũ hoặc bản sao. Chi tiết thao tác, đặt lại PIN và nghiệm thu tại [hướng dẫn tài khoản](docs/TAI_KHOAN_HOC_SINH.md).

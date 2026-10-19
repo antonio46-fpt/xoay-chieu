@@ -1,4 +1,4 @@
-# Phạm vi Xoay Chiều 2.4.0
+# Phạm vi Xoay Chiều 2.5.0
 
 Mục tiêu: giúp học sinh THPT rèn năng lực linh hoạt trong học tập qua trải nghiệm, phản tư và điều chỉnh. Bản đầu có 4 tuần, 2 trường và **4 lớp đã chốt**: THPT Chuyên Chu Văn An (10 Trung, 10D2), THPT Chi Lăng (10A6, 10A7). Khoảng 150 học sinh là quy mô dự kiến, chưa phải số người dùng đồng thời đã kiểm chứng.
 
@@ -46,3 +46,7 @@ Mục tiêu: giúp học sinh THPT rèn năng lực linh hoạt trong học tậ
 ## Chốt kỹ thuật theo góp ý Backend
 
 Theo dõi thứ tự #3 → #2 → #4 → #1 và hai issue bổ sung tại [danh sách issue](docs/issues/README.md). Roster chưa lập trình vì cần quyết định tự nguyện/đồng thuận. Bảng mã–họ tên phải ở ngoài hệ thống. Người phụ trách, hạn và lịch chưa được tự gán. Các sửa mã 2.3.0 đã có test cục bộ; deployment Google, tải thật và điện thoại vật lý vẫn cần thực hiện theo checklist.
+
+## Tài khoản được cấp và tiến độ (2.5.0)
+
+Bản thật xác thực mã học sinh có sẵn + PIN riêng theo trường/lớp; cấp/đặt lại từ editor bởi chủ dự án. Sheet lưu hash PIN, bài đã xử lý an toàn và tiến độ tuần do máy chủ tổng hợp. Không lưu PIN rõ hoặc điểm La bàn lên Sheet. Tiến độ hoàn thành tải được trên thiết bị mới; nháp/bài gốc trong Sổ vẫn cục bộ/bản sao. Quyền GVCN chỉ xem mã đã nộp + tuần của đúng lớp giữ nguyên; roster chưa nộp ở #1 vẫn chờ quyết định. Triển khai Google thật cần nghiệm thu trên Sheet thử; môi trường phát triển không truy cập Sheet chứa dữ liệu thật.

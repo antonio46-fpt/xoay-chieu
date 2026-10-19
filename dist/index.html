@@ -1341,7 +1341,7 @@ select:disabled {
  * Nội dung giáo dục được sửa riêng trong content.json.
  */
 const APP_CONFIG = Object.freeze({
-  version: '2.4.0',
+  version: '2.5.0',
   storageKey: 'xoaychieu_v2', // Giữ khóa cũ để không mất bài phiên bản 2.0.
   rpcTimeoutMs: 30000,
   retryBaseMs: 5000,
@@ -1628,7 +1628,10 @@ try {
     theme: 'light'
   };
 }
-let profile = db.current || null,
+let profile = LIVE ? null : db.current || null,
+  studentAuth = null,
+  studentProgress = null,
+  studentProgressError = '',
   tab = 'home',
   activeWeek = 1,
   coordToken = '',
@@ -1720,6 +1723,12 @@ async function sync(force = false) {
         item.nextTryAt = 0;
       }
       if (item.paused || Date.now() < (item.nextTryAt || 0)) continue;
+      if (item.record.loai === 'chu_trinh' && !studentAuthorized(item.record)) {
+        const message = 'Đăng nhập đúng mã, trường/lớp và PIN để gửi bài đang chờ.';
+        if (item.error !== message) { item.error = message; changed = true; persist(); }
+        if (profile && Core.key(profile) === Core.key(item.record)) showStudentReauth();
+        continue;
+      }
       if (item.record.loai !== 'chu_trinh' && (!coordToken || Date.now() > coordUntil ||
           profile?.truong !== item.record.truong || profile?.lop !== item.record.lop)) {
         const message = 'Chọn đúng trường/lớp của phiếu, mở Điều phối và nhập lại PIN để gửi.';
@@ -1734,19 +1743,29 @@ async function sync(force = false) {
       try {
         item.record = Core.safeRecord(item.record, CONTENT.an_toan);
         if (!persist()) throw new Error('Chưa lưu được gói an toàn; chưa gửi.');
+        const requestStudentAuth = studentAuth;
         const result = await rpc('submitRecord', {
           record: item.record,
-          token: item.record.loai === 'chu_trinh' ? '' : coordToken,
+          token: item.record.loai === 'chu_trinh' ? requestStudentAuth.token : coordToken,
         });
         if (!result?.ok || result.id !== item.record.id) {
           if (result?.code === 'AUTH_REQUIRED') {
-            coordToken = '';
-            coordUntil = 0;
-            if (tab === 'coord') showCoordinatorReauth();
+            if (item.record.loai === 'chu_trinh') {
+              if (studentAuth === requestStudentAuth) studentAuth = null;
+              if (!studentAuth && profile && Core.key(profile) === Core.key(item.record)) showStudentReauth();
+            } else {
+              coordToken = '';
+              coordUntil = 0;
+              if (tab === 'coord') showCoordinatorReauth();
+            }
           }
           const error = new Error(result?.error || 'Máy chủ chưa xác nhận đúng bản ghi.');
           error.permanent = result?.code === 'INVALID_RECORD' || result?.code === 'ID_CONFLICT';
           throw error;
+        }
+        if (item.record.loai === 'chu_trinh' && profile && Core.key(profile) === Core.key(item.record)) {
+          studentProgress ||= { ...profile, weeks: [] };
+          studentProgress.weeks = [...new Set([...studentProgress.weeks, item.record.tuan])];
         }
         db.queue = db.queue.filter(q => q.record.id !== item.record.id);
         changed = true;
@@ -1771,7 +1790,7 @@ async function sync(force = false) {
     status();
     // Không dựng lại trang mỗi 5 giây nếu không có gì thay đổi: giữ trạng thái
     // mở bài cũ và hộp chọn tệp sao lưu của người dùng.
-    if (changed && ['notebook', 'settings'].includes(tab)) render();
+    if (changed && (['notebook', 'settings'].includes(tab) || (tab === 'home' && profile))) render();
   }
 }
 
@@ -1842,6 +1861,7 @@ function render() {
     teacher,
     work
   } [tab] || home)();
+  if (LIVE && profile && ['home', 'work', 'notebook'].includes(tab) && !studentAuthorized(profile)) showStudentReauth();
 }
 
 /** Kết thúc phiên hiện tại, giữ bài và hàng đợi; không xóa dữ liệu hồ sơ. */
@@ -1857,7 +1877,10 @@ function logout() {
       return false;
     }
   }
-  const teacherToken = teacherAuth?.token, coordinatorToken = coordToken;
+  const teacherToken = teacherAuth?.token, coordinatorToken = coordToken, studentToken = studentAuth?.token;
+  studentAuth = null;
+  studentProgress = null;
+  studentProgressError = '';
   profile = null;
   teacherAuth = null;
   teacherSelection = null;
@@ -1874,6 +1897,7 @@ function logout() {
     'Đã đăng xuất. Nháp, bài cũ và bài chờ gửi vẫn được giữ trên thiết bị.');
   if (LIVE) {
     // Trả giao diện về nhập mã ngay; yêu cầu thu hồi phiên khi mạng cho phép.
+    if (studentToken) rpc('logoutStudent', studentToken).catch(() => {});
     if (teacherToken) rpc('logoutTeacher', teacherToken).catch(() => {});
     if (coordinatorToken) rpc('logoutCoordinator', coordinatorToken).catch(() => {});
   }
@@ -1900,12 +1924,14 @@ function go(t) {
 function login() {
   const schools = CONTENT.truong_lop;
   $('page').innerHTML =
-    `<div class="welcome"><p class="eyebrow">Chào bạn, rất vui được gặp</p><h1>Một góc nhìn mới<br>bắt đầu từ bạn.</h1><p class="muted">Không có câu trả lời đúng hay sai. Hãy thử, lắng nghe và ghi lại những điều mình nhận ra.</p><form id="login" class="panel"><label class="field"><span>Mã của bạn</span><input id="code" placeholder="Ví dụ định dạng: AB12-C" maxlength="8" autocomplete="off" autocapitalize="characters" required><small>Dùng đúng mã trên phiếu khảo sát. Không nhập họ tên.</small></label><label class="field"><span>Trường</span><select id="school"><option value="">Chọn trường</option>${schools.map(s=>`<option>${E(s.truong)}</option>`).join('')}</select></label><label class="field"><span>Lớp</span><select id="class"><option value="">Chọn lớp</option></select></label><p id="loginErr" class="error" role="alert"></p><button id="loginStart" type="button" class="primary" style="width:100%">Bắt đầu hành trình →</button><div id="previewFallback" class="${!LIVE&&storageUnavailable&&!loadBroken&&!storageConflict?'':'hidden'}"><p class="caption">Trình xem không cho lưu dữ liệu. Bạn có thể xem thử tạm thời; bài sẽ mất khi đóng hoặc tải lại trang.</p><button id="previewStart" type="button" class="ghost" style="width:100%">Xem thử không lưu →</button></div><details style="margin-top:18px"><summary>Cách tạo mã theo phiếu khảo sát</summary>${CONTENT.huong_dan_ma.buoc.map(b=>`<p class="caption">${E(b)}</p>`).join('')}</details></form><p class="caption">Câu trả lời lưu trên trình duyệt này${LIVE?' và được gửi về Google Sheet của nhóm nghiên cứu khi bạn nộp bài':''}. Không nhập số điện thoại, địa chỉ hay thông tin nhận diện người khác. Ô có từ khóa an toàn được thay bằng “[đã ẩn – an toàn]” trước khi gửi; bản gốc vẫn ở trên máy.</p></div>`;
+    `<div class="welcome"><p class="eyebrow">Chào bạn, rất vui được gặp</p><h1>Một góc nhìn mới<br>bắt đầu từ bạn.</h1><p class="muted">Không có câu trả lời đúng hay sai. Hãy thử, lắng nghe và ghi lại những điều mình nhận ra.</p><form id="login" class="panel"><label class="field"><span>Mã của bạn</span><input id="code" placeholder="Ví dụ định dạng: AB12-C" maxlength="8" autocomplete="off" autocapitalize="characters" required><small>Dùng đúng mã trên phiếu khảo sát. Không nhập họ tên.</small></label><label class="field"><span>Trường</span><select id="school"><option value="">Chọn trường</option>${schools.map(s=>`<option>${E(s.truong)}</option>`).join('')}</select></label><label class="field"><span>Lớp</span><select id="class"><option value="">Chọn lớp</option></select></label>${LIVE?'<label class="field"><span>PIN riêng của bạn</span><input id="studentPin" type="password" inputmode="numeric" autocomplete="off" pattern="[0-9]{6,12}" minlength="6" maxlength="12" required><small>Dùng PIN được cấp riêng. Nếu quên PIN, liên hệ người phụ trách để được đặt lại.</small></label>':''}<p id="loginErr" class="error" role="alert"></p><button id="loginStart" type="button" class="primary" style="width:100%">Bắt đầu hành trình →</button><div id="previewFallback" class="${!LIVE&&storageUnavailable&&!loadBroken&&!storageConflict?'':'hidden'}"><p class="caption">Trình xem không cho lưu dữ liệu. Bạn có thể xem thử tạm thời; bài sẽ mất khi đóng hoặc tải lại trang.</p><button id="previewStart" type="button" class="ghost" style="width:100%">Xem thử không lưu →</button></div><details style="margin-top:18px"><summary>${LIVE?'Tài khoản được cấp':'Cách tạo mã theo phiếu khảo sát'}</summary>${LIVE?'<p class="caption">Dùng mã trên phiếu khảo sát đã được người phụ trách đăng ký cùng trường/lớp và PIN riêng được cấp. Nếu mã chưa được đăng ký hoặc bạn quên PIN, hãy liên hệ người phụ trách.</p>':CONTENT.huong_dan_ma.buoc.map(b=>`<p class="caption">${E(b)}</p>`).join('')}</details></form><p class="caption">Câu trả lời lưu trên trình duyệt này${LIVE?' và được gửi về Google Sheet của nhóm nghiên cứu khi bạn nộp bài':''}. Không nhập số điện thoại, địa chỉ hay thông tin nhận diện người khác. Ô có từ khóa an toàn được thay bằng “[đã ẩn – an toàn]” trước khi gửi; bản gốc vẫn ở trên máy.</p></div>`;
   $('school').onchange = () => {
     $('class').innerHTML = '<option value="">Chọn lớp</option>' + (schools.find(s => s.truong ===
       $('school').value)?.lop || []).map(c => `<option>${E(c)}</option>`).join('');
   };
-  const attemptLogin = (temporary = false) => {
+  const attemptLogin = async (temporary = false) => {
+    const form = $('login'), button = $('loginStart');
+    if (button.disabled) return;
     $('loginErr').textContent = '';
     const ma = Core.normalize($('code').value),
       truong = $('school').value,
@@ -1923,6 +1949,26 @@ function login() {
       if (LIVE || loadBroken || storageConflict || !storageUnavailable) return;
       previewOnly = true;
     }
+    let auth = null;
+    if (LIVE) {
+      const pin = $('studentPin').value;
+      $('studentPin').value = '';
+      if (!/^[0-9]{6,12}$/.test(pin)) { $('loginErr').textContent = 'Nhập PIN riêng gồm 6–12 chữ số.'; return; }
+      if (!navigator.onLine) { $('loginErr').textContent = 'Cần có mạng để đăng nhập. Nháp và bài chờ gửi vẫn được giữ.'; return; }
+      button.disabled = true;
+      try {
+        const response = await rpc('loginStudent', {ma, truong, lop, pin});
+        if ($('login') !== form) {
+          if (response?.ok) rpc('logoutStudent', response.token).catch(() => {});
+          return;
+        }
+        if (!response?.ok) throw Error(response?.error || 'Chưa đăng nhập được.');
+        auth = {ma, truong, lop, token: response.token, expires: response.expires};
+      } catch (error) {
+        if ($('login') === form) $('loginErr').textContent = error.message;
+        return;
+      } finally { if (button.isConnected) button.disabled = false; }
+    }
     const previousProfile = profile, previousCurrent = db.current;
     profile = { ma, truong, lop };
     db.current = profile;
@@ -1930,6 +1976,7 @@ function login() {
     if (!persist()) {
       profile = previousProfile;
       db.current = previousCurrent;
+      if (auth) rpc('logoutStudent', auth.token).catch(() => {});
       $('loginErr').textContent = loadBroken ?
         'Dữ liệu cũ không đọc được. Mở Cài đặt để tải bản sao; trang chưa ghi đè dữ liệu.' :
         storageConflict ? 'Dữ liệu đã thay đổi ở tab khác. Hãy tải lại trang sau khi giữ bản sao.' :
@@ -1938,8 +1985,12 @@ function login() {
       $('loginErr').scrollIntoView?.({ block: 'nearest' });
       return;
     }
+    studentAuth = auth;
+    studentProgress = null;
+    studentProgressError = '';
     tab = 'home';
     render();
+    if (LIVE) { refreshStudentProgress(); sync(true); }
   };
   $('login').onsubmit = event => { event.preventDefault(); attemptLogin(); };
   // Một số trình xem cho chạy JS nhưng cấm submit form trong iframe sandbox.
@@ -1957,7 +2008,8 @@ function login() {
 function weekStatus(week) {
   const p = person(), history = p.history.filter(item => item.record.tuan === week);
   if (p.drafts[week]) return { kind: 'draft', text: history.length ? 'Đang viết lượt mới' : 'Đang viết' };
-  if (!history.length) return { kind: 'new', text: 'Chưa bắt đầu' };
+  if (!history.length) return studentProgress?.weeks.includes(week) ?
+    { kind: 'sent', text: 'Đã nộp trên Sheet' } : { kind: 'new', text: 'Chưa bắt đầu' };
   if (history.some(item => !item.sent)) return LIVE ?
     { kind: 'pending', text: 'Có bài chờ gửi' } : { kind: 'local', text: previewOnly ? 'Bài tạm trong phiên' : 'Bài lưu trên máy' };
   return { kind: 'sent', text: 'Máy chủ đã xác nhận' };
@@ -1973,11 +2025,13 @@ function workflowSteps(week, step) {
 
 function home() {
   const p = person(),
-    done = new Set(p.history.map(h => h.record.tuan)),
-    confirmed = new Set(p.history.filter(h => h.sent).map(h => h.record.tuan)),
+    done = new Set([...p.history.map(h => h.record.tuan), ...(studentProgress?.weeks || [])]),
+    confirmed = new Set([...p.history.filter(h => h.sent).map(h => h.record.tuan), ...(studentProgress?.weeks || [])]),
     nextWeek = CONTENT.weeks.find(w => p.drafts[w.tuan]) || CONTENT.weeks.find(w => !done.has(w.tuan));
   $('page').innerHTML =
-    `<section class="hero"><div><p class="eyebrow">SỔ TRẢI NGHIỆM CỦA ${E(profile.ma)}</p><h1>Thử một chút.<br>Hiểu mình thêm.</h1><p>Bốn tuần để rèn cách nhìn, thử và điều chỉnh việc học: chu trình tuần 1–2, tranh luận tuần 3, chỉnh sửa sản phẩm tuần 4. Mỗi lần thử là một cơ hội để bạn tìm ra cách của mình.</p><div class="row between"><span class="caption">Hành trình của bạn</span><strong>${done.size}/${CONTENT.so_tuan} tuần đã ${previewOnly?'thử':'lưu'}</strong></div><div class="progress" style="margin-top:10px"><i style="width:${done.size/CONTENT.so_tuan*100}%"></i></div><p class="caption sync-summary">${LIVE ? `${confirmed.size}/${CONTENT.so_tuan} tuần đã được máy chủ xác nhận` : previewOnly ? 'Bài chỉ giữ trong phiên xem thử này. Đóng hoặc tải lại trang sẽ mất bài.' : 'Bản xem thử chỉ lưu trên thiết bị này, chưa gửi Google Sheets.'}</p>${nextWeek ? `<button class="primary journey-continue" id="continueJourney">${p.drafts[nextWeek.tuan] ? 'Viết tiếp' : 'Khám phá'} tuần ${nextWeek.tuan} →</button>` : `<p class="notice">${previewOnly?'Bạn đã thử đủ bốn tuần trong phiên này.':'Bạn đã lưu đủ bốn tuần.'} Mở Sổ của mình để nhìn lại hành trình.</p>`}</div><div class="compass" aria-hidden="true"><span class="n">BỐN TUẦN KHÁM PHÁ</span><span class="s">MỖI BƯỚC LÀ MỘT KHÁM PHÁ</span></div></section><div class="row between titleline"><h3 style="margin:0">Bốn tuần, bốn trải nghiệm</h3><span class="caption">Đi theo nhịp của lớp bạn</span></div><section class="cards">${CONTENT.weeks.map((w,i)=>`<article class="card" style="--cardcolor:${['#b7791f','#0f7c70','#a83f53','#4c51bf'][i]}"><div class="row between"><span class="num">0${w.tuan}</span><span class="tag">${w.duration} phút · ${E(w.focus)}</span></div><h2>${E(w.title)}</h2><p>${E(w.letter.triet_gia)} · ${E(w.letter.tieu_de)}</p><div class="row between"><span class="week-status ${weekStatus(w.tuan).kind}">${E(weekStatus(w.tuan).text)}</span><button data-week="${w.tuan}" class="${i===0?'primary':''}">${p.drafts[w.tuan]?'Viết tiếp':done.has(w.tuan)?'Làm lượt mới':w.tuan===4?'Tạo bản 2':'Khám phá'} →</button></div></article>`).join('')}</section><div class="five">${CONTENT.mat_nang_luc.map(m=>`<div style="border-color:${E(m.mau)}"><strong>${E(m.ten)}</strong><br>${E(m.mo_ta)}</div>`).join('')}</div><p class="caption">${E(CONTENT.scope.trien_lam)}</p><footer>Không xếp hạng · Không chấm đúng sai · Lắng nghe theo cách của bạn</footer>`;
+    `${LIVE?`<div class="notice" role="status">${studentProgressError?E(studentProgressError):studentProgress?'Tiến độ đã đối chiếu với Sheet. Nháp và bản gốc bài làm vẫn ở thiết bị đã viết.':'Đang tải tiến độ từ Sheet…'} <button id="refreshProgress" type="button" class="small">Tải lại tiến độ</button></div>`:''}<section class="hero"><div><p class="eyebrow">SỔ TRẢI NGHIỆM CỦA ${E(profile.ma)}</p><h1>Thử một chút.<br>Hiểu mình thêm.</h1><p>Bốn tuần để rèn cách nhìn, thử và điều chỉnh việc học: chu trình tuần 1–2, tranh luận tuần 3, chỉnh sửa sản phẩm tuần 4. Mỗi lần thử là một cơ hội để bạn tìm ra cách của mình.</p><div class="row between"><span class="caption">Hành trình của bạn</span><strong>${done.size}/${CONTENT.so_tuan} tuần đã ${previewOnly?'thử':'lưu'}</strong></div><div class="progress" style="margin-top:10px"><i style="width:${done.size/CONTENT.so_tuan*100}%"></i></div><p class="caption sync-summary">${LIVE ? `${confirmed.size}/${CONTENT.so_tuan} tuần đã được máy chủ xác nhận` : previewOnly ? 'Bài chỉ giữ trong phiên xem thử này. Đóng hoặc tải lại trang sẽ mất bài.' : 'Bản xem thử chỉ lưu trên thiết bị này, chưa gửi Google Sheets.'}</p>${nextWeek ? `<button class="primary journey-continue" id="continueJourney">${p.drafts[nextWeek.tuan] ? 'Viết tiếp' : 'Khám phá'} tuần ${nextWeek.tuan} →</button>` : `<p class="notice">${previewOnly?'Bạn đã thử đủ bốn tuần trong phiên này.':'Bạn đã lưu đủ bốn tuần.'} Mở Sổ của mình để nhìn lại hành trình.</p>`}</div><div class="compass" aria-hidden="true"><span class="n">BỐN TUẦN KHÁM PHÁ</span><span class="s">MỖI BƯỚC LÀ MỘT KHÁM PHÁ</span></div></section><div class="row between titleline"><h3 style="margin:0">Bốn tuần, bốn trải nghiệm</h3><span class="caption">Đi theo nhịp của lớp bạn</span></div><section class="cards">${CONTENT.weeks.map((w,i)=>`<article class="card" style="--cardcolor:${['#b7791f','#0f7c70','#a83f53','#4c51bf'][i]}"><div class="row between"><span class="num">0${w.tuan}</span><span class="tag">${w.duration} phút · ${E(w.focus)}</span></div><h2>${E(w.title)}</h2><p>${E(w.letter.triet_gia)} · ${E(w.letter.tieu_de)}</p><div class="row between"><span class="week-status ${weekStatus(w.tuan).kind}">${E(weekStatus(w.tuan).text)}</span><button data-week="${w.tuan}" class="${i===0?'primary':''}">${p.drafts[w.tuan]?'Viết tiếp':done.has(w.tuan)?'Làm lượt mới':w.tuan===4?'Tạo bản 2':'Khám phá'} →</button></div></article>`).join('')}</section><div class="five">${CONTENT.mat_nang_luc.map(m=>`<div style="border-color:${E(m.mau)}"><strong>${E(m.ten)}</strong><br>${E(m.mo_ta)}</div>`).join('')}</div><p class="caption">${E(CONTENT.scope.trien_lam)}</p><footer>Không xếp hạng · Không chấm đúng sai · Lắng nghe theo cách của bạn</footer>`;
+  if ($('refreshProgress')) $('refreshProgress').onclick = refreshStudentProgress;
+  if (LIVE && !studentAuthorized(profile)) showStudentReauth();
   if ($('continueJourney')) $('continueJourney').onclick = () => start(nextWeek.tuan);
   document.querySelectorAll('[data-week]').forEach(b => b.onclick = () => start(+b.dataset.week));
 }
@@ -1989,7 +2043,7 @@ function start(n) {
   }
   const p = person();
   if (!p.drafts[n]) {
-    if (p.history.some(h => h.record.tuan === n) && !confirm(
+    if ((p.history.some(h => h.record.tuan === n) || studentProgress?.weeks.includes(n)) && !confirm(
         'Tạo một lượt làm mới? Bài đã nộp vẫn được giữ nguyên.')) return;
     p.drafts[n] = {
       id: Core.id(),
@@ -2258,7 +2312,7 @@ function settings() {
       const oldDb = db,
         oldProfile = profile;
       db = v;
-      profile = db.current || null;
+      profile = LIVE ? null : db.current || null;
       loadBroken = false;
       if (!persist()) {
         db = oldDb;
@@ -2507,6 +2561,59 @@ function teacher() {
     };
     if (!LIVE) showStudents([{ ma: 'ZZ01-A', weeks: [1, 2] }, { ma: 'ZZ02-B', weeks: [1] }]);
   }
+}
+
+/** Phiên chỉ ở bộ nhớ; bản sao/nháp không chứa PIN hoặc token. */
+function studentAuthorized(record) {
+  return !!(profile && record && studentAuth && studentAuth.expires > Date.now() &&
+    Core.key(studentAuth) === Core.key(record) && Core.key(profile) === Core.key(record));
+}
+
+async function refreshStudentProgress() {
+  if (!LIVE || !studentAuthorized(profile)) { showStudentReauth(); return; }
+  const auth = studentAuth, owner = { ...profile };
+  try {
+    const result = await rpc('getStudentProgress', { ...owner, token: auth.token });
+    if (studentAuth !== auth || !profile || Core.key(profile) !== Core.key(owner)) return;
+    if (!result?.ok) {
+      if (result?.code === 'AUTH_REQUIRED') { studentAuth = null; showStudentReauth(); }
+      throw Error(result?.error || 'Chưa tải được tiến độ.');
+    }
+    studentProgress = { ...owner, weeks: result.weeks.filter(n => Number.isInteger(n) && n >= 1 && n <= 4) };
+    studentProgressError = '';
+  } catch (error) {
+    if (!profile || Core.key(profile) !== Core.key(owner) || (studentAuth && studentAuth !== auth)) return;
+    studentProgressError = error.message + ' Tiến độ trên máy và nháp vẫn được giữ.';
+  }
+  if (profile && Core.key(profile) === Core.key(owner) && tab === 'home') home();
+}
+
+function showStudentReauth() {
+  if (!LIVE || !profile || !$('page') || $('studentReauth')) return;
+  const notice = document.createElement('section'), owner = { ...profile };
+  notice.id = 'studentReauth'; notice.className = 'notice';
+  notice.innerHTML = `<p role="status">Đăng nhập lại để đồng bộ mã ${E(owner.ma)}. Bạn vẫn có thể viết; nháp và bài chờ gửi được giữ trên máy.</p><form id="studentReauthForm"><label class="field"><span>PIN riêng của bạn</span><input id="studentReauthPin" type="password" inputmode="numeric" pattern="[0-9]{6,12}" maxlength="12" autocomplete="off" required></label><button type="submit" class="primary">Xác thực lại</button><p id="studentReauthError" class="error" role="alert"></p></form>`;
+  $('page').prepend(notice);
+  const form = $('studentReauthForm');
+  form.onsubmit = async event => {
+    event.preventDefault();
+    const button = form.querySelector('button'), input = $('studentReauthPin'), errorBox = $('studentReauthError');
+    if (button.disabled) return;
+    const pin = input.value; input.value = ''; errorBox.textContent = '';
+    button.disabled = true;
+    try {
+      const result = await rpc('loginStudent', { ...owner, pin });
+      if (!notice.isConnected || !profile || Core.key(profile) !== Core.key(owner)) {
+        if (result?.ok) rpc('logoutStudent', result.token).catch(() => {});
+        return;
+      }
+      if (!result?.ok) throw Error(result?.error || 'Chưa xác thực được.');
+      studentAuth = { ...owner, token: result.token, expires: result.expires };
+      notice.remove();
+      refreshStudentProgress(); sync(true);
+    } catch (error) { if (notice.isConnected) errorBox.textContent = error.message; }
+    finally { if (button.isConnected) button.disabled = false; }
+  };
 }
 
 /** Cache có thể mất sớm: yêu cầu PIN ngay trên màn hình, giữ nguyên DOM và phiếu. */

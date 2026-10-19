@@ -4,7 +4,7 @@
 
 Frontend là HTML/CSS/JavaScript thuần. `build.py` ghép cấu hình, nội dung và logic thành một HTML đầy đủ. `dist/index.html` là bản xem thử độc lập; `apps-script/Index.html` có cùng nội dung nhưng khi được Google Apps Script phục vụ sẽ có cầu nối `google.script.run`.
 
-Backend gồm `Code.gs` và `Schema.gs`. `doGet()` trả giao diện. `submitRecord()` nhận bản ghi, kiểm tra lại và ghi vào Sheet. `loginCoordinator()` cấp phiên điều phối theo trường/lớp. Các hàm tên kết thúc `_` là hàm nội bộ, không gọi được từ `google.script.run`.
+Backend gồm `Code.gs`, `Schema.gs` và `Accounts.gs`. `Accounts.gs` quản lý mã/PIN học sinh, phiên và tiến độ đã nộp; hướng dẫn tại [tài khoản](docs/TAI_KHOAN_HOC_SINH.md). `doGet()` trả giao diện. `submitRecord()` nhận bản ghi, kiểm tra lại và ghi vào Sheet. `loginCoordinator()` cấp phiên điều phối theo trường/lớp. Các hàm tên kết thúc `_` là hàm nội bộ, không gọi được từ `google.script.run`.
 
 Không đặt Sheet ID hoặc PIN vào frontend. `setup_()` lưu Sheet ID vào Script Properties. PIN được chủ dự án cấu hình ở thuộc tính `COORDINATOR_PINS`.
 

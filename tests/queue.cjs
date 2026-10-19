@@ -84,10 +84,10 @@ function harness() {
   const h = harness();
   h.c.item = {
     id: 'stable-id-123456',
-    loai: 'chu_trinh',
+    loai: 'chu_trinh', ma:'AB12-C', truong:'Trường thử', lop:'10A', tuan:1,
     noi: 'Mình bị bắt nạt nên cần hỗ trợ'
   };
-  vm.runInContext('enqueue(item)', h.c);
+  vm.runInContext('profile={ma:item.ma,truong:item.truong,lop:item.lop};studentAuth={...profile,token:"fixture-session-token-123",expires:Date.now()+60000};enqueue(item)', h.c);
   assert.equal(h.attempts, 0);
   assert.equal(JSON.parse(h.mem.xoaychieu_v2).queue.length, 1);
   h.c.navigator.onLine = true;
