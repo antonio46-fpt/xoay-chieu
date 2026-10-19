@@ -34,6 +34,7 @@ const Safety = (() => {
 if (typeof module !== 'undefined') module.exports = Safety;
 
 const SCHEMA = {
+  "cellMax": 13000,
   "schools": [
     {
       "truong": "THPT Chuyên Chu Văn An",

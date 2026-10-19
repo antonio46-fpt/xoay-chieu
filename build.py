@@ -11,6 +11,10 @@ ROOT = Path(__file__).resolve().parent
 SRC = ROOT / "src"
 DIST = ROOT / "dist"
 SERVER = ROOT / "apps-script"
+MAX_CELL_CHARS = 13000
+
+def utf16_length(text):
+    return len(text.encode("utf-16-le")) // 2
 
 
 def read(path):
@@ -30,11 +34,21 @@ def validate_content(content):
             stages[step["stage"]] = step["minutes"]
             for field in step["fields"]:
                 fields.append(field["key"])
-                assert field["max"] >= field["min"] >= 0
+                assert MAX_CELL_CHARS >= field["max"] >= field["min"] >= 0, "Giới hạn ô vượt mức nội bộ"
+                for option in field.get("options", []):
+                    assert utf16_length(option) <= field["max"], "Lựa chọn vượt giới hạn ô"
         assert sum(stages.values()) == week["duration"], (week["tuan"], stages)
         assert week["duration"] == (15 if week["tuan"] <= 2 else 45)
         assert len(fields) == len(set(fields)), "Trùng khóa câu trả lời"
         assert fields.count("tu_danh_gia") == 1, "Mỗi tuần cần một tự đánh giá"
+        limits = {field["key"]: field["max"] for step in week["steps"] for field in step["fields"]}
+        if week["tuan"] == 3:
+            assert limits["nghi_1"] + utf16_length("Phe A: ") <= MAX_CELL_CHARS
+            assert limits["chia_se"] + max(map(utf16_length, ["Đổi ý: ", "Giữ ý: "])) <= MAX_CELL_CHARS
+        if week["tuan"] == 4:
+            total = limits["kiem_soat"] + limits["ngoai_kiem_soat"] + utf16_length("Phần mình thay đổi được:\n\n\nPhần mình không thay đổi được:\n")
+            assert total <= MAX_CELL_CHARS, "Cột tổng hợp tuần 4 vượt giới hạn ô"
+
 
 
 def build():
@@ -64,6 +78,7 @@ def build():
 
     # Cùng định nghĩa ô nhập cho kiểm tra cả phía học sinh và máy chủ.
     schema = {
+        "cellMax": MAX_CELL_CHARS,
         "schools": content["truong_lop"],
         "safety": content["an_toan"],
         "weeks": [[field for step in week["steps"] for field in step["fields"]]

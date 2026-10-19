@@ -1,5 +1,5 @@
 /**
- * XOAY CHIỀU — MÁY CHỦ GOOGLE APPS SCRIPT, phiên bản 2.2.0.
+ * XOAY CHIỀU — MÁY CHỦ GOOGLE APPS SCRIPT, phiên bản 2.3.0.
  *
  * Các điểm vào từ trình duyệt:
  *   doGet()                  → phục vụ giao diện Index.html.
@@ -9,7 +9,7 @@
  * Các hàm kết thúc bằng '_' là hàm nội bộ, không gọi được qua google.script.run.
  * API tiến độ chỉ trả mã và tuần, xác thực bằng phiên giáo viên của đúng lớp. Không có API đọc bài riêng tư.
  */
-const SERVER_VERSION = '2.2.0';
+const SERVER_VERSION = '2.3.0';
 
 const HEADERS = {
   chu_trinh: [
@@ -94,6 +94,7 @@ function num_(value, min, max) {
 }
 
 function valid_(data) {
+  if (SCHEMA.cellMax !== 13000) fail_('Schema không cùng phiên bản. Hãy cập nhật đồng bộ Code.gs, Schema.gs và Index.html.', 'SETUP_REQUIRED');
   if (!data || typeof data !== 'object' || Array.isArray(data) ||
     JSON.stringify(data).length > 100000) fail_('Bản ghi không hợp lệ hoặc quá lớn.');
   if (!Object.prototype.hasOwnProperty.call(HEADERS, data.loai)) fail_(
@@ -113,7 +114,7 @@ function valid_(data) {
       'Trường dữ liệu không được hỗ trợ: ' + name);
     if (!['string', 'number', 'boolean'].includes(typeof value)) fail_(
       'Kiểu dữ liệu không hợp lệ: ' + name);
-    if (typeof value === 'string' && value.length > 13000) fail_('Giá trị quá dài: ' + name);
+    if (typeof value === 'string' && value.length > SCHEMA.cellMax) fail_('Giá trị quá dài: ' + name);
   });
 
   if (data.loai === 'chu_trinh') validateStudent_(data);
@@ -181,6 +182,14 @@ function validateDebate_(data) {
   text_(data.vi_sao, 'vì sao', 5, 6000);
 }
 
+/** RAW + UNFORMATTED_VALUE: bỏ ô trống cuối hàng là bình thường; chuỗi giữ nguyên từng ký tự. */
+function sameCell_(stored, expected) {
+  if (expected === undefined || expected === null || expected === '') return stored === undefined || stored === null || stored === '';
+  if (typeof expected === 'number') return typeof stored === 'number' && Number.isFinite(stored) && stored === expected;
+  if (typeof expected === 'boolean') return stored === expected;
+  return typeof stored === 'string' && stored === expected;
+}
+
 /**
  * Đảm bảo tính idempotent:
  * - Cùng ID + cùng nội dung → ACK lại, không tạo dòng mới.
@@ -207,26 +216,22 @@ function submitRecord(payload) {
       error: 'Máy chủ đang bận; bài được giữ để gửi lại.'
     };
 
-    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
-    const sheet = spreadsheet.getSheetByName(data.loai);
-    const columns = HEADERS[data.loai];
-    if (!sheet || !headersMatch_(sheet, columns)) fail_(
+    // Đọc ID, đọc bản ghi và append qua cùng Sheets API; khóa giữ đến khi append trả về.
+    const columns = HEADERS[data.loai], range = "'" + data.loai + "'!";
+    const readOptions = { valueRenderOption: 'UNFORMATTED_VALUE', dateTimeRenderOption: 'SERIAL_NUMBER' };
+    const headers = Sheets.Spreadsheets.Values.get(spreadsheetId, range + '1:1', readOptions).values || [];
+    if (JSON.stringify(headers[0] || []) !== JSON.stringify(columns)) fail_(
       'Cấu trúc Sheet không khớp; liên hệ người quản lý.', 'SETUP_REQUIRED');
-
-    if (sheet.getLastRow() > 1) {
-      const match = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1)
-        .createTextFinder(data.id).matchEntireCell(true).findNext();
-      if (match) {
-        const existing = sheet.getRange(match.getRow(), 1, 1, columns.length).getValues()[0];
-        const identical = columns.every((key, index) => key === 'thoi_gian_nhan' ||
-          String(existing[index] ?? '') === String(data[key] ?? ''));
-        if (!identical) fail_('ID đã tồn tại với nội dung khác. Không ghi đè.', 'ID_CONFLICT');
-        return {
-          ok: true,
-          id: data.id,
-          duplicate: true
-        };
-      }
+    const ids = Sheets.Spreadsheets.Values.get(spreadsheetId, range + 'A2:A', readOptions).values || [];
+    const found = ids.findIndex(row => row[0] === data.id);
+    if (found >= 0) {
+      const rowNumber = found + 2;
+      const existing = (Sheets.Spreadsheets.Values.get(spreadsheetId,
+        range + rowNumber + ':' + rowNumber, readOptions).values || [])[0] || [];
+      const identical = columns.every((key, index) => key === 'thoi_gian_nhan' ||
+        sameCell_(existing[index], data[key]));
+      if (!identical) fail_('ID đã tồn tại với nội dung khác. Không ghi đè.', 'ID_CONFLICT');
+      return { ok: true, id: data.id, duplicate: true };
     }
 
     const row = columns.map(key => key === 'thoi_gian_nhan' ?
@@ -327,15 +332,31 @@ function loginRole_(input, role, property) {
     if (!lock.tryLock(1500)) fail_('Máy chủ đang bận. Thử lại sau vài giây.', 'BUSY');
     const cache = CacheService.getScriptCache();
     const key = 'login:' + role + ':' + input.truong + '|' + input.lop;
-    const attempts = Number(cache.get(key) || 0);
-    if (attempts >= 8) fail_('Đã thử nhiều lần. Vui lòng đợi 10 phút.', 'AUTH_REQUIRED');
+    let state;
+    try { state = JSON.parse(cache.get(key) || 'null'); } catch { state = null; }
+    // Đọc cả bộ đếm cũ khi nâng cấp; không vô tình bỏ qua thời gian khóa còn lại.
+    if (typeof state === 'number') state = { attempts: state, blockedUntil: state >= 8 ? Date.now() + 600000 : 0 };
+    state ||= { attempts: 0, blockedUntil: 0 };
+    if (state.blockedUntil > Date.now()) {
+      const seconds = Math.max(1, Math.ceil((state.blockedUntil - Date.now()) / 1000));
+      cache.put(key, JSON.stringify(state), seconds);
+      const error = new Error('Lớp đang tạm khóa đăng nhập. Thử lại sau ' + seconds + ' giây; liên hệ chủ dự án nếu cần hỗ trợ.');
+      error.code = 'RATE_LIMITED'; error.retryAfterSeconds = seconds; throw error;
+    }
+    if (state.blockedUntil) state = { attempts: 0, blockedUntil: 0 };
     const raw = PropertiesService.getScriptProperties().getProperty(property) || '{}';
     const pins = JSON.parse(raw);
     const expected = pins[input.truong + '|' + input.lop];
     if (!expected || !/^\d{6,12}$/.test(String(expected)) || String(input.pin) !== String(
         expected)) {
-      cache.put(key, String(attempts + 1), 600);
-      fail_('PIN chưa được cấu hình hoặc không đúng.', 'AUTH_REQUIRED');
+      state.attempts++;
+      if (state.attempts >= 8) state.blockedUntil = Date.now() + 600000;
+      cache.put(key, JSON.stringify(state), 600);
+      if (state.blockedUntil) {
+        const error = new Error('Đã nhập sai PIN 8 lần. Lớp tạm khóa trong 600 giây; liên hệ chủ dự án nếu cần hỗ trợ.');
+        error.code = 'RATE_LIMITED'; error.retryAfterSeconds = 600; throw error;
+      }
+      fail_('PIN chưa được cấu hình hoặc không đúng. Còn ' + (8 - state.attempts) + ' lần thử trước khi tạm khóa.', 'AUTH_REQUIRED');
     }
     cache.remove(key);
     const token = Utilities.getUuid() + Utilities.getUuid();
@@ -354,7 +375,8 @@ function loginRole_(input, role, property) {
     return {
       ok: false,
       code: error.code || 'SERVER_ERROR',
-      error: error.code ? error.message : 'Chưa xác thực được quyền truy cập.'
+      error: error.code ? error.message : 'Chưa xác thực được quyền truy cập.',
+      ...(error.retryAfterSeconds ? { retryAfterSeconds: error.retryAfterSeconds } : {})
     };
   } finally {
     if (lock && lock.hasLock()) lock.releaseLock();

@@ -127,6 +127,7 @@ test('Server RAW append, retry deduplication, conflicting IDs and unauthorized c
     Sheets: {
       Spreadsheets: {
         Values: {
+          get: require('./helpers/sheets.cjs').valuesReader(() => vm.runInContext('HEADERS.chu_trinh', c), () => rows),
           append: (body, id, range, opts) => {
             options = opts;
             rows.push(body.values[0]);

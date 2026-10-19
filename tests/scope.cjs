@@ -17,7 +17,7 @@ const context = {
   CacheService: { getScriptCache: () => ({ get: key => cache.get(key) || null, put: (k,v) => cache.set(k,v), remove: k => cache.delete(k) }) },
   LockService: { getScriptLock: () => ({ tryLock: () => locked = true, hasLock: () => locked, releaseLock: () => locked = false }) },
   Utilities: { getUuid: () => crypto.randomUUID() },
-  Sheets: { Spreadsheets: { Values: { append: body => records.push(body.values[0]) } } },
+  Sheets: { Spreadsheets: { Values: { get: require('./helpers/sheets.cjs').valuesReader(() => vm.runInContext('HEADERS.chu_trinh', c), () => records), append: body => records.push(body.values[0]) } } },
   SpreadsheetApp: { openById: () => ({ getSheetByName: () => ({
     getLastRow: () => records.length + 1,
     getRange: (start, column, count) => ({
