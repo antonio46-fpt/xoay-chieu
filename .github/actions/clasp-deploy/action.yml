@@ -1,0 +1,35 @@
+name: clasp deploy
+description: Đẩy apps-script/ lên một dự án Apps Script và cập nhật deployment hiện có
+inputs:
+  clasprc: { description: Nội dung ~/.clasprc.json, required: true }
+  script-id: { description: Script ID của dự án, required: true }
+  deployment-id: { description: ID deployment cần cập nhật, required: true }
+  description: { description: Mô tả phiên bản, required: false, default: '' }
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 24
+    - name: Cấu hình clasp
+      shell: bash
+      env:
+        CLASPRC_JSON: ${{ inputs.clasprc }}
+        SCRIPT_ID: ${{ inputs.script-id }}
+        DEPLOYMENT_ID: ${{ inputs.deployment-id }}
+      run: |
+        [ -n "$CLASPRC_JSON" ] && [ -n "$SCRIPT_ID" ] && [ -n "$DEPLOYMENT_ID" ] || { echo "Thiếu secret CLASPRC_JSON, SCRIPT_ID hoặc DEPLOYMENT_ID"; exit 1; }
+        printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
+        printf '{"scriptId":"%s","rootDir":"apps-script"}' "$SCRIPT_ID" > .clasp.json
+    - name: Push và deploy
+      shell: bash
+      env:
+        DEPLOYMENT_ID: ${{ inputs.deployment-id }}
+        DESCRIPTION: ${{ inputs.description }}
+      run: |
+        npx --yes @google/clasp@3.4.1 push --force
+        npx --yes @google/clasp@3.4.1 deploy -i "$DEPLOYMENT_ID" -d "$DESCRIPTION"
+    - name: Xóa thông tin đăng nhập
+      if: always()
+      shell: bash
+      run: rm -f ~/.clasprc.json .clasp.json

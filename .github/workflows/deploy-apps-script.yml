@@ -1,7 +1,8 @@
 name: Deploy Apps Script
 
-# Đẩy apps-script/ lên dự án Apps Script khi nhánh main thay đổi.
-# Dùng dự án THỬ cho SCRIPT_ID; không trỏ vào deployment đang chạy cho học sinh.
+# main thay đổi apps-script/ → kiểm tra → deploy bản THỬ → (người duyệt) → deploy bản THẬT.
+# Mỗi environment có secret riêng: CLASPRC_JSON, SCRIPT_ID, DEPLOYMENT_ID.
+# Deployment được cập nhật theo ID nên URL web app không đổi.
 on:
   push:
     branches: [main]
@@ -16,24 +17,47 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  verify:
     runs-on: ubuntu-latest
-    environment: apps-script
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - run: npm ci
-      - run: npm test
-      - name: Cấu hình clasp
-        env:
-          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
-          SCRIPT_ID: ${{ secrets.SCRIPT_ID }}
+      - name: Bản build đã commit phải khớp src/
         run: |
-          test -n "$CLASPRC_JSON" && test -n "$SCRIPT_ID" || { echo "Thiếu secret CLASPRC_JSON hoặc SCRIPT_ID"; exit 1; }
-          printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
-          printf '{"scriptId":"%s","rootDir":"apps-script"}' "$SCRIPT_ID" > .clasp.json
-      - name: Đẩy mã lên Apps Script
-        run: npx --yes @google/clasp@3.4.1 push --force
+          python build.py
+          git diff --exit-code -- apps-script dist || { echo "Hãy chạy python build.py và commit kết quả."; exit 1; }
+      - run: npm test
+
+  deploy-test:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: apps-script-test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/clasp-deploy
+        with:
+          clasprc: ${{ secrets.CLASPRC_JSON }}
+          script-id: ${{ secrets.SCRIPT_ID }}
+          deployment-id: ${{ secrets.DEPLOYMENT_ID }}
+          description: ${{ github.sha }}
+
+  deploy-prod:
+    needs: deploy-test
+    runs-on: ubuntu-latest
+    # Bật Required reviewers cho environment này để cần người bấm duyệt.
+    environment: apps-script-prod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/clasp-deploy
+        with:
+          clasprc: ${{ secrets.CLASPRC_JSON }}
+          script-id: ${{ secrets.SCRIPT_ID }}
+          deployment-id: ${{ secrets.DEPLOYMENT_ID }}
+          description: ${{ github.sha }}

@@ -82,17 +82,18 @@ Tài liệu Google: https://developers.google.com/apps-script/guides/html/commun
 4. Deploy → Manage deployments → Edit → New version → Deploy để giữ URL cũ. Chỉ Save code chưa cập nhật bản `/exec`.
 5. Không đổi cấu trúc câu hỏi/phiên bản giữa lúc học sinh đang làm. Thử trước trên bản sao.
 
-## E2. Tự đẩy mã lên Apps Script bằng GitHub Actions
+## E2. Tự động deploy: thử trước, thật sau
 
-Workflow `.github/workflows/deploy-apps-script.yml` chạy `npm test` rồi `clasp push` thư mục `apps-script/` mỗi khi `main` có thay đổi ở đó (hoặc chạy tay ở tab Actions). Chỉ cập nhật mã; phải tạo deployment mới để người dùng thấy bản mới (mục E). Script Properties không bị ảnh hưởng.
+Workflow `.github/workflows/deploy-apps-script.yml` chạy khi `main` đổi `apps-script/`: (1) `verify` build lại và báo lỗi nếu bản commit không khớp `src/`, rồi `npm test`; (2) `deploy-test` đẩy mã và cập nhật deployment của dự án THỬ; (3) `deploy-prod` làm tương tự cho dự án THẬT, chỉ chạy sau khi người duyệt đồng ý. Deployment được cập nhật theo ID nên URL web app không đổi. Script Properties (PIN, `CLASS_ROSTERS`, `SPREADSHEET_ID`) không bị ảnh hưởng.
 
 Thiết lập một lần:
 1. Bật Apps Script API tại https://script.google.com/home/usersettings (tài khoản dùng để đẩy mã).
-2. Trên máy: `npx @google/clasp login`, rồi lấy nội dung `~/.clasprc.json`.
-3. GitHub → Settings → Environments → tạo `apps-script`; thêm secret `CLASPRC_JSON` (nội dung bước 2) và `SCRIPT_ID` (Apps Script → Project Settings).
-4. Dùng **dự án Apps Script thử** cho `SCRIPT_ID`. Không trỏ vào dự án đang chạy cho học sinh; dự án thật chỉ đẩy tay sau khi kiểm tra. Có thể bật Required reviewers cho environment.
+2. Mỗi dự án (thử, thật) tạo sẵn một Web App deployment bằng tay, cấp quyền lần đầu, rồi ghi lại Deployment ID.
+3. Trên máy: `npx @google/clasp login`, lấy nội dung `~/.clasprc.json`.
+4. GitHub → Settings → Environments, tạo `apps-script-test` và `apps-script-prod`. Mỗi environment có ba secret: `CLASPRC_JSON`, `SCRIPT_ID` (Project Settings), `DEPLOYMENT_ID`.
+5. Ở `apps-script-prod` bật **Required reviewers**.
 
-`CLASPRC_JSON` cho quyền ghi vào tài khoản Google, nên dùng tài khoản riêng của dự án và không đưa vào Git hay log. Không sửa mã trực tiếp trên web editor vì lần đẩy sau sẽ ghi đè.
+`CLASPRC_JSON` cho quyền ghi vào tài khoản Google; dùng tài khoản riêng của dự án, không đưa vào Git hay log. Không sửa mã trên web editor vì lần deploy sau sẽ ghi đè. Đổi `oauthScopes` trong `appsscript.json` cần cấp quyền lại bằng tay. Kiểm thử trên Google thật (issue #2–#4) vẫn làm thủ công trên dự án thử trước khi duyệt bản thật.
 
 ## F. Sao lưu và xử lý lỗi
 
