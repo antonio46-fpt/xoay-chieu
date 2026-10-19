@@ -1322,7 +1322,7 @@ select:disabled {
  * Nội dung giáo dục được sửa riêng trong content.json.
  */
 const APP_CONFIG = Object.freeze({
-  version: '2.2.0',
+  version: '2.3.0',
   storageKey: 'xoaychieu_v2', // Giữ khóa cũ để không mất bài phiên bản 2.0.
   rpcTimeoutMs: 30000,
   retryBaseMs: 5000,
@@ -1407,7 +1407,7 @@ const Core = (() => {
     'xc-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
 
   /** Tạo gói bất biến cho một lần nộp. Không tạo lại gói khi gửi lại vì lỗi mạng. */
-  function record(draft, profile, week, appVersion = '2.2.0') {
+  function record(draft, profile, week, appVersion = '2.3.0') {
     const answers = draft.answers;
     const result = {
       id: draft.id,
@@ -1615,6 +1615,7 @@ let profile = db.current || null,
   coordToken = '',
   coordUntil = 0,
   teacherAuth = null,
+  teacherSelection = null,
   sending = false,
   lastTick = Date.now(),
   saveTimer = null,
@@ -1708,6 +1709,7 @@ async function sync(force = false) {
           changed = true;
           persist();
         }
+        if (tab === 'coord' && profile?.truong === item.record.truong && profile?.lop === item.record.lop) showCoordinatorReauth();
         continue;
       }
       try {
@@ -1721,6 +1723,7 @@ async function sync(force = false) {
           if (result?.code === 'AUTH_REQUIRED') {
             coordToken = '';
             coordUntil = 0;
+            if (tab === 'coord') showCoordinatorReauth();
           }
           const error = new Error(result?.error || 'Máy chủ chưa xác nhận đúng bản ghi.');
           error.permanent = result?.code === 'INVALID_RECORD' || result?.code === 'ID_CONFLICT';
@@ -2357,6 +2360,7 @@ function saveCoord(form, data) {
 }
 
 function paintCoord() {
+  if (LIVE && tab === 'coord' && (!coordToken || Date.now() > coordUntil)) showCoordinatorReauth();
   if (!$('coordTime') || !stageClock) return;
   const t = Math.max(0, Math.ceil(stageClock.remaining));
   $('stageName').textContent = stageClock.stages[stageClock.idx][0];
@@ -2380,7 +2384,10 @@ setInterval(() => {
 function teacher() {
   const page = $('page');
   const active = teacherAuth && Date.now() < teacherAuth.expires;
-  if (!active) teacherAuth = null;
+  if (!active) {
+    if (teacherAuth) teacherSelection = { truong: teacherAuth.truong, lop: teacherAuth.lop };
+    teacherAuth = null;
+  }
   page.innerHTML = `<p class="eyebrow">DÀNH CHO GIÁO VIÊN CHỦ NHIỆM</p><h1>Tiến độ lớp</h1><p class="muted">Chỉ xem mã và tuần đã được máy chủ xác nhận. Không đọc câu trả lời, sản phẩm hay mức tự đánh giá.</p>${!LIVE ? '<div class="notice">Bản xem thử chưa kết nối Sheet. Bảng dưới đây chỉ dùng dữ liệu giả để minh họa.</div>' : ''}${active ? `<section class="panel"><div class="row between"><h2>${E(teacherAuth.lop)}</h2><button id="teacherLogout">Đăng xuất</button></div><p>${E(teacherAuth.truong)}</p><button id="teacherRefresh">Làm mới tiến độ</button><div id="teacherResult" aria-live="polite"></div></section>` : `<form id="teacherLogin" class="panel"><label class="field"><span>Trường phụ trách</span><select id="teacherSchool">${CONTENT.truong_lop.map(s => `<option>${E(s.truong)}</option>`).join('')}</select></label><label class="field"><span>Lớp phụ trách</span><select id="teacherClass"></select></label><label class="field"><span>PIN giáo viên</span><input id="teacherPin" type="password" inputmode="numeric" pattern="[0-9]{6,12}" required autocomplete="off" ${LIVE ? '' : 'disabled'}></label><button class="primary" ${LIVE ? '' : 'disabled'}>Xem tiến độ lớp</button><p id="teacherError" class="error" role="alert"></p></form>${!LIVE ? '<section class="panel" style="margin-top:20px"><h2>Minh họa bằng dữ liệu giả</h2><div id="teacherResult"></div></section>' : ''}`}<p class="caption">Bảng chỉ liệt kê mã đã có ít nhất một bài được xác nhận. Chưa có danh sách mã được cấp để kết luận các mã chưa xuất hiện là chưa làm bài. Giáo viên không được chia sẻ PIN hoặc dùng chung thiết bị đang mở Sổ của mình với học sinh.</p>`;
   function showStudents(students) {
     const result = $('teacherResult');
@@ -2396,7 +2403,7 @@ function teacher() {
       const response = await rpc('getClassProgress', { token: auth.token, truong: auth.truong, lop: auth.lop });
       if ($('page') !== page || teacherAuth !== auth) return;
       if (!response?.ok) {
-        if (response?.code === 'AUTH_REQUIRED') { teacherAuth = null; teacher(); toast('Phiên giáo viên hết hạn. Hãy đăng nhập lại.'); return; }
+        if (response?.code === 'AUTH_REQUIRED') { teacherSelection = { truong: auth.truong, lop: auth.lop }; teacherAuth = null; teacher(); toast('Phiên giáo viên hết hạn. Hãy đăng nhập lại.'); return; }
         throw Error(response?.error || 'Chưa tải được tiến độ.');
       }
       showStudents(response.students);
@@ -2419,13 +2426,16 @@ function teacher() {
       klass.innerHTML = CONTENT.truong_lop.find(s => s.truong === school.value).lop.map(lop => `<option>${E(lop)}</option>`).join('');
     };
     school.onchange = choose;
+    if (teacherSelection && CONTENT.truong_lop.some(s => s.truong === teacherSelection.truong)) school.value = teacherSelection.truong;
     choose();
+    if (teacherSelection && [...klass.options].some(o => o.value === teacherSelection.lop)) klass.value = teacherSelection.lop;
     $('teacherLogin').onsubmit = async event => {
       event.preventDefault();
       if (!LIVE) return;
       const button = event.target.querySelector('button');
       button.disabled = true;
       const input = { truong: school.value, lop: klass.value, pin: $('teacherPin').value };
+      teacherSelection = { truong: input.truong, lop: input.lop };
       $('teacherPin').value = '';
       $('teacherError').textContent = '';
       try {
@@ -2441,30 +2451,46 @@ function teacher() {
   }
 }
 
-function coordLogin() {
-  $('page').innerHTML =
-    `<div class="welcome panel"><h2>Chế độ điều phối</h2><p>${E(profile.truong)} · ${E(profile.lop)}</p><p class="muted">Nhập PIN được giáo viên cấp cho lớp. PIN được kiểm tra trên máy chủ.</p><form id="pinForm"><label class="field"><span>PIN điều phối</span><input id="pin" type="password" inputmode="numeric" minlength="6" maxlength="12" required autocomplete="off"></label><button class="primary">Mở chế độ điều phối</button><p id="pinErr" class="error" role="alert"></p></form></div>`;
-  $('pinForm').onsubmit = async e => {
-    e.preventDefault();
-    const b = e.target.querySelector('button');
-    b.disabled = true;
+/** Cache có thể mất sớm: yêu cầu PIN ngay trên màn hình, giữ nguyên DOM và phiếu. */
+function showCoordinatorReauth() {
+  if (!LIVE || !$('sessionForm') || $('coordReauth')) return;
+  const notice = document.createElement('section');
+  notice.id = 'coordReauth';
+  notice.className = 'notice';
+  notice.innerHTML = `<p role="status">Phiên điều phối hết hạn. Phiếu đang điền vẫn được giữ; nhập lại PIN để gửi tiếp.</p><form id="coordReauthForm"><label class="field"><span>PIN điều phối của lớp ${E(profile.lop)}</span><input id="coordReauthPin" type="password" inputmode="numeric" pattern="[0-9]{6,12}" required autocomplete="off"></label><button class="primary">Xác thực lại</button><p id="coordReauthError" class="error" role="alert"></p></form>`;
+  $('page').prepend(notice);
+  bindCoordinatorLogin('coordReauthForm', 'coordReauthPin', 'coordReauthError', () => {
+    notice.remove();
+    toast('Đã xác thực lại. Phiếu và đồng hồ được giữ nguyên.');
+    sync(true);
+  });
+}
+
+function bindCoordinatorLogin(formId, pinId, errorId, onSuccess) {
+  const form = $(formId), page = $('page');
+  form.onsubmit = async event => {
+    event.preventDefault();
+    const button = form.querySelector('button'), owner = Core.key(profile);
+    button.disabled = true;
+    const input = { truong: profile.truong, lop: profile.lop, pin: $(pinId).value };
+    $(pinId).value = '';
+    $(errorId).textContent = '';
     try {
-      const r = await rpc('loginCoordinator', {
-        truong: profile.truong,
-        lop: profile.lop,
-        pin: $('pin').value
-      });
-      if (!r.ok) throw Error(r.error || 'PIN không đúng.');
-      coordToken = r.token;
-      coordUntil = r.expires;
-      render();
-      sync(true);
-    } catch (err) {
-      $('pinErr').textContent = err.message;
-    } finally {
-      b.disabled = false;
-    }
+      const response = await rpc('loginCoordinator', input);
+      if ($('page') !== page || !form.isConnected || !profile || Core.key(profile) !== owner) return;
+      if (!response?.ok) throw Error(response?.error || 'Chưa xác thực được PIN.');
+      coordToken = response.token;
+      coordUntil = response.expires;
+      onSuccess();
+    } catch (error) {
+      if (form.isConnected && $(errorId)) $(errorId).textContent = error.message;
+    } finally { if (button.isConnected) button.disabled = false; }
   };
+}
+
+function coordLogin() {
+  $('page').innerHTML = `<div class="welcome panel"><h2>Chế độ điều phối</h2><p>${E(profile.truong)} · ${E(profile.lop)}</p><p class="muted">Nhập PIN được giáo viên cấp cho lớp. PIN được kiểm tra trên máy chủ.</p><form id="pinForm"><label class="field"><span>PIN điều phối</span><input id="pin" type="password" inputmode="numeric" pattern="[0-9]{6,12}" required autocomplete="off"></label><button class="primary">Mở chế độ điều phối</button><p id="pinErr" class="error" role="alert"></p></form></div>`;
+  bindCoordinatorLogin('pinForm', 'pin', 'pinErr', () => { render(); sync(true); });
 }
 /** Hiệu ứng nhấn dùng chung; không can thiệp xử lý nút hay dữ liệu bài làm. */
 function showButtonRipple(event) {
