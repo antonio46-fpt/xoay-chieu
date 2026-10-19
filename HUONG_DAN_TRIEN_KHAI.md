@@ -82,6 +82,18 @@ Tài liệu Google: https://developers.google.com/apps-script/guides/html/commun
 4. Deploy → Manage deployments → Edit → New version → Deploy để giữ URL cũ. Chỉ Save code chưa cập nhật bản `/exec`.
 5. Không đổi cấu trúc câu hỏi/phiên bản giữa lúc học sinh đang làm. Thử trước trên bản sao.
 
+## E2. Tự đẩy mã lên Apps Script bằng GitHub Actions
+
+Workflow `.github/workflows/deploy-apps-script.yml` chạy `npm test` rồi `clasp push` thư mục `apps-script/` mỗi khi `main` có thay đổi ở đó (hoặc chạy tay ở tab Actions). Chỉ cập nhật mã; phải tạo deployment mới để người dùng thấy bản mới (mục E). Script Properties không bị ảnh hưởng.
+
+Thiết lập một lần:
+1. Bật Apps Script API tại https://script.google.com/home/usersettings (tài khoản dùng để đẩy mã).
+2. Trên máy: `npx @google/clasp login`, rồi lấy nội dung `~/.clasprc.json`.
+3. GitHub → Settings → Environments → tạo `apps-script`; thêm secret `CLASPRC_JSON` (nội dung bước 2) và `SCRIPT_ID` (Apps Script → Project Settings).
+4. Dùng **dự án Apps Script thử** cho `SCRIPT_ID`. Không trỏ vào dự án đang chạy cho học sinh; dự án thật chỉ đẩy tay sau khi kiểm tra. Có thể bật Required reviewers cho environment.
+
+`CLASPRC_JSON` cho quyền ghi vào tài khoản Google, nên dùng tài khoản riêng của dự án và không đưa vào Git hay log. Không sửa mã trực tiếp trên web editor vì lần đẩy sau sẽ ghi đè.
+
 ## F. Sao lưu và xử lý lỗi
 
 - Xuất bản sao JSON trong Cài đặt, hoặc từng mã trong Sổ của mình. JSON có câu trả lời, cần giữ riêng.

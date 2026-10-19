@@ -1,0 +1,39 @@
+name: Deploy Apps Script
+
+# Đẩy apps-script/ lên dự án Apps Script khi nhánh main thay đổi.
+# Dùng dự án THỬ cho SCRIPT_ID; không trỏ vào deployment đang chạy cho học sinh.
+on:
+  push:
+    branches: [main]
+    paths: ['apps-script/**']
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-apps-script
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: apps-script
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Cấu hình clasp
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+          SCRIPT_ID: ${{ secrets.SCRIPT_ID }}
+        run: |
+          test -n "$CLASPRC_JSON" && test -n "$SCRIPT_ID" || { echo "Thiếu secret CLASPRC_JSON hoặc SCRIPT_ID"; exit 1; }
+          printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
+          printf '{"scriptId":"%s","rootDir":"apps-script"}' "$SCRIPT_ID" > .clasp.json
+      - name: Đẩy mã lên Apps Script
+        run: npx --yes @google/clasp@3.4.1 push --force
