@@ -39,15 +39,14 @@ const SCHEMA = {
     {
       "truong": "THPT Chuyên Chu Văn An",
       "lop": [
-        "10 Trung",
-        "10D2"
+        "10A3 (10 Tin)",
+        "11E1 (11 Văn)"
       ]
     },
     {
       "truong": "THPT Chi Lăng",
       "lop": [
-        "10A6",
-        "10A7"
+        "12A2"
       ]
     }
   ],

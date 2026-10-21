@@ -59,7 +59,7 @@ function studentAccounts_(id) {
 
 function pinDigest_(pin, account) {
   const secret = PropertiesService.getScriptProperties().getProperty('STUDENT_PIN_SECRET');
-  if (!secret) fail_('Chủ dự án cần cấp PIN trước khi đăng nhập học sinh.', 'SETUP_REQUIRED');
+  if (!secret) fail_('Chủ dự án cần cấp mật khẩu trước khi đăng nhập học sinh.', 'SETUP_REQUIRED');
   const message = JSON.stringify([accountKey_(account), account.salt, pin]);
   return Utilities.computeHmacSha256Signature(message, secret, Utilities.Charset.UTF_8)
     .map(byte => ((byte + 256) % 256).toString(16).padStart(2, '0')).join('');
@@ -72,10 +72,17 @@ function constantTimeEqual_(left, right) {
   return difference === 0;
 }
 
+/** Mật khẩu mới là chuỗi 8–64 ký tự; PIN số 6–12 đã cấp vẫn dùng được. */
+function studentPassword_(input) {
+  const value = Object.prototype.hasOwnProperty.call(input, 'password') ? input.password : input.pin;
+  return typeof value === 'string' && (/^[0-9]{6,12}$/.test(value) ||
+    (value.length >= 8 && value.length <= 64 && !/[\x00-\x20\x7f]/.test(value))) ? value : '';
+}
+
 function loginStudent(input) {
   let lock;
   try {
-    if (!input || !schoolOK_(input) || typeof input.ma !== 'string' || !/^[A-Z]{2}[0-9]{2}-[A-Z]$/.test(input.ma)) fail_('Mã, trường/lớp hoặc PIN không đúng.', 'AUTH_REQUIRED');
+    if (!input || !schoolOK_(input) || typeof input.ma !== 'string' || !/^[A-Z]{2}[0-9]{2}-[A-Z]$/.test(input.ma)) fail_('Mã, trường/lớp hoặc mật khẩu không đúng.', 'AUTH_REQUIRED');
     const id = accountSheetId_();
     lock = LockService.getScriptLock();
     if (!lock.tryLock(1500)) fail_('Máy chủ đang bận. Thử lại sau vài giây.', 'BUSY');
@@ -90,16 +97,16 @@ function loginStudent(input) {
     const account = studentAccounts_(id).find(item => accountKey_(item) === accountKey_(input));
     // Tính digest cả với tài khoản không tồn tại để không trả thông tin danh sách mã.
     const candidate = account || { ...input, salt: 'unregistered' };
-    const suppliedPin = typeof input.pin === 'string' && /^[0-9]{6,12}$/.test(input.pin) ? input.pin : '';
+    const suppliedPin = studentPassword_(input);
     const digest = pinDigest_(suppliedPin, candidate);
     if (!account || account.status !== 'hoat_dong' || !account.pinHash ||
-        !/^[0-9]{6,12}$/.test(String(input.pin || '')) || !constantTimeEqual_(digest, account.pinHash)) {
+        !suppliedPin || !constantTimeEqual_(digest, account.pinHash)) {
       state.attempts++;
       if (state.attempts >= 8) state.blockedUntil = Date.now() + 600000;
       cache.put(key, JSON.stringify(state), 600);
       return { ok: false, code: state.blockedUntil ? 'RATE_LIMITED' : 'AUTH_REQUIRED',
         ...(state.blockedUntil ? { retryAfterSeconds: 600 } : {}),
-        error: state.blockedUntil ? 'Đã thử sai 8 lần. Mã này tạm khóa 600 giây.' : 'Mã, trường/lớp hoặc PIN không đúng.' };
+        error: state.blockedUntil ? 'Đã thử sai 8 lần. Mã này tạm khóa 600 giây.' : 'Mã, trường/lớp hoặc mật khẩu không đúng.' };
     }
     cache.remove(key);
     const token = Utilities.getUuid() + Utilities.getUuid(), expires = Date.now() + 21600000;
@@ -112,7 +119,7 @@ function loginStudent(input) {
 }
 
 function authorizeStudent_(token, data, id) {
-  if (typeof token !== 'string' || token.length < 20 || token.length > 160) fail_('Hãy đăng nhập lại bằng mã và PIN để đồng bộ.', 'AUTH_REQUIRED');
+  if (typeof token !== 'string' || token.length < 20 || token.length > 160) fail_('Hãy đăng nhập lại bằng mã và mật khẩu để đồng bộ.', 'AUTH_REQUIRED');
   let auth;
   try { auth = JSON.parse(CacheService.getScriptCache().get('student:' + token) || 'null'); } catch { auth = null; }
   if (!auth || !Number.isFinite(auth.expires) || auth.expires <= Date.now() || accountKey_(auth) !== accountKey_(data)) fail_('Phiên học sinh hết hạn hoặc không đúng mã/trường/lớp.', 'AUTH_REQUIRED');
@@ -160,17 +167,12 @@ function getStudentProgress(input) {
   } finally { if (lock && lock.hasLock()) lock.releaseLock(); }
 }
 
-function newStudentPin_() {
-  let result = '';
-  while (result.length < 8) {
-    const hex = Utilities.getUuid().replace(/-/g, '');
-    for (let i = 0; i < hex.length && result.length < 8; i += 2) {
-      const byte = parseInt(hex.slice(i, i + 2), 16);
-      if (byte < 250) result += String(byte % 10);
-    }
-  }
-  return result;
+function newStudentPassword_() {
+  // Sinh từ UUID ngẫu nhiên; không lấy mã học sinh hoặc dùng chung cho cả lớp.
+  return 'Xc' + Utilities.getUuid().replace(/-/g, '').slice(0, 24);
 }
+
+function newStudentPin_() { return newStudentPassword_(); }
 
 function accountRow_(account) {
   return [account.ma, account.truong, account.lop, account.status, account.salt, account.pinHash, account.issuedAt];
@@ -178,9 +180,10 @@ function accountRow_(account) {
 
 function showIssuedPins_(ui, issued, note = '') {
   const quote = value => '"' + String(value).replace(/"/g, '""') + '"';
-  const csv = [['ma','truong','lop','pin'], ...issued.map(item => [item.ma,item.truong,item.lop,item.pin])].map(row => row.map(quote).join(',')).join('\n');
+  const csv = [['ma','truong','lop','mat_khau'], ...issued.map(item => [item.ma,item.truong,item.lop,item.pin])].map(row => row.map(quote).join(',')).join('\n');
+  const download = '<p><a download="Tai_khoan_mat_khau.csv" href="data:text/csv;charset=utf-8,' + encodeURIComponent('\uFEFF' + csv) + '">Tải file tài khoản và mật khẩu (CSV)</a></p>';
   const escape = value => String(value).replace(/[&<>\"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[char]));
-  ui.showModalDialog(HtmlService.createHtmlOutput('<h2>PIN mới — chỉ hiện ở lần cấp này</h2><p>Sao chép và giao riêng cho từng học sinh. Không đăng Git, nhóm lớp hoặc lưu chung với dữ liệu nghiên cứu. Giữ PIN dưới dạng văn bản để không mất số 0 đầu.</p><p>' + escape(note) + '</p><textarea readonly style="width:100%;height:300px">' + escape(csv) + '</textarea>').setWidth(650).setHeight(470), 'Cấp tài khoản học sinh');
+  ui.showModalDialog(HtmlService.createHtmlOutput('<h2>Mật khẩu mới — chỉ hiện ở lần cấp này</h2><p>Sao chép và giao riêng cho từng học sinh. Không đăng Git, nhóm lớp hoặc lưu chung với dữ liệu nghiên cứu. Giữ mật khẩu nguyên chữ hoa/thường, không thêm khoảng trắng.</p><p>' + escape(note) + '</p>' + download + '<textarea readonly style="width:100%;height:300px">' + escape(csv) + '</textarea>').setWidth(650).setHeight(470), 'Cấp mật khẩu học sinh');
 }
 
 /** Chạy sau khi chép mã có sẵn vào A:C của tai_khoan. Không sinh lại mã, không đổi PIN đã cấp. */
@@ -240,6 +243,39 @@ function resetSelectedStudentPin_() {
       "'tai_khoan'!A" + account.rowNumber + ':G' + account.rowNumber, { valueInputOption: 'RAW' });
     issued = { ma: account.ma, truong: account.truong, lop: account.lop, pin };
   } finally { if (lock && lock.hasLock()) lock.releaseLock(); }
-  showIssuedPins_(ui, [issued], 'Các phiên cũ của mã này phải nhập lại PIN.');
+  showIssuedPins_(ui, [issued], 'Các phiên cũ của mã này phải nhập lại mật khẩu.');
   return { reset: true };
+}
+
+/** Chuẩn bị bảng trung gian chỉ 3 cột, không nhập dữ liệu khảo sát vào hệ thống. */
+function prepareStudentImport_() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  if (!spreadsheet || spreadsheet.getId() !== accountSheetId_()) fail_('Mở đúng Sheet đã cấu hình.', 'SETUP_REQUIRED');
+  const headers = ['ma', 'truong', 'lop'];
+  const sheet = spreadsheet.getSheetByName('nhap_tai_khoan') || spreadsheet.insertSheet('nhap_tai_khoan');
+  if (sheet.getLastRow() === 0) {
+    sheet.getRange(1, 1, 1, 3).setValues([headers]); sheet.setFrozenRows(1);
+  } else if (!headersMatch_(sheet, headers)) fail_('Bảng nhập cần đúng ba cột ma, truong, lop. Không ghi đè dữ liệu cũ.', 'SETUP_REQUIRED');
+  SpreadsheetApp.getUi().alert('Dán dữ liệu CSV mã/trường/lớp vào nhap_tai_khoan, không dán các cột khảo sát. Sau đó chạy importStudentRoster_.');
+}
+
+/** Chỉ chạy từ editor; kiểm tra cả danh sách trước khi ghi, thêm mới và giữ mật khẩu cũ. */
+function importStudentRoster_() {
+  const ui = SpreadsheetApp.getUi();
+  let lock, result;
+  try {
+    const id = accountSheetId_();
+    lock = LockService.getScriptLock();
+    if (!lock.tryLock(1500)) fail_('Máy chủ đang bận. Thử lại sau.', 'BUSY');
+    const incoming = normalizeAccounts_(readSystemTable_(id, 'nhap_tai_khoan', ['ma', 'truong', 'lop']).map(row => row.slice(0, 3)));
+    if (!incoming.length) fail_('Bảng nhập chưa có mã học sinh.', 'SETUP_REQUIRED');
+    const existing = new Set(studentAccounts_(id).map(accountKey_));
+    const fresh = incoming.filter(account => !existing.has(accountKey_(account)));
+    if (fresh.length) Sheets.Spreadsheets.Values.append({values: fresh.map(accountRow_)}, id,
+      "'tai_khoan'!A1", {valueInputOption:'RAW', insertDataOption:'INSERT_ROWS'});
+    result = {created: fresh.length, existing: incoming.length - fresh.length};
+  } finally { if (lock && lock.hasLock()) lock.releaseLock(); }
+  // Ui.alert tạm dừng server: phải thả khóa trước khi chờ người dùng.
+  ui.alert('Đã thêm ' + result.created + ' tài khoản; giữ nguyên ' + result.existing + ' tài khoản đã có. Chạy provisionStudentAccounts_ để cấp mật khẩu cho mã mới.');
+  return result;
 }

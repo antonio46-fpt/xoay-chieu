@@ -4,7 +4,7 @@ let now=Date.now(),locked=false,failProgress=false,batchCalls=0,display='',selec
 class Clock extends Date {static now(){return now;}}
 const school=content.truong_lop[0].truong,klass=content.truong_lop[0].lop[0];
 const props={SPREADSHEET_ID:'fake-account-sheet'},cache=new Map(),tables={tai_khoan:[],tien_do:[],chu_trinh:[]};
-const ui={showModalDialog:html=>display=html.value,alert:()=>{}};
+const ui={showModalDialog:html=>display=html.value,alert:()=>assert(!locked,'Release lock before a blocking UI alert')};
 const api={
  get:(id,range,opts)=>{
   assert(locked);assert.equal(opts.valueRenderOption,'UNFORMATTED_VALUE');assert.equal(opts.dateTimeRenderOption,'SERIAL_NUMBER');
@@ -44,10 +44,17 @@ function login(ma,pin,extra={}){return call('loginStudent',{ma,truong:school,lop
 const provision=call('provisionStudentAccounts_');assert.equal(provision.created,2);assert.equal(batchCalls,1);
 const lines=display.match(/<textarea[^>]*>([\s\S]*?)<\/textarea>/)[1].replaceAll('&quot;','"').split('\n');
 const pins=Object.fromEntries(lines.slice(1).map(line=>{const cells=JSON.parse('['+line+']');return [cells[0],cells[3]];}));
-assert.match(pins['ZZ01-A'],/^\d{8}$/);assert.notEqual(tables.tai_khoan[1][4],tables.tai_khoan[2][4]);
+assert.match(pins['ZZ01-A'],/^Xc[a-f0-9]{24}$/);assert.notEqual(tables.tai_khoan[1][4],tables.tai_khoan[2][4]);
 assert(!JSON.stringify(tables).includes(pins['ZZ01-A']),'Plain PIN is never stored in Sheets');
 const hash=tables.tai_khoan[1][5],secret=props.STUDENT_PIN_SECRET;
 assert.equal(call('provisionStudentAccounts_').created,0);assert.equal(tables.tai_khoan[1][5],hash);assert.equal(props.STUDENT_PIN_SECRET,secret);
+// Password field is canonical; numeric PIN requests issued by older versions stay valid.
+assert(call('loginStudent',{ma:'ZZ01-A',truong:school,lop:klass,password:pins['ZZ01-A']}).ok);
+assert(!call('loginStudent',{ma:'ZZ01-A',truong:school,lop:klass,password:pins['ZZ01-A'].toUpperCase()}).ok);
+c.legacyAccount={ma:'ZZ02-B',truong:school,lop:klass,salt:tables.tai_khoan[2][4]};
+const originalSecondHash=tables.tai_khoan[2][5];tables.tai_khoan[2][5]=vm.runInContext("pinDigest_('012345',legacyAccount)",c);
+assert(login('ZZ02-B','012345').ok);assert(call('loginStudent',{ma:'ZZ02-B',truong:school,lop:klass,password:'012345'}).ok);
+tables.tai_khoan[2][5]=originalSecondHash;
 const owner=login('ZZ01-A',pins['ZZ01-A']);assert(owner.ok);const other=login('ZZ02-B',pins['ZZ02-B']);assert(other.ok);
 const auth={ma:'ZZ01-A',truong:school,lop:klass,token:owner.token};
 assert.equal(call('getStudentProgress',{...auth,token:other.token}).code,'AUTH_REQUIRED');
@@ -74,7 +81,17 @@ call('resetSelectedStudentPin_');assert.notEqual(tables.tai_khoan[1][5],hash);as
 for(let i=0;i<7;i++)login('ZZ02-B','000000');const blocked=login('ZZ02-B','000000');assert.equal(blocked.code,'RATE_LIMITED');assert.equal(blocked.retryAfterSeconds,600);
 now+=120000;assert.equal(login('ZZ02-B',pins['ZZ02-B']).retryAfterSeconds,480);now+=480001;assert(login('ZZ02-B',pins['ZZ02-B']).ok);
 now+=21600001;assert.equal(call('getStudentProgress',{...auth,ma:'ZZ02-B',token:other.token}).code,'AUTH_REQUIRED');
+tables.nhap_tai_khoan=[['ma','truong','lop'],['ZZ01-A',school,klass],['ZZ03-C',school,klass],['ZZ01-A',school,content.truong_lop[0].lop[1]]];
+assert.equal(call('importStudentRoster_').created,2);assert.equal(call('importStudentRoster_').created,0);
+const previousRoster=JSON.stringify(tables.tai_khoan);tables.nhap_tai_khoan.push(['bad-code',school,klass]);
+assert.throws(()=>call('importStudentRoster_'));assert.equal(JSON.stringify(tables.tai_khoan),previousRoster);tables.nhap_tai_khoan.pop();
 const before=JSON.stringify(tables.tai_khoan);tables.tai_khoan.push([...tables.tai_khoan[1]]);assert.throws(()=>call('provisionStudentAccounts_'));tables.tai_khoan.pop();assert.equal(JSON.stringify(tables.tai_khoan),before);
+// Same code in another class is a separate password/account, never a merged identity.
+assert.equal(call('provisionStudentAccounts_').created,2);
+const newlyIssued=display.match(/<textarea[^>]*>([\s\S]*?)<\/textarea>/)[1].replaceAll('&quot;','"').split('\n').slice(1).map(line=>JSON.parse('['+line+']'));
+const sibling=newlyIssued.find(row=>row[0]==='ZZ01-A'&&row[2]!==klass);
+assert(sibling);assert(call('loginStudent',{ma:sibling[0],truong:sibling[1],lop:sibling[2],password:sibling[3]}).ok);
+assert(!call('loginStudent',{ma:sibling[0],truong:sibling[1],lop:klass,password:sibling[3]}).ok);
 // Full planned cohort uses one write request, without copying any real roster.
 tables.tai_khoan=[tables.tai_khoan[0],...Array.from({length:150},(_,i)=>['AA'+String(Math.floor(i/26)).padStart(2,'0')+'-'+String.fromCharCode(65+i%26),school,klass])];
 const batchesBefore=batchCalls;assert.equal(call('provisionStudentAccounts_').created,150);assert.equal(batchCalls-batchesBefore,1);
