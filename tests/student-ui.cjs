@@ -7,7 +7,7 @@ function open(snapshot){
  let session=0,rejectProgress=false,submitResult=null;
  w.fakeRpc=async(name,input)=>{
   calls.push({name,input});
-  if(name==='loginStudent')return input.pin==='12345678'?{ok:true,token:'fake-student-token-'+(++session),expires:Date.now()+600000}:{ok:false,code:'AUTH_REQUIRED',error:'Mã hoặc PIN không đúng.'};
+  if(name==='loginStudent')return (input.password||input.pin)==='12345678'?{ok:true,token:'fake-student-token-'+(++session),expires:Date.now()+600000}:{ok:false,code:'AUTH_REQUIRED',error:'Mã hoặc PIN không đúng.'};
   if(name==='getStudentProgress'){if(rejectProgress)throw Error('Mất mạng thử');return {ok:true,weeks:[1,2],updatedAt:new Date().toISOString()};}
   if(name==='submitRecord')return submitResult||{ok:true,id:input.record.id};
   return {ok:true};

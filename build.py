@@ -74,7 +74,8 @@ def build():
         assert html.count(marker) == 1, "Sai placeholder " + name
         html = html.replace(marker, source)
     (DIST / "index.html").write_text(html, encoding="utf-8")
-    (SERVER / "Index.html").write_text(html, encoding="utf-8")
+    assert html.count("authRequired: false") == 1, "Thiếu cấu hình xác thực riêng cho bản thật"
+    (SERVER / "Index.html").write_text(html.replace("authRequired: false", "authRequired: true"), encoding="utf-8")
 
     # Cùng định nghĩa ô nhập cho kiểm tra cả phía học sinh và máy chủ.
     schema = {

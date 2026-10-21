@@ -18,3 +18,6 @@
 - [ ] Tài khoản thử được cấp PIN riêng bằng `provisionStudentAccounts_`; không có PIN rõ trong Sheet. Giữ `STUDENT_PIN_SECRET` trong Script Properties; thử cấp lại không đổi PIN và đặt lại/khóa mã thu hồi phiên cũ.
 - [ ] Học sinh mã khác/lớp khác/đổi vai trò không nộp hoặc xem tiến độ thay mã khác. Bài bị che trước ghi; `tien_do` đúng các tuần đã nhận kể cả sau lỗi cập nhật tiến độ và gửi lại cùng ID.
 - [ ] Đăng nhập thiết bị mới nhận tiến độ; không nhầm tiến độ với nháp/bài gốc chỉ ở thiết bị cũ. Hết phiên khi viết vẫn giữ nháp/DOM; đăng xuất giữ hàng đợi và chỉ gửi khi đúng mã đăng nhập lại.
+
+- [ ] Ba lớp đúng workbook triển khai; nhập CSV qua `nhap_tai_khoan`, chạy lại không nhân đôi hoặc đổi mật khẩu cũ. File CSV tài khoản/mật khẩu chỉ do người phụ trách giữ, không lưu trong Sheet nguồn hoặc Git.
+- [ ] Dùng đúng `apps-script/Index.html` có `authRequired: true`; khi thiếu bridge Google không có đường vào demo. Thử mật khẩu chữ/số, mã trùng khác lớp, Enter, hiện/ẩn mật khẩu và chặn mở tuần khi hết phiên.

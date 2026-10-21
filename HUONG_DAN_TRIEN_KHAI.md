@@ -1,4 +1,4 @@
-# Triển khai Xoay Chiều 2.5.0 vào Google Sheets
+# Triển khai Xoay Chiều 2.6.0 vào Google Sheets
 
 Bộ `apps-script/` đã có bản build sẵn; không cần cài Python hoặc Node chỉ để dán và triển khai. Bản Sites/HTML tĩnh dành cho xem thử, không phải link thu dữ liệu Google Sheets. Không sử dụng dữ liệu thật trong bước thử.
 
@@ -29,10 +29,9 @@ Làm theo [hướng dẫn mã + PIN và tiến độ](docs/TAI_KHOAN_HOC_SINH.md
 
 ```json
 {
- "THPT Chuyên Chu Văn An|10 Trung": "PIN_RIENG_1",
- "THPT Chuyên Chu Văn An|10D2": "PIN_RIENG_2",
- "THPT Chi Lăng|10A6": "PIN_RIENG_3",
- "THPT Chi Lăng|10A7": "PIN_RIENG_4"
+ "THPT Chuyên Chu Văn An|10A3 (10 Tin)": "PIN_RIENG_1",
+ "THPT Chuyên Chu Văn An|11E1 (11 Văn)": "PIN_RIENG_2",
+ "THPT Chi Lăng|12A2": "PIN_RIENG_3"
 }
 ```
 
@@ -110,3 +109,7 @@ Cập nhật `Index.html` và `Code.gs` rồi Deploy New version để có nút 
 ## Nâng cấp 2.5.0
 
 Cập nhật đủ `Code.gs`, `Accounts.gs`, `Schema.gs`, `Index.html`; giữ Script Properties và dữ liệu cũ. Thực hiện mục A2 trên bản thử, sau đó chủ dự án chuẩn bị tài khoản ở bản thật trước khi New version. Đăng nhập trên máy mới tải tiến độ các tuần đã nộp; nháp/bài gốc trong Sổ vẫn cần thiết bị cũ hoặc bản sao. Chi tiết thao tác, đặt lại PIN và nghiệm thu tại [hướng dẫn tài khoản](docs/TAI_KHOAN_HOC_SINH.md).
+
+## Nâng cấp 2.6.0 — mã từ Excel và mật khẩu
+
+Ba lớp thực nghiệm mới thay cấu hình lớp cũ. Làm theo [nhập danh sách và cấp mật khẩu](docs/TAI_KHOAN_HOC_SINH.md): prepareStudentImport_ → dán CSV mã/trường/lớp → importStudentRoster_ → provisionStudentAccounts_ → tải file mật khẩu riêng → New version. Giữ nguyên khóa Script Properties và dữ liệu bài cũ; không tự gán lại trường/lớp trong nháp/hàng đợi. PIN số cũ giữ tương thích. HTML demo có thông báo riêng, không đăng nhập tài khoản thật.

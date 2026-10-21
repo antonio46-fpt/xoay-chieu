@@ -19,7 +19,7 @@ def package():
         "src/style.css", "src/shell.html", "apps-script/Code.gs", "apps-script/Accounts.gs", "apps-script/Schema.gs",
         "apps-script/appsscript.json", "build.py", "package_source.py", "package.json",
         "tests/accounts.cjs", "tests/student-ui.cjs", "tests/logout.cjs", "tests/helpers/sheets.cjs", "tests/backend-review.cjs", "tests/reauth.cjs", "tests/preview.cjs", "tests/fe.cjs", "tests/scope.cjs", "tests/test.cjs", "tests/queue.cjs", "tests/recovery.cjs", "tests/ui.cjs", "tests/run.cjs",
-        "tools/source-reader.html",
+        "tools/source-reader.html", "tools/import_student_roster.py", "tests/roster_import.py", "tests/password-gate.cjs",
         ".github/ISSUE_TEMPLATE/backend_task.yml", "docs/issues/README.md",
         "docs/issues/be-class-roster.md", "docs/issues/be-progress-permissions.md",
         "docs/issues/be-submission-integrity.md", "docs/issues/be-capacity.md",

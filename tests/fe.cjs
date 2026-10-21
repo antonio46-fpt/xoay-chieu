@@ -9,7 +9,7 @@ function open(live) {
   }});
   const w=dom.window;
   w.fixture={ma:'ZZ01-A',truong:content.truong_lop[0].truong,lop:content.truong_lop[0].lop[0]};
-  w.eval('profile=fixture;person();tab="home";render()');
+  w.eval('profile=fixture;studentAuth={...fixture,token:"fake-fe-auth-token-123456",expires:Date.now()+60000};person();tab="home";render()');
   return {dom,w,$:id=>w.document.getElementById(id)};
 }
 for(const live of [false,true]) {

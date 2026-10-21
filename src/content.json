@@ -3,15 +3,14 @@
     {
       "truong": "THPT Chuyên Chu Văn An",
       "lop": [
-        "10 Trung",
-        "10D2"
+        "10A3 (10 Tin)",
+        "11E1 (11 Văn)"
       ]
     },
     {
       "truong": "THPT Chi Lăng",
       "lop": [
-        "10A6",
-        "10A7"
+        "12A2"
       ]
     }
   ],
@@ -168,7 +167,7 @@
     "Bắt đầu bằng “Mình nghĩ… vì…”",
     "Ai không muốn nói được làm người ghi chép"
   ],
-  "phien_ban": "2.2.1",
+  "phien_ban": "2.2.2",
   "so_tuan": 4,
   "ngay_bat_dau": "",
   "noi_dung_status": "Bản thử nghiệm — nhóm nghiên cứu cần duyệt nội dung trước khi dùng chính thức.",
@@ -1090,7 +1089,7 @@
     "muc_tieu": "Rèn luyện năng lực linh hoạt trong học tập của học sinh THPT qua hoạt động bốn tuần.",
     "giai_doan": "Bản bắt buộc: chu trình tuần 1–2, tranh luận tuần 3, chỉnh sửa sản phẩm tuần 4.",
     "trien_lam": "App chỉ cho xem và chỉnh sửa sản phẩm của chính mình. Hình thức triển lãm chờ chốt với nhóm nghiên cứu; không hiển thị bài của học sinh khác.",
-    "quy_mo_du_kien": "2 trường, 4 lớp, khoảng 150 học sinh dự kiến.",
+    "quy_mo_du_kien": "2 trường, 3 lớp thực nghiệm theo danh sách triển khai.",
     "ngoai_pham_vi": [
       "Tuần 5–8",
       "Ứng dụng Android/iOS riêng",
