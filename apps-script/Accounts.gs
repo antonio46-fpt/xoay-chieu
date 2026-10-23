@@ -3,7 +3,7 @@ const ACCOUNT_HEADERS = ['ma', 'truong', 'lop', 'trang_thai', 'pin_salt', 'pin_h
 const PROGRESS_HEADERS = ['ma', 'truong', 'lop', 'tuan_1', 'tuan_2', 'tuan_3', 'tuan_4', 'so_tuan_da_nop', 'cap_nhat'];
 
 function setupStudentStorage_(spreadsheet) {
-  for (const [name, headers] of [['tai_khoan', ACCOUNT_HEADERS], ['tien_do', PROGRESS_HEADERS]]) {
+  for (const [name, headers] of [['tai_khoan', ACCOUNT_HEADERS], ['tien_do', PROGRESS_HEADERS], ['nhap_hoc_tap', LEARNING_HEADERS]]) {
     const sheet = spreadsheet.getSheetByName(name) || spreadsheet.insertSheet(name);
     if (sheet.getLastRow() === 0) {
       sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
@@ -41,7 +41,7 @@ function normalizeAccounts_(rows) {
     const account = { ma, truong: String(row[1] || '').trim(), lop: String(row[2] || '').trim(),
       status: String(row[3] || 'hoat_dong'), salt: String(row[4] || ''), pinHash: String(row[5] || ''),
       issuedAt: String(row[6] || ''), rowNumber: index + 2 };
-    if (!/^[A-Z]{2}[0-9]{2}-[A-Z]$/.test(ma) || ma === 'HO07-T' || !schoolOK_(account) ||
+    if (!/^[A-Z]{2}[0-9]{2}-[A-Z]$/.test(ma) || !schoolOK_(account) ||
         !['hoat_dong', 'khoa'].includes(account.status)) fail_('Kiểm tra mã, trường/lớp và trạng thái ở dòng ' + (index + 2) + ' của tai_khoan.', 'SETUP_REQUIRED');
     if (!!account.salt !== !!account.pinHash || (account.pinHash && !/^[a-f0-9]{64}$/.test(account.pinHash))) {
       fail_('Dữ liệu PIN không hoàn chỉnh ở dòng ' + (index + 2) + '. Dùng chức năng đặt lại PIN, không nhập PIN vào bảng này.', 'SETUP_REQUIRED');

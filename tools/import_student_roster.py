@@ -67,7 +67,7 @@ def roster(path, content):
                 if not header or not code:
                     continue
                 # Preserve supplied codes: reject invalid values rather than silently renaming.
-                if not CODE.fullmatch(code) or code == 'HO07-T':
+                if not CODE.fullmatch(code):
                     raise ValueError(f'Mã không hợp lệ: lớp {name}, dòng {row.attrib["r"]}.')
                 key = (school, klass, code)
                 if key in seen:

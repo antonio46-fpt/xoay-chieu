@@ -1,5 +1,5 @@
 /**
- * XOAY CHIỀU — MÁY CHỦ GOOGLE APPS SCRIPT, phiên bản 2.6.0.
+ * XOAY CHIỀU — MÁY CHỦ GOOGLE APPS SCRIPT, phiên bản 2.7.0.
  *
  * Các điểm vào từ trình duyệt:
  *   doGet()                  → phục vụ giao diện Index.html.
@@ -7,9 +7,9 @@
  *   loginCoordinator(input)  → xác thực PIN của đúng trường/lớp.
  *
  * Các hàm kết thúc bằng '_' là hàm nội bộ, không gọi được qua google.script.run.
- * API tiến độ chỉ trả mã và tuần, xác thực bằng phiên giáo viên của đúng lớp. Không có API đọc bài riêng tư.
+ * API tiến độ chỉ trả mã và tuần, xác thực bằng phiên giáo viên của đúng lớp. Phiên giáo viên không đọc bài/nháp riêng; Learning.gs chỉ trả bài của chính học sinh đã xác thực.
  */
-const SERVER_VERSION = '2.6.0';
+const SERVER_VERSION = '2.7.0';
 
 const HEADERS = {
   chu_trinh: [
@@ -124,8 +124,7 @@ function valid_(data) {
 }
 
 function validateStudent_(data) {
-  if (typeof data.ma !== 'string' || !/^[A-Z]{2}[0-9]{2}-[A-Z]$/.test(data.ma) || data.ma ===
-    'HO07-T') {
+  if (typeof data.ma !== 'string' || !/^[A-Z]{2}[0-9]{2}-[A-Z]$/.test(data.ma)) {
     fail_('Mã học sinh không hợp lệ.');
   }
   // Schema sinh từ cùng content.json với giao diện, tránh lệch quy tắc hai phía.

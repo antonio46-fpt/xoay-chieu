@@ -7,7 +7,7 @@
 const Core = (() => {
   const words = value => String(value ?? '').trim().split(/\s+/u).filter(Boolean).length;
   const normalize = value => String(value ?? '').toUpperCase().replace(/\s/g, '');
-  const validCode = value => /^[A-Z]{2}[0-9]{2}-[A-Z]$/.test(value) && value !== 'HO07-T';
+  const validCode = value => /^[A-Z]{2}[0-9]{2}-[A-Z]$/.test(value);
 
   // Mọi văn bản tự do đều được escape trước khi chèn vào HTML.
   const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({
@@ -92,6 +92,7 @@ const Core = (() => {
 
   const safety = typeof module !== 'undefined' ? require('./safety.js') : Safety;
   return {
+    schools: content => [...content.truong_lop, ...(content.truong_lop_cu || [])],
     safeRecord: safety.redactRecord,
     safetyMatches: safety.matches,
     words,

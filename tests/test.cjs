@@ -39,10 +39,10 @@ test('Four unique workflows have correct total stage durations', () => {
     s.minutes
   ]))).reduce((a, b) => a + b, 0), w.duration));
 });
-test('Codes normalize; malformed and example codes rejected', () => {
+test('Codes normalize; malformed codes rejected; membership is checked by server authentication', () => {
   assert.equal(Core.normalize(' bi08-t '), 'BI08-T');
   assert(Core.validCode('BI08-T'));
-  for (const c of ['HO07-T', 'ABC12-C', 'AB1-C', '<img>']) assert(!Core.validCode(c));
+  for (const c of ['BAD-CODE', 'ABC12-C', 'AB1-C', '<img>']) assert(!Core.validCode(c));
 });
 test('Blank, too short, missing rating and invalid selection rejected', () => {
   assert(Core.validate({
@@ -93,7 +93,7 @@ test('All four valid records pass server validation', () => {
     c.r = rec(w);
     vm.runInContext('valid_(r)', c);
   });
-  for (const modify of [r => r.tu_danh_gia = 0, r => r.noi = '', r => r.ma = 'HO07-T', r => r
+  for (const modify of [r => r.tu_danh_gia = 0, r => r.noi = '', r => r.ma = 'BAD-CODE', r => r
       .tuan = 8, r => r.lop = 'Other'
     ]) {
     c.r = rec(D.weeks[0]);

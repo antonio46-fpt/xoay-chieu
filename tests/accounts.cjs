@@ -55,6 +55,7 @@ c.legacyAccount={ma:'ZZ02-B',truong:school,lop:klass,salt:tables.tai_khoan[2][4]
 const originalSecondHash=tables.tai_khoan[2][5];tables.tai_khoan[2][5]=vm.runInContext("pinDigest_('012345',legacyAccount)",c);
 assert(login('ZZ02-B','012345').ok);assert(call('loginStudent',{ma:'ZZ02-B',truong:school,lop:klass,password:'012345'}).ok);
 tables.tai_khoan[2][5]=originalSecondHash;
+assert(!login('ZZ99-Z','XcUnknownSynthetic2026').ok,'A formatted but unregistered code cannot log in');
 const owner=login('ZZ01-A',pins['ZZ01-A']);assert(owner.ok);const other=login('ZZ02-B',pins['ZZ02-B']);assert(other.ok);
 const auth={ma:'ZZ01-A',truong:school,lop:klass,token:owner.token};
 assert.equal(call('getStudentProgress',{...auth,token:other.token}).code,'AUTH_REQUIRED');
@@ -92,6 +93,16 @@ const newlyIssued=display.match(/<textarea[^>]*>([\s\S]*?)<\/textarea>/)[1].repl
 const sibling=newlyIssued.find(row=>row[0]==='ZZ01-A'&&row[2]!==klass);
 assert(sibling);assert(call('loginStudent',{ma:sibling[0],truong:sibling[1],lop:sibling[2],password:sibling[3]}).ok);
 assert(!call('loginStudent',{ma:sibling[0],truong:sibling[1],lop:klass,password:sibling[3]}).ok);
+// Existing Chi Lang credentials remain valid when a new school is added.
+const legacy=content.truong_lop_cu?.[0];
+if(legacy){
+ c.legacyExisting={ma:'ZZ88-Z',truong:legacy.truong,lop:legacy.lop[0],salt:'legacy-test-salt'};
+ const legacyHash=vm.runInContext("pinDigest_('XcLegacySynthetic2026',legacyExisting)",c);
+ tables.tai_khoan.push(['ZZ88-Z',legacy.truong,legacy.lop[0],'hoat_dong','legacy-test-salt',legacyHash,'']);
+ assert(call('loginStudent',{...c.legacyExisting,password:'XcLegacySynthetic2026'}).ok);
+ call('importStudentRoster_');assert.equal(tables.tai_khoan.at(-1)[5],legacyHash);
+ assert(Core.schools(content).some(s=>s.truong===legacy.truong&&s.lop.includes(legacy.lop[0])));
+}
 // Full planned cohort uses one write request, without copying any real roster.
 tables.tai_khoan=[tables.tai_khoan[0],...Array.from({length:150},(_,i)=>['AA'+String(Math.floor(i/26)).padStart(2,'0')+'-'+String.fromCharCode(65+i%26),school,klass])];
 const batchesBefore=batchCalls;assert.equal(call('provisionStudentAccounts_').created,150);assert.equal(batchCalls-batchesBefore,1);

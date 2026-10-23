@@ -44,6 +44,12 @@ const SCHEMA = {
       ]
     },
     {
+      "truong": "Trường PTDTNT THCS & THPT Lộc Bình",
+      "lop": [
+        "LB-11A (11A Lộc Bình)"
+      ]
+    },
+    {
       "truong": "THPT Chi Lăng",
       "lop": [
         "12A2"
@@ -64,6 +70,168 @@ const SCHEMA = {
     "loi_nhan": "Cảm ơn bạn đã chia sẻ. Điều bạn đang gặp rất quan trọng. Hãy nói chuyện ngay với thầy cô chủ nhiệm hoặc cán bộ tư vấn học đường của trường – bạn không phải tự mình vượt qua một mình. Phần trả lời có từ khóa sẽ được thay bằng “[đã ẩn – an toàn]” khi gửi; bản gốc vẫn nằm trên máy và trong bản sao bạn tải về.",
     "lien_he": ""
   },
+  "workflow": [
+    [
+      {
+        "stage": "Mở thư",
+        "hints": 0
+      },
+      {
+        "stage": "Thử",
+        "hints": 0
+      },
+      {
+        "stage": "Nghĩ",
+        "hints": 3
+      },
+      {
+        "stage": "Nghĩ",
+        "hints": 3
+      },
+      {
+        "stage": "Nghĩ",
+        "hints": 3
+      },
+      {
+        "stage": "Nối",
+        "hints": 0
+      },
+      {
+        "stage": "Nối",
+        "hints": 0
+      },
+      {
+        "stage": "Chia sẻ",
+        "hints": 0
+      },
+      {
+        "stage": "Tự đánh giá",
+        "hints": 0
+      }
+    ],
+    [
+      {
+        "stage": "Mở thư",
+        "hints": 0
+      },
+      {
+        "stage": "Thử",
+        "hints": 0
+      },
+      {
+        "stage": "Nghĩ",
+        "hints": 3
+      },
+      {
+        "stage": "Nghĩ",
+        "hints": 3
+      },
+      {
+        "stage": "Nghĩ",
+        "hints": 3
+      },
+      {
+        "stage": "Nối",
+        "hints": 0
+      },
+      {
+        "stage": "Nối",
+        "hints": 0
+      },
+      {
+        "stage": "Chia sẻ",
+        "hints": 0
+      },
+      {
+        "stage": "Tự đánh giá",
+        "hints": 0
+      }
+    ],
+    [
+      {
+        "stage": "Mở thư",
+        "hints": 0
+      },
+      {
+        "stage": "Thử",
+        "hints": 0
+      },
+      {
+        "stage": "Chuẩn bị",
+        "hints": 3
+      },
+      {
+        "stage": "Trình bày",
+        "hints": 0
+      },
+      {
+        "stage": "Đổi phe",
+        "hints": 3
+      },
+      {
+        "stage": "Bỏ phe",
+        "hints": 3
+      },
+      {
+        "stage": "Sản phẩm",
+        "hints": 0
+      },
+      {
+        "stage": "Sản phẩm",
+        "hints": 0
+      },
+      {
+        "stage": "Sản phẩm",
+        "hints": 0
+      },
+      {
+        "stage": "Chia sẻ",
+        "hints": 0
+      },
+      {
+        "stage": "Tự đánh giá",
+        "hints": 0
+      }
+    ],
+    [
+      {
+        "stage": "Nhìn lại",
+        "hints": 0
+      },
+      {
+        "stage": "Nhìn lại",
+        "hints": 0
+      },
+      {
+        "stage": "Nhìn lại",
+        "hints": 3
+      },
+      {
+        "stage": "Phòng tranh",
+        "hints": 0
+      },
+      {
+        "stage": "Phòng tranh",
+        "hints": 0
+      },
+      {
+        "stage": "Viết thư",
+        "hints": 3
+      },
+      {
+        "stage": "Tổng kết",
+        "hints": 3
+      },
+      {
+        "stage": "Tổng kết",
+        "hints": 0
+      },
+      {
+        "stage": "Tự đánh giá",
+        "hints": 0
+      }
+    ]
+  ],
   "weeks": [
     [
       {
