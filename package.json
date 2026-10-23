@@ -3,7 +3,7 @@
     "jsdom": "30.1.3"
   },
   "name": "xoay-chieu",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "private": true,
   "description": "Công cụ hoạt động và thu dữ liệu nghiên cứu học tập trong bốn tuần",
   "engines": {

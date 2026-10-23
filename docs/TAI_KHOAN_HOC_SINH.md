@@ -1,10 +1,10 @@
-# Nhập tài khoản từ Excel và cấp mật khẩu — 2.6.0
+# Nhập tài khoản từ Excel và cấp mật khẩu — 2.7.0
 
 Bản mới dùng mã học sinh trong danh sách riêng làm tài khoản, mật khẩu ngẫu nhiên do chủ dự án cấp. Giao diện thật gửi `password` đến `loginStudent`, chỉ mở bài sau khi máy chủ xác nhận. Biết mã chưa đủ để vào học. Mật khẩu mới 8–64 ký tự; PIN số cũ 6–12 chữ số đã cấp vẫn dùng được, không tự đổi hash/PIN cũ.
 
 ## Cách làm nhanh với danh sách đã chuẩn bị
 
-1. Dùng **Sheet thử/dữ liệu giả trước**. Cập nhật đủ `Code.gs`, `Accounts.gs`, `Schema.gs`, `Index.html`, giữ nguyên Script Properties. Chạy `setup_` nếu chưa có bảng tài khoản. Các hàm quản trị tên kết thúc `_` chỉ chạy từ editor.
+1. Dùng **Sheet thử/dữ liệu giả trước**. Cập nhật đủ `Code.gs`, `Accounts.gs`, **`Learning.gs`**, `Schema.gs`, `Index.html`, giữ nguyên Script Properties. Chạy `setup_` nếu chưa có bảng tài khoản. Các hàm quản trị tên kết thúc `_` chỉ chạy từ editor.
 2. Chạy **prepareStudentImport_** để tạo bảng `nhap_tai_khoan` ba cột `ma, truong, lop`. Mở CSV danh sách riêng đã xuất, chép toàn bộ A:C (gồm dòng tiêu đề) vào A1 của **riêng bảng nhập này**. Không dán workbook khảo sát vào bảng tài khoản/bài làm, không thay thế toàn bộ Sheet.
 3. Chạy **importStudentRoster_**. Máy chủ kiểm tra toàn bộ danh sách rồi thêm tài khoản mới, giữ nguyên mã/mật khẩu đã có; chạy lại không nhân đôi. Mã trùng giữa các lớp được giữ thành tài khoản khác theo bộ ba mã/trường/lớp. Mã trùng trong cùng lớp hoặc lớp ngoài cấu hình bị từ chối trước khi ghi.
 4. Chạy **provisionStudentAccounts_**. Máy chủ sinh mật khẩu riêng cho mã mới chưa cấp, lưu salt + HMAC; `STUDENT_PIN_SECRET` nằm trong Script Properties và phải giữ nguyên. Quay về Sheet, hộp thoại có liên kết **Tải file tài khoản và mật khẩu (CSV)** và bảng để sao chép. Mật khẩu rõ chỉ hiện trong lần cấp này; file tải về do người phụ trách giữ và cấp riêng từng em. Không đăng file lên Git, nhóm lớp hoặc dữ liệu nghiên cứu. Nếu hộp thoại bị mất, chọn đúng dòng và chạy **resetSelectedStudentPin_** để cấp mật khẩu mới.
@@ -14,7 +14,7 @@ Bản mới dùng mã học sinh trong danh sách riêng làm tài khoản, mậ
 
 Chạy `python tools/import_student_roster.py /đường/dẫn/danh_sach.xlsx --output /thư/mục/riêng/tai_khoan.csv`. Công cụ dùng thư viện chuẩn Python, chỉ nhận các sheet lớp khớp cấu hình; chỉ xuất `ma,truong,lop`, bỏ toàn bộ cột khảo sát và sheet hướng dẫn/tổng hợp. Không sửa mã, không sinh mật khẩu cục bộ, không ghi đè file đích đã có; đầu ra phải bên ngoài thư mục mã nguồn. Không đưa workbook, CSV hay mật khẩu thật vào repo/gói source.
 
-Cấu hình lớp mới: **10A3 (10 Tin), 11E1 (11 Văn)** thuộc THPT Chuyên Chu Văn An và **12A2** thuộc THPT Chi Lăng. Mã sinh viên/học sinh lấy đúng cột MÃ HS, không dùng STT làm tài khoản. Danh sách lớp đã đổi theo đợt triển khai mới; không tự đổi trường/lớp trong bài hoặc nháp cũ để chuyển danh tính. Chủ dự án xử lý dữ liệu lớp cũ riêng trước khi nâng bản nếu còn bài chờ gửi.
+Cấu hình lớp mới: **10A3 (10 Tin), 11E1 (11 Văn)** thuộc THPT Chuyên Chu Văn An và **LB-11A (11A Lộc Bình)** thuộc Trường PTDTNT THCS & THPT Lộc Bình. Giữ Chi Lăng / 12A2 trong nhóm lớp cũ; NT-10A6/NT-10A7 còn chờ chốt, chưa kích hoạt. Mã sinh viên/học sinh lấy đúng cột MÃ HS, không dùng STT làm tài khoản. Danh sách lớp đã đổi theo đợt triển khai mới; không tự đổi trường/lớp trong bài hoặc nháp cũ để chuyển danh tính. Chủ dự án xử lý dữ liệu lớp cũ riêng trước khi nâng bản nếu còn bài chờ gửi.
 
 ## Khóa tài khoản và đặt lại mật khẩu
 
@@ -27,7 +27,7 @@ Không tự thay mã, trường/lớp trên dòng đang dùng để di chuyển 
 - `chu_trinh`: bài đã xử lý an toàn, mã/trường/lớp, tuần, ID, thời gian và phiên bản. Không chứa PIN/token. Bản gốc trước khi che và nháp giữ trên thiết bị đã viết.
 - `tien_do`: `ma, truong, lop, tuan_1, tuan_2, tuan_3, tuan_4, so_tuan_da_nop, cap_nhat`. Cờ tuần là TRUE/FALSE; số tuần là số đếm hoàn thành, **không phải điểm năng lực/nghiên cứu**. Được máy chủ tổng hợp từ bài đã nhận; không tin dữ liệu tiến độ client. Bảng có dòng khi học sinh đăng nhập/tải tiến độ hoặc nộp bài. Tài khoản chưa dùng có thể chưa có dòng tiến độ.
 - Gửi lại cùng ID/nội dung không thêm bài. Nếu ghi bài thành công nhưng cập nhật tiến độ lỗi, lần gửi lại cùng ID phục hồi tiến độ trước khi xác nhận.
-- Đăng nhập trên thiết bị mới tải lại các tuần đã nộp từ Sheet. **Không tải nội dung bài hoặc nháp cũ từ Sheet xuống Sổ của mình**; dùng cùng thiết bị hoặc khôi phục bản sao riêng để sửa sản phẩm ở tuần 4. Không coi thiếu bài trong Sổ là bài đã mất trên Sheet.
+- Đăng nhập trên thiết bị mới tải lại các tuần đã nộp từ Sheet. Khôi phục nháp/bài đã xử lý an toàn từ Sheet; phần chưa đồng bộ và bản gốc trước khi che vẫn cần thiết bị cũ/bản sao. Không coi thiếu bài trong Sổ là bài đã mất trên Sheet.
 - GVCN vẫn chỉ thấy mã đã nộp và tuần trong đúng lớp qua API tiến độ giáo viên. Không trả danh sách tài khoản chưa nộp, hash hay bài riêng tư; quyết định roster ở #1 vẫn tạm dừng. Người có quyền trực tiếp với Sheet phải do chủ dự án kiểm soát.
 
 ## Đăng nhập, mất mạng và đăng xuất
@@ -40,8 +40,10 @@ Không dùng máy chung cho nội dung riêng tư: dữ liệu cục bộ/bản 
 
 ## Chuyển bản đang dùng
 
-Sao lưu cấu hình và dữ liệu do chủ dự án quản lý; thử trên Sheet riêng trước. Chủ dự án tự thêm bảng tài khoản và cấp PIN cho mã đã có, rồi cập nhật đủ bốn tệp và New version. Chỉ triển khai khi các học sinh cần sử dụng đã nhận PIN; bản mới từ chối bài chưa xác thực. Bài đang chờ vẫn giữ ID, đăng nhập đúng tài khoản để gửi lại. Không thay ID để vượt xung đột hoặc tự nhập lại bài cũ.
+Sao lưu cấu hình và dữ liệu do chủ dự án quản lý; thử trên Sheet riêng trước. Chủ dự án tự thêm bảng tài khoản và cấp PIN cho mã đã có, rồi cập nhật đủ năm tệp gồm Learning.gs và New version. Chỉ triển khai khi các học sinh cần sử dụng đã nhận PIN; bản mới từ chối bài chưa xác thực. Bài đang chờ vẫn giữ ID, đăng nhập đúng tài khoản để gửi lại. Không thay ID để vượt xung đột hoặc tự nhập lại bài cũ.
 
 Môi trường phát triển không đọc/ghi Sheet có dữ liệu thật đã cung cấp. Unit/DOM/browser test dùng dữ liệu giả; chưa phải bằng chứng Google deployment, quota hoặc điện thoại thật đã đạt. Checklist trên Sheet thử: cấp PIN hai mã, đăng nhập sai/đúng, nộp bốn tuần, mất mạng/gửi lại, thử token sai mã/lớp/vai trò, đổi PIN, khóa mã, đăng xuất, dùng thiết bị khác xem tiến độ và kiểm tra quyền GVCN. Chỉ chủ dự án thực hiện bước chuyển sang Sheet thật theo quyền đã quản lý.
 
 Bản Apps Script được build với `authRequired: true`: nếu bridge Google chưa có, màn hình báo chưa kết nối máy chủ và chặn mở bài, không chuyển sang demo. Khi triển khai phải dùng đúng `apps-script/Index.html`, không dùng `dist/index.html`.
+
+Chi tiết tiến trình, lớp cũ và lớp chờ chọn: [tiếp tục hành trình qua các tuần](TIEN_TRINH_HOC_TAP.md). Không tự đổi mật khẩu tài khoản đã có hoặc chuyển mã Chi Lăng sang Lộc Bình.

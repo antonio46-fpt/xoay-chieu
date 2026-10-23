@@ -4,7 +4,7 @@
 
 Frontend là HTML/CSS/JavaScript thuần. `build.py` ghép cấu hình, nội dung và logic thành một HTML đầy đủ. `dist/index.html` là bản xem thử độc lập; `apps-script/Index.html` có cùng nội dung nhưng khi được Google Apps Script phục vụ sẽ có cầu nối `google.script.run`.
 
-Backend gồm `Code.gs`, `Schema.gs` và `Accounts.gs`. `Accounts.gs` quản lý mã/PIN học sinh, phiên và tiến độ đã nộp; hướng dẫn tại [tài khoản](docs/TAI_KHOAN_HOC_SINH.md). `doGet()` trả giao diện. `submitRecord()` nhận bản ghi, kiểm tra lại và ghi vào Sheet. `loginCoordinator()` cấp phiên điều phối theo trường/lớp. Các hàm tên kết thúc `_` là hàm nội bộ, không gọi được từ `google.script.run`.
+Backend gồm `Code.gs`, `Schema.gs`, `Accounts.gs` và `Learning.gs`. `Accounts.gs` quản lý mã/PIN học sinh, phiên và tiến độ đã nộp; hướng dẫn tại [tài khoản](docs/TAI_KHOAN_HOC_SINH.md). `doGet()` trả giao diện. `submitRecord()` nhận bản ghi, kiểm tra lại và ghi vào Sheet. `loginCoordinator()` cấp phiên điều phối theo trường/lớp. Các hàm tên kết thúc `_` là hàm nội bộ, không gọi được từ `google.script.run`.
 
 Không đặt Sheet ID hoặc PIN vào frontend. `setup_()` lưu Sheet ID vào Script Properties. PIN được chủ dự án cấu hình ở thuộc tính `COORDINATOR_PINS`.
 
@@ -166,3 +166,5 @@ Tài liệu nền tảng chính thức: [HTML Service communication](https://dev
 `submitRecord` giữ script lock, dùng `Sheets.Spreadsheets.Values.get` với `UNFORMATTED_VALUE` cho tiêu đề/ID/dòng có sẵn và dùng `Values.append` RAW cho ghi. So sánh không dùng `String()` hay trim: giữ kiểu số/boolean, chuẩn hóa ô trống cuối hàng, giữ nguyên chuỗi. Không còn dùng `createTextFinder` trong đường submit.
 
 `build.py` chặn field và cột tổng hợp vượt mức nội bộ 13.000 UTF-16 code units; `Schema.gs` sinh cùng mức để server kiểm tra. `showCoordinatorReauth()` chèn form PIN mà không dựng lại phiếu điều phối. RATE_LIMITED có `retryAfterSeconds`; thời gian khóa không bị kéo dài khi người dùng nhấn lại. Roster không được triển khai trước quyết định nghiên cứu.
+
+`src/learning.js` quản lý khôi phục nháp và Sổ riêng từ Sheet; `Learning.gs` kiểm tra tài khoản và revision, xử lý an toàn trước ghi RAW. Xem [hướng dẫn tiến trình](docs/TIEN_TRINH_HOC_TAP.md).

@@ -1,4 +1,4 @@
-# Triển khai Xoay Chiều 2.6.0 vào Google Sheets
+# Triển khai Xoay Chiều 2.7.0 vào Google Sheets
 
 Bộ `apps-script/` đã có bản build sẵn; không cần cài Python hoặc Node chỉ để dán và triển khai. Bản Sites/HTML tĩnh dành cho xem thử, không phải link thu dữ liệu Google Sheets. Không sử dụng dữ liệu thật trong bước thử.
 
@@ -8,14 +8,14 @@ Bộ `apps-script/` đã có bản build sẵn; không cần cài Python hoặc 
 2. Trong Share / Chia sẻ, để Restricted / Hạn chế. Chỉ mời đúng tài khoản nhóm nghiên cứu cần xem/chỉnh sửa. Học sinh không cần quyền truy cập Sheet.
 3. Mở Tiện ích mở rộng → Apps Script.
 4. Thay nội dung `Code.gs` bằng `apps-script/Code.gs` của bộ này.
-5. Tạo thêm tệp Script tên `Schema` rồi dán `apps-script/Schema.gs`; tạo Script **Accounts** rồi dán `apps-script/Accounts.gs`.
+5. Tạo thêm tệp Script tên `Schema` rồi dán `apps-script/Schema.gs`; tạo Script **Accounts** rồi dán `apps-script/Accounts.gs`; tạo Script **Learning** rồi dán `apps-script/Learning.gs`.
 6. Tạo thêm tệp HTML tên **Index** rồi dán toàn bộ `apps-script/Index.html` (tên phải đúng chữ hoa).
 7. Bên trái, Services / Dịch vụ → dấu + → Google Sheets API → Add. Máy chủ dùng dịch vụ này để ghi RAW sau khi xử lý nội dung an toàn, không biến câu trả lời thành công thức. Nếu dự án Google Cloud riêng yêu cầu bật API, bật Google Sheets API cho chính dự án đó.
 
    Tệp `apps-script/appsscript.json` là manifest mẫu tương ứng. Với dự án MỚI, có thể bật “Show appsscript.json manifest file in editor” trong Project Settings rồi dán tệp này để đặt V8, múi giờ GMT+7 và Sheets v4. Không dán đè manifest của dự án đang có dịch vụ khác. Nếu đã thêm Sheets API bằng giao diện, giữ manifest Google tự tạo cũng được.
 
 8. Lưu. Ở danh sách hàm trên thanh công cụ, chọn **setup_**, bấm Run và cấp quyền cho dự án do bạn quản lý. Hàm có dấu gạch dưới cuối để trình duyệt không gọi được qua google.script.run.
-9. Kiểm tra Sheet có 5 trang: `chu_trinh`, `phieu_buoi`, `doi_y`, `tai_khoan`, `tien_do`. `SPREADSHEET_ID` tự lưu trong Script Properties. Nếu báo cột không khớp, dùng Sheet mới; đừng xóa dữ liệu cũ để chữa lỗi.
+9. Kiểm tra Sheet có 6 trang: `chu_trinh`, `phieu_buoi`, `doi_y`, `tai_khoan`, `tien_do`, `nhap_hoc_tap`. `SPREADSHEET_ID` tự lưu trong Script Properties. Nếu báo cột không khớp, dùng Sheet mới; đừng xóa dữ liệu cũ để chữa lỗi.
 
 ## A2. Cấp tài khoản học sinh trước khi triển khai
 
@@ -113,3 +113,7 @@ Cập nhật đủ `Code.gs`, `Accounts.gs`, `Schema.gs`, `Index.html`; giữ Sc
 ## Nâng cấp 2.6.0 — mã từ Excel và mật khẩu
 
 Ba lớp thực nghiệm mới thay cấu hình lớp cũ. Làm theo [nhập danh sách và cấp mật khẩu](docs/TAI_KHOAN_HOC_SINH.md): prepareStudentImport_ → dán CSV mã/trường/lớp → importStudentRoster_ → provisionStudentAccounts_ → tải file mật khẩu riêng → New version. Giữ nguyên khóa Script Properties và dữ liệu bài cũ; không tự gán lại trường/lớp trong nháp/hàng đợi. PIN số cũ giữ tương thích. HTML demo có thông báo riêng, không đăng nhập tài khoản thật.
+
+## Nâng cấp 2.7.0 — tiếp tục qua các tuần
+
+Cập nhật đủ Code.gs, Accounts.gs, **Learning.gs**, Schema.gs, Index.html; chạy setup_ để thêm nhap_hoc_tap rồi New version. Nhập danh sách mới theo cách thêm mã, giữ mật khẩu/tiến trình cũ. Lộc Bình dùng danh tính mới, giữ Chi Lăng cũ; NT-10A6/NT-10A7 chưa kích hoạt. Xem [hướng dẫn nâng cấp và kiểm tra khôi phục](docs/TIEN_TRINH_HOC_TAP.md). Những ghi chú “chỉ có nháp/Sổ trên máy” của các bản cũ không áp dụng cho nháp/bài đã được bản 2.7 xác nhận đồng bộ.

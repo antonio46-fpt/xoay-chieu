@@ -66,6 +66,7 @@ def build():
         "SAFETY": read(SRC / "safety.js"),
         "CORE": read(SRC / "core.js"),
         "BACKUP": read(SRC / "backup.js"),
+        "LEARNING": read(SRC / "learning.js"),
         "APP": read(SRC / "app.js"),
     }
     html = read(SRC / "shell.html")
@@ -80,8 +81,9 @@ def build():
     # Cùng định nghĩa ô nhập cho kiểm tra cả phía học sinh và máy chủ.
     schema = {
         "cellMax": MAX_CELL_CHARS,
-        "schools": content["truong_lop"],
+        "schools": content["truong_lop"] + content.get("truong_lop_cu", []),
         "safety": content["an_toan"],
+        "workflow": [[{"stage": step["stage"], "hints": len(step["hints"])} for step in week["steps"]] for week in content["weeks"]],
         "weeks": [[field for step in week["steps"] for field in step["fields"]]
                   for week in content["weeks"]],
     }

@@ -22,7 +22,7 @@ const Backup = (() => {
       return val;
     }));
     const validProfile = p => plain(p) && core.validCode(p.ma) &&
-      content.truong_lop.some(s => s.truong === p.truong && s.lop.includes(p.lop));
+      core.schools(content).some(s => s.truong === p.truong && s.lop.includes(p.lop));
     const validRecord = record => {
       if (!plain(record) || !string(record.id) || !/^[a-zA-Z0-9-]{12,80}$/.test(record.id)) {
         fail('Bản ghi trong bản sao thiếu ID hợp lệ.');

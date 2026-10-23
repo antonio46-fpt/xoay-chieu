@@ -1,6 +1,6 @@
-# Phạm vi Xoay Chiều 2.6.0
+# Phạm vi Xoay Chiều 2.7.0
 
-Mục tiêu: giúp học sinh THPT rèn năng lực linh hoạt trong học tập qua trải nghiệm, phản tư và điều chỉnh. Bản đầu có 4 tuần, 2 trường và **3 lớp thực nghiệm theo danh sách mới**: THPT Chuyên Chu Văn An (10A3 / 10 Tin, 11E1 / 11 Văn), THPT Chi Lăng (12A2). Số người dùng đồng thời chưa được kiểm chứng trên Google thật.
+Mục tiêu: giúp học sinh THPT rèn năng lực linh hoạt trong học tập qua trải nghiệm, phản tư và điều chỉnh. Chương trình có 4 tuần; danh sách đang mở gồm THPT Chuyên Chu Văn An (10A3 / 10 Tin, 11E1 / 11 Văn) và Trường PTDTNT THCS & THPT Lộc Bình (LB-11A). Giữ THPT Chi Lăng (12A2) trong nhóm lớp cũ. Lớp thứ tư mới chưa chốt giữa NT-10A6/NT-10A7. Số người dùng đồng thời chưa được kiểm chứng trên Google thật.
 
 | Yêu cầu bắt buộc | Thực hiện |
 |---|---|
@@ -49,4 +49,8 @@ Theo dõi thứ tự #3 → #2 → #4 → #1 và hai issue bổ sung tại [danh
 
 ## Tài khoản được cấp và tiến độ (2.5.0)
 
-Bản thật xác thực mã học sinh có sẵn + PIN riêng theo trường/lớp; cấp/đặt lại từ editor bởi chủ dự án. Sheet lưu hash PIN, bài đã xử lý an toàn và tiến độ tuần do máy chủ tổng hợp. Không lưu PIN rõ hoặc điểm La bàn lên Sheet. Tiến độ hoàn thành tải được trên thiết bị mới; nháp/bài gốc trong Sổ vẫn cục bộ/bản sao. Quyền GVCN chỉ xem mã đã nộp + tuần của đúng lớp giữ nguyên; roster chưa nộp ở #1 vẫn chờ quyết định. Triển khai Google thật cần nghiệm thu trên Sheet thử; môi trường phát triển không truy cập Sheet chứa dữ liệu thật.
+Bản thật xác thực mã học sinh có sẵn + PIN riêng theo trường/lớp; cấp/đặt lại từ editor bởi chủ dự án. Sheet lưu hash PIN, bài đã xử lý an toàn và tiến độ tuần do máy chủ tổng hợp. Không lưu PIN rõ hoặc điểm La bàn lên Sheet. Tiến độ hoàn thành tải được trên thiết bị mới; bản gốc trước khi che vẫn cục bộ/bản sao; từ 2.7 nháp/bài an toàn đã đồng bộ được khôi phục từ Sheet. Quyền GVCN chỉ xem mã đã nộp + tuần của đúng lớp giữ nguyên; roster chưa nộp ở #1 vẫn chờ quyết định. Triển khai Google thật cần nghiệm thu trên Sheet thử; môi trường phát triển không truy cập Sheet chứa dữ liệu thật.
+
+## Cập nhật danh sách và tiến trình (2.7.0)
+
+Theo xác nhận mới: mở 10A3 (10 Tin), 11E1 (11 Văn), LB-11A (11A Lộc Bình); giữ Chi Lăng / 12A2 để truy cập dữ liệu cũ, không đổi danh tính. NT-10A6/NT-10A7 chờ bốc thăm, chưa kích hoạt cả hai. Bản này lưu/khôi phục nháp và bước đang làm của chính học sinh trên Sheet, có xử lý an toàn; Sổ trả lại bài đã nộp riêng để tuần sau/tuần 4 tiếp tục. Quyền giáo viên không mở rộng sang nội dung bài/nháp. Nháp không tính là bài hoàn thành hoặc điểm nghiên cứu.

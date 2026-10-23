@@ -47,8 +47,8 @@ class RosterImport(unittest.TestCase):
             workbook(source)
             before = source.read_bytes()
             rows = module.export(source, target, CONTENT)
-            self.assertEqual(len(rows), 3)
-            self.assertEqual(len(set((r['truong'], r['lop'], r['ma']) for r in rows)), 3)
+            self.assertEqual(len(rows), sum(len(s['lop']) for s in CONTENT['truong_lop']))
+            self.assertEqual(len(set((r['truong'], r['lop'], r['ma']) for r in rows)), len(rows))
             with target.open(encoding='utf-8-sig') as stream:
                 self.assertEqual(csv.DictReader(stream).fieldnames, ['ma', 'truong', 'lop'])
             self.assertNotIn('SENSITIVE', target.read_text())

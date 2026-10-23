@@ -8,9 +8,9 @@
       ]
     },
     {
-      "truong": "THPT Chi Lăng",
+      "truong": "Trường PTDTNT THCS & THPT Lộc Bình",
       "lop": [
-        "12A2"
+        "LB-11A (11A Lộc Bình)"
       ]
     }
   ],
@@ -21,7 +21,6 @@
       "Chữ cái đầu của tên đệm của bạn (viết HOA, không dấu); không có tên đệm thì ghi X. Ví dụ: Nguyễn Thị Mai → T."
     ],
     "mau": "^[A-Z]{2}[0-9]{2}-[A-Z]$",
-    "ma_vi_du_cam": "HO07-T",
     "nhac": "Dùng đúng mã bạn đã ghi ở phiếu khảo sát."
   },
   "mat_nang_luc": [
@@ -167,7 +166,7 @@
     "Bắt đầu bằng “Mình nghĩ… vì…”",
     "Ai không muốn nói được làm người ghi chép"
   ],
-  "phien_ban": "2.2.2",
+  "phien_ban": "2.2.3",
   "so_tuan": 4,
   "ngay_bat_dau": "",
   "noi_dung_status": "Bản thử nghiệm — nhóm nghiên cứu cần duyệt nội dung trước khi dùng chính thức.",
@@ -1089,7 +1088,7 @@
     "muc_tieu": "Rèn luyện năng lực linh hoạt trong học tập của học sinh THPT qua hoạt động bốn tuần.",
     "giai_doan": "Bản bắt buộc: chu trình tuần 1–2, tranh luận tuần 3, chỉnh sửa sản phẩm tuần 4.",
     "trien_lam": "App chỉ cho xem và chỉnh sửa sản phẩm của chính mình. Hình thức triển lãm chờ chốt với nhóm nghiên cứu; không hiển thị bài của học sinh khác.",
-    "quy_mo_du_kien": "2 trường, 3 lớp thực nghiệm theo danh sách triển khai.",
+    "quy_mo_du_kien": "3 lớp đang triển khai; lớp thứ tư chưa chốt. Giữ tài khoản và dữ liệu lớp Chi Lăng cũ.",
     "ngoai_pham_vi": [
       "Tuần 5–8",
       "Ứng dụng Android/iOS riêng",
@@ -1101,5 +1100,23 @@
       "Bản ghi thanh_to",
       "Chatbot kịch bản"
     ]
-  }
+  },
+  "truong_lop_cu": [
+    {
+      "truong": "THPT Chi Lăng",
+      "lop": [
+        "12A2"
+      ]
+    }
+  ],
+  "lop_cho_chot": [
+    {
+      "truong": "THPT Dân tộc nội trú tỉnh",
+      "lop": [
+        "NT-10A6",
+        "NT-10A7"
+      ],
+      "trang_thai": "Chưa bốc thăm; chưa kích hoạt tài khoản"
+    }
+  ]
 }

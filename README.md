@@ -1,6 +1,6 @@
-# Xoay Chiều — mã nguồn đầy đủ 2.6.0
+# Xoay Chiều — mã nguồn đầy đủ 2.7.0
 
-Công cụ hoạt động và thu dữ liệu cho đề tài “Phát triển năng lực linh hoạt trong học tập của học sinh THPT tại Lạng Sơn”. Phạm vi bản bắt buộc: 2 trường, 3 lớp thực nghiệm theo danh sách mới, 4 tuần can thiệp. Lịch triển khai và kết thúc chưa chốt. Không chấm đúng/sai, không xếp hạng, không tự suy ra điểm năng lực.
+Công cụ hoạt động và thu dữ liệu cho đề tài “Phát triển năng lực linh hoạt trong học tập của học sinh THPT tại Lạng Sơn”. Phạm vi bản bắt buộc: 3 lớp đang triển khai theo danh sách mới, giữ lớp Chi Lăng cũ; lớp thứ tư chờ chốt, 4 tuần can thiệp. Lịch triển khai và kết thúc chưa chốt. Không chấm đúng/sai, không xếp hạng, không tự suy ra điểm năng lực.
 
 Xem [SCOPE.md](SCOPE.md) để đối chiếu yêu cầu, quyền dữ liệu và những điểm còn chờ chốt.
 
@@ -42,6 +42,7 @@ Xem [SCOPE.md](SCOPE.md) để đối chiếu yêu cầu, quyền dữ liệu v�
 | `src/app.js` | Điều hướng, màn hình, nháp, hàng đợi, giao tiếp máy chủ |
 | `src/style.css`, `src/shell.html` | CSS và khung HTML |
 | `apps-script/Code.gs` | Máy chủ kiểm tra dữ liệu, xác thực điều phối, ghi Sheet RAW |
+| `apps-script/Learning.gs` | Nháp theo tuần, khôi phục Sổ riêng và chống ghi đè giữa thiết bị |
 | `apps-script/Accounts.gs` | Cấp PIN riêng, xác thực học sinh, tổng hợp tiến độ trên Sheet |
 | `apps-script/Schema.gs` | Schema kiểm tra tự sinh từ JSON; không sửa tay |
 | `apps-script/Index.html` | App đã ghép để dán vào HTML Service |
@@ -79,7 +80,7 @@ Bản HTML tĩnh không thể dùng `google.script.run`; bản dùng thật ph�
 
 Mỗi hồ sơ được tách bằng bộ ba trường/lớp/mã. Mã là mã giả danh, không phải mật khẩu. Bản ghi ứng dụng không chứa họ tên, email hay thông tin thiết bị. Các đoạn học sinh viết vẫn có thể chứa thông tin nhận diện nếu tự nhập; lời nhắc trên app yêu cầu tránh điều đó. Sheet cần để quyền Hạn chế, chỉ cấp cho nhóm nghiên cứu.
 
-Dùng cùng thiết bị, trình duyệt và URL trong bốn tuần. Lịch sử trên máy không tự đồng bộ từ Sheet. Tuần 4 chỉ chọn sản phẩm cũ đang có ở máy đó; có thể nhập lại từ bản giấy. Trên máy chung, người có quyền vào trình duyệt có thể truy cập dữ liệu cục bộ. Phát hiện tab khác ghi dữ liệu sẽ tạm dừng lưu tab này, cho tải bản sao rồi mở lại; đây không phải cơ chế làm việc đồng thời nhiều tab.
+Đăng nhập đúng tài khoản để khôi phục nháp đã đồng bộ, bước đang làm và bài cũ từ Sheet. Bản gốc trước khi che và phần chưa được xác nhận đồng bộ vẫn cần thiết bị đã viết hoặc bản sao riêng. Tuần 4 có thể chọn sản phẩm cũ đã được khôi phục. Trên máy chung, người có quyền vào trình duyệt có thể truy cập dữ liệu cục bộ. Phát hiện tab khác ghi dữ liệu sẽ tạm dừng lưu tab này, cho tải bản sao rồi mở lại; đây không phải cơ chế làm việc đồng thời nhiều tab.
 
 Khi trang đã tải, mất mạng vẫn có thể làm và lưu bài. Bản tĩnh HTTPS có cache sau lần mở online. Apps Script không bảo đảm tải mới/tải lại trang khi hoàn toàn offline. Không xóa dữ liệu trình duyệt trong lúc còn bài chờ. Bản sao nhập lại giữ nguyên ID và tạm dừng gửi; chỉ khôi phục trên trình duyệt chưa có dữ liệu.
 
@@ -108,8 +109,12 @@ Sau khi vào bằng mã, nút **Đăng xuất** xuất hiện trên thanh phiên
 
 ## Tài khoản học sinh (2.5.0)
 
-Bản Apps Script đăng nhập bằng mã có sẵn + mật khẩu riêng được cấp (giữ PIN cũ), kiểm tra đúng trường/lớp trước khi nhận bài; Sheet lưu bài đã che an toàn và bảng tiến độ bốn tuần. Đăng xuất giữ nháp/hàng đợi; đăng nhập trên máy mới tải tiến độ, còn Sổ bài gốc vẫn trên thiết bị cũ/bản sao. Xem [cấp tài khoản và triển khai](docs/TAI_KHOAN_HOC_SINH.md), [issue #8](https://github.com/antonio46-fpt/xoay-chieu/issues/8). Chưa triển khai hay kiểm thử vào Sheet thật.
+Bản Apps Script đăng nhập bằng mã có sẵn + mật khẩu riêng được cấp (giữ PIN cũ), kiểm tra đúng trường/lớp trước khi nhận bài; Sheet lưu bài đã che an toàn và bảng tiến độ bốn tuần. Đăng xuất giữ nháp/hàng đợi; đăng nhập trên máy mới tải tiến độ, Sổ khôi phục bài đã xử lý an toàn; bản gốc trước khi che vẫn trên thiết bị cũ/bản sao. Xem [cấp tài khoản và triển khai](docs/TAI_KHOAN_HOC_SINH.md), [issue #8](https://github.com/antonio46-fpt/xoay-chieu/issues/8). Chưa triển khai hay kiểm thử vào Sheet thật.
 
 ## Mật khẩu theo danh sách Excel (2.6.0)
 
-Cấu hình ba lớp 10A3 (10 Tin), 11E1 (11 Văn), 12A2; không chứa mã học sinh thật trong source. [Công cụ xuất CSV riêng](tools/import_student_roster.py) chỉ lấy mã/trường/lớp. Chủ dự án nhập CSV qua `importStudentRoster_`, cấp mật khẩu riêng bằng `provisionStudentAccounts_` và tải bảng tài khoản/mật khẩu trong hộp thoại Sheet. Máy chủ xác thực trước khi FE vào học, giữ tương thích PIN cũ; bản HTML ghi rõ demo. Xem [hướng dẫn](docs/TAI_KHOAN_HOC_SINH.md), [issue #9](https://github.com/antonio46-fpt/xoay-chieu/issues/9).
+Cấu hình lớp được cập nhật theo đợt triển khai (xem mục 2.7 bên dưới); không chứa mã học sinh thật trong source. [Công cụ xuất CSV riêng](tools/import_student_roster.py) chỉ lấy mã/trường/lớp. Chủ dự án nhập CSV qua `importStudentRoster_`, cấp mật khẩu riêng bằng `provisionStudentAccounts_` và tải bảng tài khoản/mật khẩu trong hộp thoại Sheet. Máy chủ xác thực trước khi FE vào học, giữ tương thích PIN cũ; bản HTML ghi rõ demo. Xem [hướng dẫn](docs/TAI_KHOAN_HOC_SINH.md), [issue #9](https://github.com/antonio46-fpt/xoay-chieu/issues/9).
+
+## Tiến trình qua các tuần (2.7.0)
+
+[Hướng dẫn lưu/khôi phục tiến trình](docs/TIEN_TRINH_HOC_TAP.md): nháp và bài cũ của chính tài khoản được tải từ Sheet, tiếp tục đúng bước khi vào tuần sau; đồng bộ có revision để tránh thiết bị cũ ghi đè. Cập nhật thêm **Learning.gs** và chạy setup_ trước New version. Giữ tài khoản/tiến trình Chi Lăng cũ, thêm Lộc Bình; chưa kích hoạt NT-10A6/NT-10A7 khi chưa bốc thăm. [Issue #10](https://github.com/antonio46-fpt/xoay-chieu/issues/10).
