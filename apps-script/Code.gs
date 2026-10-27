@@ -1,5 +1,5 @@
 /**
- * XOAY CHIỀU — MÁY CHỦ GOOGLE APPS SCRIPT, phiên bản 2.7.0.
+ * XOAY CHIỀU — MÁY CHỦ GOOGLE APPS SCRIPT, phiên bản 2.7.1.
  *
  * Các điểm vào từ trình duyệt:
  *   doGet()                  → phục vụ giao diện Index.html.
@@ -9,7 +9,7 @@
  * Các hàm kết thúc bằng '_' là hàm nội bộ, không gọi được qua google.script.run.
  * API tiến độ chỉ trả mã và tuần, xác thực bằng phiên giáo viên của đúng lớp. Phiên giáo viên không đọc bài/nháp riêng; Learning.gs chỉ trả bài của chính học sinh đã xác thực.
  */
-const SERVER_VERSION = '2.7.0';
+const SERVER_VERSION = '2.7.1';
 
 const HEADERS = {
   chu_trinh: [
@@ -70,7 +70,7 @@ function headersMatch_(sheet, columns) {
 }
 
 function schoolOK_(data) {
-  return SCHEMA.schools.some(s => s.truong === data.truong && s.lop.includes(data.lop));
+  return SCHEMA.schools.some(s => s.truong === data.truong && s.lop.includes(ClassIds.code(data.lop)));
 }
 
 function count_(value) {
@@ -205,6 +205,7 @@ function submitRecord(payload) {
     valid_(payload && payload.record);
     const data = Safety.redactRecord(payload.record, SCHEMA.safety);
     valid_(data);
+    data.lop = ClassIds.code(data.lop);
     if (data.loai !== 'chu_trinh') authorizeCoordinator_(payload.token, data);
 
     const spreadsheetId = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
@@ -230,7 +231,7 @@ function submitRecord(payload) {
       const existing = (Sheets.Spreadsheets.Values.get(spreadsheetId,
         range + rowNumber + ':' + rowNumber, readOptions).values || [])[0] || [];
       const identical = columns.every((key, index) => key === 'thoi_gian_nhan' ||
-        sameCell_(existing[index], data[key]));
+        (key === 'lop' ? ClassIds.code(existing[index]) === data.lop : sameCell_(existing[index], data[key])));
       if (!identical) fail_('ID đã tồn tại với nội dung khác. Không ghi đè.', 'ID_CONFLICT');
       if (student) projectStudentProgress_(spreadsheetId, student);
       return { ok: true, id: data.id, duplicate: true };
@@ -274,7 +275,7 @@ function authorizeRole_(token, data, role) {
     auth = JSON.parse(CacheService.getScriptCache().get(role + ':' + token) || 'null');
   } catch { auth = null; }
   if (!auth || !Number.isFinite(auth.expires) || auth.expires <= Date.now() ||
-      auth.truong !== data.truong || auth.lop !== data.lop) {
+      auth.truong !== data.truong || ClassIds.code(auth.lop) !== ClassIds.code(data.lop)) {
     fail_('Phiên hết hạn hoặc không có quyền với lớp này. Hãy đăng nhập lại.', 'AUTH_REQUIRED');
   }
 }
@@ -305,7 +306,7 @@ function getClassProgress(input) {
     const rows = sheet.getLastRow() > 1 ? sheet.getRange(2, 1, sheet.getLastRow() - 1, columns.length).getValues() : [];
     const index = key => columns.indexOf(key);
     rows.forEach(row => {
-      if (row[index('truong')] !== input.truong || row[index('lop')] !== input.lop) return;
+      if (row[index('truong')] !== input.truong || ClassIds.code(row[index('lop')]) !== ClassIds.code(input.lop)) return;
       const code = row[index('ma')], week = Number(row[index('tuan')]);
       if (!/^[A-Z]{2}[0-9]{2}-[A-Z]$/.test(String(code)) || !Number.isInteger(week) || week < 1 || week > 4) return;
       if (!byCode.has(code)) byCode.set(code, new Set());
@@ -339,6 +340,7 @@ function loginRole_(input, role, property) {
   let lock;
   try {
     if (!input || !schoolOK_(input)) fail_('Lớp không hợp lệ.', 'AUTH_REQUIRED');
+    input = ClassIds.profile(input);
     lock = LockService.getScriptLock();
     if (!lock.tryLock(1500)) fail_('Máy chủ đang bận. Thử lại sau vài giây.', 'BUSY');
     const cache = CacheService.getScriptCache();
@@ -357,7 +359,10 @@ function loginRole_(input, role, property) {
     if (state.blockedUntil) state = { attempts: 0, blockedUntil: 0 };
     const raw = PropertiesService.getScriptProperties().getProperty(property) || '{}';
     const pins = JSON.parse(raw);
-    const expected = pins[input.truong + '|' + input.lop];
+    const keys = [...new Set([input.lop,ClassIds.label(input.lop)])];
+    const configured = keys.map(lop=>pins[input.truong+'|'+lop]).filter(value=>value!==undefined);
+    if (new Set(configured.map(String)).size > 1) fail_('PIN mã lớp và tên lớp cũ không khớp; chủ dự án cần kiểm tra cấu hình.', 'SETUP_REQUIRED');
+    const expected = configured[0];
     if (!expected || !/^\d{6,12}$/.test(String(expected)) || String(input.pin) !== String(
         expected)) {
       state.attempts++;

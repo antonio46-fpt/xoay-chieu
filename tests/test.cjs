@@ -294,3 +294,6 @@ test('Local storage failure keeps draft and does not claim submission', () => {
 });
 console.log('\n' + passed +
   ' test groups passed. Browser visual QA and live Google deployment remain manual.');
+
+assert.equal(Core.key({ma:'ZZ01-A',truong:'School',lop:'10A3'}),Core.key({ma:'ZZ01-A',truong:'School',lop:'10A3 (10 Tin)'}),'Legacy browser profile key must survive');
+assert.notEqual(Core.key({ma:'ZZ01-A',truong:'School',lop:'10A3'}),Core.key({ma:'ZZ01-A',truong:'School',lop:'11E1'}));

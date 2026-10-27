@@ -5,6 +5,7 @@
  * Bản ghi giữ nguyên khoảng trắng, dấu câu và xuống dòng của học sinh.
  */
 const Core = (() => {
+  const classes = typeof module !== 'undefined' ? require('./classes.js') : ClassIds;
   const words = value => String(value ?? '').trim().split(/\s+/u).filter(Boolean).length;
   const normalize = value => String(value ?? '').toUpperCase().replace(/\s/g, '');
   const validCode = value => /^[A-Z]{2}[0-9]{2}-[A-Z]$/.test(value);
@@ -35,7 +36,7 @@ const Core = (() => {
   }
 
   // Cùng một mã ở hai lớp khác nhau không trộn bản nháp và sản phẩm.
-  const key = profile => JSON.stringify([profile.truong, profile.lop, profile.ma]);
+  const key = classes.storageKey;
   const id = () => globalThis.crypto?.randomUUID?.() ||
     'xc-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
 
@@ -49,7 +50,7 @@ const Core = (() => {
       bat_dau: draft.started,
       ma: profile.ma,
       truong: profile.truong,
-      lop: profile.lop,
+      lop: classes.code(profile.lop),
       tuan: week.tuan,
       phien_ban_app: appVersion,
       phien_ban_noi_dung: draft.version,
@@ -92,6 +93,8 @@ const Core = (() => {
 
   const safety = typeof module !== 'undefined' ? require('./safety.js') : Safety;
   return {
+    classCode: classes.code,
+    classLabel: classes.label,
     schools: content => [...content.truong_lop, ...(content.truong_lop_cu || [])],
     safeRecord: safety.redactRecord,
     safetyMatches: safety.matches,

@@ -58,5 +58,14 @@ assert(!call('saveStudentDraft',{...a,week:4,draft:{...large,step:999},expectedR
 const escaped=Object.fromEntries(largeWeek.steps.flatMap(s=>s.fields).map(f=>[f.key,f.kind==='rating'?2:f.options?f.options[0]:'\\'.repeat(f.max)]));
 assert(call('saveStudentDraft',{...a,week:4,draft:{...large,answers:escaped},expectedRevision:1,mutationId:crypto.randomUUID()}).ok);
 assert.equal(call('getStudentLearning',a).states.find(s=>s.week===4).draft.answers.san_pham,escaped.san_pham);
+// Old labelled rows join the same canonical account and retain submission IDs/revisions.
+const oldLabel=Core.classLabel(klass);tables.tai_khoan[1][2]=oldLabel;
+tables.chu_trinh[1][6]=oldLabel;
+for(const row of tables.nhap_hoc_tap.slice(1))row[2]=oldLabel;
+for(const row of tables.tien_do.slice(1))row[2]=oldLabel;
+assert(call('submitRecord',{record,token:a.token}).duplicate,'Canonical retry acknowledges an old labelled submission');
+assert.equal(call('getStudentProgress',a).weeks[0],1);
+const legacyState=call('getStudentLearning',a);assert.equal(legacyState.records[0].lop,klass);assert(legacyState.states.some(s=>s.week===4));
+const nextRecord={...record,id:crypto.randomUUID()};assert(call('submitRecord',{record:nextRecord,token:a.token}).ok);assert.equal(tables.chu_trinh.at(-1)[6],klass,'New records write only the class code');
 cache.delete('student:'+a.token);assert.equal(call('getStudentLearning',a).code,'AUTH_REQUIRED');assert(!locked);
 console.log('PASS learning server: authenticated own drafts/history, safety, week/step validation, duplicate mutation, CAS conflict, outage recovery, submitted-draft suppression and maximum emoji/chunk round trip');

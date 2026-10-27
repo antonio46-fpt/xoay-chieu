@@ -30,7 +30,7 @@ function readSystemTable_(id, name, headers) {
 }
 
 function accountKey_(account) {
-  return JSON.stringify([account.truong, account.lop, account.ma]);
+  return JSON.stringify([account.truong, ClassIds.code(account.lop), account.ma]);
 }
 
 function normalizeAccounts_(rows) {
@@ -40,12 +40,13 @@ function normalizeAccounts_(rows) {
     const ma = String(row[0] || '').toUpperCase().replace(/\s/g, '');
     const account = { ma, truong: String(row[1] || '').trim(), lop: String(row[2] || '').trim(),
       status: String(row[3] || 'hoat_dong'), salt: String(row[4] || ''), pinHash: String(row[5] || ''),
-      issuedAt: String(row[6] || ''), rowNumber: index + 2 };
+      issuedAt: String(row[6] || ''), rowNumber: index + 2, credentialClass: String(row[2] || '').trim() };
     if (!/^[A-Z]{2}[0-9]{2}-[A-Z]$/.test(ma) || !schoolOK_(account) ||
         !['hoat_dong', 'khoa'].includes(account.status)) fail_('Kiểm tra mã, trường/lớp và trạng thái ở dòng ' + (index + 2) + ' của tai_khoan.', 'SETUP_REQUIRED');
     if (!!account.salt !== !!account.pinHash || (account.pinHash && !/^[a-f0-9]{64}$/.test(account.pinHash))) {
       fail_('Dữ liệu PIN không hoàn chỉnh ở dòng ' + (index + 2) + '. Dùng chức năng đặt lại PIN, không nhập PIN vào bảng này.', 'SETUP_REQUIRED');
     }
+    account.lop = ClassIds.code(account.lop);
     const key = accountKey_(account);
     if (seen.has(key)) fail_('Mã trùng trong cùng trường/lớp ở dòng ' + (index + 2) + '.', 'SETUP_REQUIRED');
     seen.add(key); result.push(account);
@@ -60,7 +61,7 @@ function studentAccounts_(id) {
 function pinDigest_(pin, account) {
   const secret = PropertiesService.getScriptProperties().getProperty('STUDENT_PIN_SECRET');
   if (!secret) fail_('Chủ dự án cần cấp mật khẩu trước khi đăng nhập học sinh.', 'SETUP_REQUIRED');
-  const message = JSON.stringify([accountKey_(account), account.salt, pin]);
+  const message = JSON.stringify([JSON.stringify([account.truong, account.credentialClass || account.lop, account.ma]), account.salt, pin]);
   return Utilities.computeHmacSha256Signature(message, secret, Utilities.Charset.UTF_8)
     .map(byte => ((byte + 256) % 256).toString(16).padStart(2, '0')).join('');
 }
@@ -83,6 +84,7 @@ function loginStudent(input) {
   let lock;
   try {
     if (!input || !schoolOK_(input) || typeof input.ma !== 'string' || !/^[A-Z]{2}[0-9]{2}-[A-Z]$/.test(input.ma)) fail_('Mã, trường/lớp hoặc mật khẩu không đúng.', 'AUTH_REQUIRED');
+    input = ClassIds.profile(input);
     const id = accountSheetId_();
     lock = LockService.getScriptLock();
     if (!lock.tryLock(1500)) fail_('Máy chủ đang bận. Thử lại sau vài giây.', 'BUSY');
@@ -99,8 +101,10 @@ function loginStudent(input) {
     const candidate = account || { ...input, salt: 'unregistered' };
     const suppliedPin = studentPassword_(input);
     const digest = pinDigest_(suppliedPin, candidate);
+    const alternateClass = (candidate.credentialClass || candidate.lop) === ClassIds.code(candidate.lop) ? ClassIds.label(candidate.lop) : ClassIds.code(candidate.lop);
+    const alternateDigest = pinDigest_(suppliedPin, {...candidate,credentialClass:alternateClass});
     if (!account || account.status !== 'hoat_dong' || !account.pinHash ||
-        !suppliedPin || !constantTimeEqual_(digest, account.pinHash)) {
+        !suppliedPin || !(constantTimeEqual_(digest, account.pinHash) || constantTimeEqual_(alternateDigest, account.pinHash))) {
       state.attempts++;
       if (state.attempts >= 8) state.blockedUntil = Date.now() + 600000;
       cache.put(key, JSON.stringify(state), 600);
@@ -137,10 +141,10 @@ function projectStudentProgress_(id, account) {
   const raw = Sheets.Spreadsheets.Values.get(id, "'chu_trinh'!E2:H", {
     valueRenderOption: 'UNFORMATTED_VALUE', dateTimeRenderOption: 'SERIAL_NUMBER'
   }).values || [];
-  const weeks = [...new Set(raw.filter(row => row[0] === account.ma && row[1] === account.truong && row[2] === account.lop)
+  const weeks = [...new Set(raw.filter(row => row[0] === account.ma && row[1] === account.truong && ClassIds.code(row[2]) === account.lop)
     .map(row => Number(row[3])).filter(week => Number.isInteger(week) && week >= 1 && week <= 4))].sort();
   const rows = readSystemTable_(id, 'tien_do', PROGRESS_HEADERS), matches = [];
-  rows.forEach((row, index) => { if (row[0] === account.ma && row[1] === account.truong && row[2] === account.lop) matches.push(index); });
+  rows.forEach((row, index) => { if (row[0] === account.ma && row[1] === account.truong && ClassIds.code(row[2]) === account.lop) matches.push(index); });
   if (matches.length > 1) fail_('Bảng tien_do có mã trùng trong cùng trường/lớp. Chủ dự án cần kiểm tra.', 'SETUP_REQUIRED');
   const updatedAt = new Date().toISOString();
   const values = [account.ma, account.truong, account.lop, ...[1,2,3,4].map(week => weeks.includes(week)), weeks.length, updatedAt];
@@ -204,7 +208,7 @@ function provisionStudentAccounts_() {
     const pending = [], data = [];
     for (const account of accounts) {
       if (account.pinHash || account.status !== 'hoat_dong') continue;
-      const pin = newStudentPin_(); account.salt = Utilities.getUuid();
+      const pin = newStudentPin_(); delete account.credentialClass; account.salt = Utilities.getUuid();
       account.pinHash = pinDigest_(pin, account); account.issuedAt = new Date().toISOString();
       data.push({ range: "'tai_khoan'!A" + account.rowNumber + ':G' + account.rowNumber, values: [accountRow_(account)] });
       pending.push({ ma: account.ma, truong: account.truong, lop: account.lop, pin });
@@ -237,7 +241,7 @@ function resetSelectedStudentPin_() {
     if (!lock.tryLock(1500)) fail_('Máy chủ đang bận. Thử lại sau.', 'BUSY');
     const account = studentAccounts_(id).find(item => item.rowNumber === range.getRow());
     if (!account) fail_('Dòng được chọn chưa có tài khoản hợp lệ.', 'INVALID_RECORD');
-    const pin = newStudentPin_(); account.salt = Utilities.getUuid();
+    const pin = newStudentPin_(); delete account.credentialClass; account.salt = Utilities.getUuid();
     account.pinHash = pinDigest_(pin, account); account.issuedAt = new Date().toISOString();
     Sheets.Spreadsheets.Values.update({ values: [accountRow_(account)] }, id,
       "'tai_khoan'!A" + account.rowNumber + ':G' + account.rowNumber, { valueInputOption: 'RAW' });

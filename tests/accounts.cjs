@@ -103,6 +103,16 @@ if(legacy){
  call('importStudentRoster_');assert.equal(tables.tai_khoan.at(-1)[5],legacyHash);
  assert(Core.schools(content).some(s=>s.truong===legacy.truong&&s.lop.includes(legacy.lop[0])));
 }
+// Independent pre-upgrade HMAC: old label must not invalidate assigned passwords.
+const label=Core.classLabel(klass), oldPin='XcOldLabelSynthetic2026', oldMa='ZZ77-Y', oldSalt='old-class-salt';
+const oldMessage=JSON.stringify([JSON.stringify([school,label,oldMa]),oldSalt,oldPin]);
+const oldHash=crypto.createHmac('sha256',props.STUDENT_PIN_SECRET).update(oldMessage).digest('hex');
+const oldRow=[oldMa,school,label,'hoat_dong',oldSalt,oldHash,''];tables.tai_khoan.push(oldRow);
+assert(call('loginStudent',{ma:oldMa,truong:school,lop:klass,password:oldPin}).ok,'Short class authenticates an old labelled account');
+assert(call('loginStudent',{ma:oldMa,truong:school,lop:label,password:oldPin}).ok);
+oldRow[2]=klass;assert(call('loginStudent',{ma:oldMa,truong:school,lop:klass,password:oldPin}).ok,'Renamed cell retains its old HMAC');
+assert.equal(oldRow[5],oldHash);
+assert(!call('loginStudent',{ma:oldMa,truong:school,lop:klass+' (unapproved)',password:oldPin}).ok);
 // Full planned cohort uses one write request, without copying any real roster.
 tables.tai_khoan=[tables.tai_khoan[0],...Array.from({length:150},(_,i)=>['AA'+String(Math.floor(i/26)).padStart(2,'0')+'-'+String.fromCharCode(65+i%26),school,klass])];
 const batchesBefore=batchCalls;assert.equal(call('provisionStudentAccounts_').created,150);assert.equal(batchCalls-batchesBefore,1);

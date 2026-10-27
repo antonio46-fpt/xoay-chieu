@@ -84,6 +84,14 @@ vm.runInContext('authorizeCoordinator_(coordToken,coordClass)',c);
 call('logoutCoordinator',coord.token);
 assert.throws(()=>vm.runInContext('authorizeCoordinator_(coordToken,coordClass)',c),'Coordinator token is revoked on logout');
 assert(call('logoutCoordinator',coord.token).ok,'Coordinator logout is idempotent');
+// Old labelled submission rows still appear in canonical class reports.
+const oldLabel=Core.classLabel(klass);records[0][headers.indexOf('lop')]=oldLabel;
+assert.equal(call('getClassProgress',input).students[0].weeks.length,4);
+props.TEACHER_PINS=JSON.stringify({[school+'|'+oldLabel]:'123456'});
+assert(login({pin:'123456'}).ok,'Canonical login accepts an old property key');
+props.TEACHER_PINS=JSON.stringify({[school+'|'+oldLabel]:'123456',[school+'|'+klass]:'654321'});
+assert.equal(login({pin:'123456'}).code,'SETUP_REQUIRED','Ambiguous PIN configuration fails safely');
+props.TEACHER_PINS=JSON.stringify({[school+'|'+klass]:'123456'});
 call('logoutTeacher',teacher.token);
 assert(!call('getClassProgress',input).ok,'Logged out teacher session is rejected');
 for(let i=0;i<8;i++) assert(!login({pin:'wrong'}).ok);

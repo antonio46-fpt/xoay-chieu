@@ -45,7 +45,7 @@ function ownLearningRows_(rows, account) {
   const found = new Set();
   return rows.map((row,index) => ({row,index})).filter(item => {
     const row = item.row;
-    if (row[0] !== account.ma || row[1] !== account.truong || row[2] !== account.lop) return false;
+    if (row[0] !== account.ma || row[1] !== account.truong || ClassIds.code(row[2]) !== account.lop) return false;
     if (!Number.isInteger(row[3]) || row[3] < 1 || row[3] > 4 || found.has(row[3]) || !Number.isSafeInteger(row[5]) || row[5] < 1) fail_('Bảng nháp có tuần hoặc revision không hợp lệ/trùng. Chủ dự án cần kiểm tra.', 'SETUP_REQUIRED');
     found.add(row[3]); return true;
   });
@@ -73,7 +73,7 @@ function studentRecords_(id, account) {
   const metadata = Sheets.Spreadsheets.Values.get(id,"'chu_trinh'!E2:H",options).values || [];
   const ranges = [];
   metadata.forEach((row,index) => {
-    if (row[0] === account.ma && row[1] === account.truong && row[2] === account.lop) ranges.push("'chu_trinh'!" + (index + 2) + ':' + (index + 2));
+    if (row[0] === account.ma && row[1] === account.truong && ClassIds.code(row[2]) === account.lop) ranges.push("'chu_trinh'!" + (index + 2) + ':' + (index + 2));
   });
   const records = [];
   for (let offset = 0; offset < ranges.length; offset += 50) {
@@ -84,7 +84,7 @@ function studentRecords_(id, account) {
       const record = {loai:'chu_trinh'};
       HEADERS.chu_trinh.forEach((key,index) => {record[key] = row[index] ?? '';});
       // Kiểm tra lần nữa trước khi trả, kể cả khi bảng nguồn bị chỉnh thủ công.
-      if (record.ma === account.ma && record.truong === account.truong && record.lop === account.lop) records.push(Safety.redactRecord(record,SCHEMA.safety));
+      if (record.ma === account.ma && record.truong === account.truong && ClassIds.code(record.lop) === account.lop) records.push(Safety.redactRecord(ClassIds.profile(record),SCHEMA.safety));
     }
   }
   return records;
