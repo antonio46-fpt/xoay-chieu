@@ -1,4 +1,4 @@
-# Triển khai Xoay Chiều 2.7.0 vào Google Sheets
+# Triển khai Xoay Chiều 2.7.1 vào Google Sheets
 
 Bộ `apps-script/` đã có bản build sẵn; không cần cài Python hoặc Node chỉ để dán và triển khai. Bản Sites/HTML tĩnh dành cho xem thử, không phải link thu dữ liệu Google Sheets. Không sử dụng dữ liệu thật trong bước thử.
 
@@ -117,3 +117,7 @@ Ba lớp thực nghiệm mới thay cấu hình lớp cũ. Làm theo [nhập dan
 ## Nâng cấp 2.7.0 — tiếp tục qua các tuần
 
 Cập nhật đủ Code.gs, Accounts.gs, **Learning.gs**, Schema.gs, Index.html; chạy setup_ để thêm nhap_hoc_tap rồi New version. Nhập danh sách mới theo cách thêm mã, giữ mật khẩu/tiến trình cũ. Lộc Bình dùng danh tính mới, giữ Chi Lăng cũ; NT-10A6/NT-10A7 chưa kích hoạt. Xem [hướng dẫn nâng cấp và kiểm tra khôi phục](docs/TIEN_TRINH_HOC_TAP.md). Những ghi chú “chỉ có nháp/Sổ trên máy” của các bản cũ không áp dụng cho nháp/bài đã được bản 2.7 xác nhận đồng bộ.
+
+## Mã lớp 2.7.1
+
+Giá trị dữ liệu dùng 10A3, 11E1, LB-11A; chú thích chỉ hiển thị. Giữ tương thích tài khoản, mật khẩu, bài và nháp cũ. Cập nhật đồng bộ đủ 5 tệp Apps Script rồi New version, không đổi hàng loạt Sheet gốc. Xem [mã lớp và nâng cấp](docs/MA_LOP.md).

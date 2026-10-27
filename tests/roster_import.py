@@ -52,6 +52,7 @@ class RosterImport(unittest.TestCase):
             with target.open(encoding='utf-8-sig') as stream:
                 self.assertEqual(csv.DictReader(stream).fieldnames, ['ma', 'truong', 'lop'])
             self.assertNotIn('SENSITIVE', target.read_text())
+            self.assertTrue(all('(' not in r['lop'] for r in rows))
             self.assertEqual(source.read_bytes(), before)
             with self.assertRaises(FileExistsError):
                 module.export(source, target, CONTENT)

@@ -36,3 +36,21 @@ for(const live of [false,true]) {
   } finally {dom.window.close();}
 }
 console.log('PASS FE: resume CTA, stage indicator, local/pending/confirmed states, current navigation, revision provenance');
+
+// A decorated-class browser snapshot must resume under the new canonical login.
+{
+ const Core=require('../src/core.js'),old={ma:'ZZ01-A',truong:content.truong_lop[0].truong,lop:'10A3 (10 Tin)'};
+ const draft={id:'legacy-class-draft-123456',version:content.phien_ban,step:1,answers:{thu_lam:'Nháp cũ không được mất khi đổi mã lớp.'},started:new Date().toISOString(),activeMs:1000,stageTimes:{},hints:{}};
+ const snapshot={current:old,profiles:{[JSON.stringify([old.truong,old.lop,old.ma])]:{drafts:{1:draft},history:[]}},queue:[],theme:'light'};
+ const dom=new JSDOM(fs.readFileSync('dist/index.html','utf8'),{url:'https://xoaychieu.test/',runScripts:'dangerously',beforeParse(w){w.setInterval=()=>0;w.scrollTo=()=>{};w.localStorage.setItem('xoaychieu_v2',JSON.stringify(snapshot));}});
+ try{
+  const w=dom.window;assert.equal(w.eval('profile.lop'),'10A3');
+  w.document.getElementById('continueJourney').click();assert.equal(w.document.querySelector('textarea').value,draft.answers.thu_lam);
+  assert.equal(w.eval('current().id'),draft.id);
+  let captured;w.google={script:{run:{withSuccessHandler(success){return {withFailureHandler(){return {test(input){captured=input;success({ok:true});}};}};}}}};
+  w.wire={...old,record:{...old,id:'preserve-submission-123456'}};w.eval('rpc("test",wire)');
+  assert.equal(captured.lop,'10A3');assert.equal(captured.record.lop,'10A3');assert.equal(captured.record.id,w.wire.record.id);assert.equal(w.wire.lop,old.lop);
+  assert.equal(Core.classCode('10A3 (unapproved)'),'10A3 (unapproved)');
+ }finally{dom.window.close();}
+ console.log('PASS class compatibility: decorated browser snapshot resumes, RPC uses short codes without changing IDs or source objects');
+}

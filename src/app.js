@@ -50,6 +50,7 @@ let profile = AUTH_REQUIRED ? null : db.current || null,
   lastTick = Date.now(),
   saveTimer = null,
   toastTimer, stageClock = null;
+if (profile) { profile = {...profile,lop:Core.classCode(profile.lop)}; db.current = profile; }
 const cloudSync = () => typeof LearningSync === 'undefined' ? null : LearningSync;
 let logoutPending = false;
 const person = () => profile ? (db.profiles[Core.key(profile)] ||= {
@@ -95,6 +96,10 @@ function toast(s) {
 }
 
 function rpc(name, data) {
+  if (data && typeof data === 'object') {
+    if (data.lop !== undefined) data = {...data,lop:Core.classCode(data.lop)};
+    if (data.record) data = {...data,record:{...data.record,lop:Core.classCode(data.record.lop)}};
+  }
   return new Promise((resolve, reject) => {
     const t = setTimeout(() => reject(Error(
         'Chưa nhận xác nhận từ máy chủ. Bài vẫn nằm trong hàng đợi.')), APP_CONFIG
@@ -128,6 +133,7 @@ async function sync(force = false) {
   status();
   try {
     for (const item of [...db.queue]) {
+      item.record = {...item.record,lop:Core.classCode(item.record.lop)};
       if (force) {
         item.paused = false;
         item.nextTryAt = 0;
@@ -346,7 +352,7 @@ function login() {
     `<div class="welcome"><p class="eyebrow">Chào bạn, rất vui được gặp</p><h1>Một góc nhìn mới<br>bắt đầu từ bạn.</h1><p class="muted">Không có câu trả lời đúng hay sai. Hãy thử, lắng nghe và ghi lại những điều mình nhận ra.</p><form id="login" class="panel"><label class="field"><span>Mã của bạn</span><input id="code" placeholder="Ví dụ định dạng: AB12-C" maxlength="8" autocomplete="off" autocapitalize="characters" required><small>Dùng đúng mã trên phiếu khảo sát. Không nhập họ tên.</small></label><label class="field"><span>Trường</span><select id="school"><option value="">Chọn trường</option>${schools.map(s=>`<option value="${E(s.truong)}">${E(s.truong)}${CONTENT.truong_lop_cu?.some(old=>old.truong===s.truong)?' (lớp cũ)':''}</option>`).join('')}</select></label><label class="field"><span>Lớp</span><select id="class"><option value="">Chọn lớp</option></select></label><label class="field"><span>Mật khẩu</span><input id="studentPin" type="password" autocomplete="current-password" minlength="6" maxlength="64" ${AUTH_REQUIRED?'required':'disabled'}><small>${AUTH_REQUIRED?'Dùng mật khẩu được cấp riêng cùng mã học sinh. Quên mật khẩu? Liên hệ người phụ trách để được đặt lại.':'Đây là bản xem thử. Tài khoản thật đăng nhập tại link Apps Script do giáo viên cung cấp.'}</small></label>${AUTH_REQUIRED?'<button id="toggleStudentPassword" type="button" class="small" aria-controls="studentPin" aria-pressed="false">Hiện mật khẩu</button>':''}<p id="loginErr" class="error" role="alert"></p><button id="loginStart" type="button" class="primary" style="width:100%">${AUTH_REQUIRED?'Đăng nhập và bắt đầu →':'Vào bản xem thử →'}</button><div id="previewFallback" class="${!AUTH_REQUIRED&&storageUnavailable&&!loadBroken&&!storageConflict?'':'hidden'}"><p class="caption">Trình xem không cho lưu dữ liệu. Bạn có thể xem thử tạm thời; bài sẽ mất khi đóng hoặc tải lại trang.</p><button id="previewStart" type="button" class="ghost" style="width:100%">Xem thử không lưu →</button></div><details style="margin-top:18px"><summary>${AUTH_REQUIRED?'Tài khoản được cấp':'Cách tạo mã theo phiếu khảo sát'}</summary>${AUTH_REQUIRED?'<p class="caption">Dùng mã trên phiếu khảo sát đã được người phụ trách đăng ký cùng trường/lớp và mật khẩu riêng được cấp. Nếu mã chưa được đăng ký hoặc bạn quên mật khẩu, hãy liên hệ người phụ trách.</p>':CONTENT.huong_dan_ma.buoc.map(b=>`<p class="caption">${E(b)}</p>`).join('')}</details></form><p class="caption">Câu trả lời lưu trên trình duyệt này${AUTH_REQUIRED?'; nháp và bài đã xử lý an toàn được đồng bộ lên Sheet để tuần sau tiếp tục':''}. Không nhập số điện thoại, địa chỉ hay thông tin nhận diện người khác. Ô có từ khóa an toàn được thay bằng “[đã ẩn – an toàn]” trước khi gửi; bản gốc vẫn ở trên máy.</p></div>`;
   $('school').onchange = () => {
     $('class').innerHTML = '<option value="">Chọn lớp</option>' + (schools.find(s => s.truong ===
-      $('school').value)?.lop || []).map(c => `<option>${E(c)}</option>`).join('');
+      $('school').value)?.lop || []).map(c => `<option value="${E(c)}">${E(Core.classLabel(c))}</option>`).join('');
   };
   if ($('toggleStudentPassword')) $('toggleStudentPassword').onclick = () => {
     const input = $('studentPin'), show = input.type === 'password';
@@ -754,6 +760,7 @@ function settings() {
         oldProfile = profile;
       db = v;
       profile = AUTH_REQUIRED ? null : db.current || null;
+      if (profile) { profile = {...profile,lop:Core.classCode(profile.lop)}; db.current = profile; }
       loadBroken = false;
       if (!persist()) {
         db = oldDb;
@@ -976,7 +983,7 @@ function teacher() {
   } else {
     const school = $('teacherSchool'), klass = $('teacherClass');
     const choose = () => {
-      klass.innerHTML = Core.schools(CONTENT).find(s => s.truong === school.value).lop.map(lop => `<option>${E(lop)}</option>`).join('');
+      klass.innerHTML = Core.schools(CONTENT).find(s => s.truong === school.value).lop.map(lop => `<option value="${E(lop)}">${E(Core.classLabel(lop))}</option>`).join('');
     };
     school.onchange = choose;
     if (teacherSelection && Core.schools(CONTENT).some(s => s.truong === teacherSelection.truong)) school.value = teacherSelection.truong;

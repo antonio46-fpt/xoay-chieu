@@ -1,4 +1,4 @@
-# Xoay Chiều — mã nguồn đầy đủ 2.7.0
+# Xoay Chiều — mã nguồn đầy đủ 2.7.1
 
 Công cụ hoạt động và thu dữ liệu cho đề tài “Phát triển năng lực linh hoạt trong học tập của học sinh THPT tại Lạng Sơn”. Phạm vi bản bắt buộc: 3 lớp đang triển khai theo danh sách mới, giữ lớp Chi Lăng cũ; lớp thứ tư chờ chốt, 4 tuần can thiệp. Lịch triển khai và kết thúc chưa chốt. Không chấm đúng/sai, không xếp hạng, không tự suy ra điểm năng lực.
 
@@ -118,3 +118,7 @@ Cấu hình lớp được cập nhật theo đợt triển khai (xem mục 2.7 
 ## Tiến trình qua các tuần (2.7.0)
 
 [Hướng dẫn lưu/khôi phục tiến trình](docs/TIEN_TRINH_HOC_TAP.md): nháp và bài cũ của chính tài khoản được tải từ Sheet, tiếp tục đúng bước khi vào tuần sau; đồng bộ có revision để tránh thiết bị cũ ghi đè. Cập nhật thêm **Learning.gs** và chạy setup_ trước New version. Giữ tài khoản/tiến trình Chi Lăng cũ, thêm Lộc Bình; chưa kích hoạt NT-10A6/NT-10A7 khi chưa bốc thăm. [Issue #10](https://github.com/antonio46-fpt/xoay-chieu/issues/10).
+
+## Mã lớp 2.7.1
+
+Giá trị dữ liệu dùng 10A3, 11E1, LB-11A; chú thích chỉ hiển thị. Giữ tương thích tài khoản, mật khẩu, bài và nháp cũ. Cập nhật đồng bộ đủ 5 tệp Apps Script rồi New version, không đổi hàng loạt Sheet gốc. Xem [mã lớp và nâng cấp](docs/MA_LOP.md).

@@ -64,6 +64,7 @@ def build():
         "CONFIG": read(SRC / "config.js"),
         "DATA": data_js,
         "SAFETY": read(SRC / "safety.js"),
+        "CLASSES": read(SRC / "classes.js"),
         "CORE": read(SRC / "core.js"),
         "BACKUP": read(SRC / "backup.js"),
         "LEARNING": read(SRC / "learning.js"),
@@ -89,7 +90,7 @@ def build():
     }
     (SERVER / "Schema.gs").write_text(
         "// Tự sinh bởi build.py; không sửa trực tiếp.\n"
-        + read(SRC / "safety.js") + "\n"
+        + read(SRC / "safety.js") + "\n" + read(SRC / "classes.js") + "\n"
         + "const SCHEMA = " + json.dumps(schema, ensure_ascii=False, indent=2) + ";\n",
         encoding="utf-8",
     )

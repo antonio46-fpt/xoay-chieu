@@ -14,6 +14,7 @@ function open(live,production=false){
   a.$('toggleStudentPassword').click();assert.equal(a.$('studentPin').type,'text');assert.equal(a.$('toggleStudentPassword').getAttribute('aria-pressed'),'true');a.$('toggleStudentPassword').click();
   a.w.eval('start(1)');assert(a.$('login'));assert(!a.w.eval('profile'));
   a.$('code').value='ZZ01-A';a.$('school').value=content.truong_lop[0].truong;a.$('school').dispatchEvent(new a.w.Event('change'));a.$('class').value=content.truong_lop[0].lop[0];
+  assert.equal(a.$('class').value,'10A3');assert.equal(a.$('class').selectedOptions[0].textContent,'10A3 (10 Tin)');
   a.$('studentPin').value='XcSyntheticPassword2026';a.$('loginStart').click();assert(a.$('login'));assert(a.$('loginStart').disabled);assert.equal(a.$('studentPin').value,'');
   assert.equal(calls[0].input.password,'XcSyntheticPassword2026');assert(!Object.hasOwn(calls[0].input,'pin'));
   resolve({ok:false,code:'AUTH_REQUIRED',error:'Mã hoặc mật khẩu không đúng.'});await tick();assert(a.$('login'));assert(!a.w.eval('profile'));
