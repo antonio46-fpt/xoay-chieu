@@ -1709,6 +1709,7 @@ const LearningSync = (() => {
     collect();
     if(!persist())return;
     remember();persist();
+    if(!studentAuthorized(profile)){error='Phiên học sinh hết hạn. Nhập lại mật khẩu để tiếp tục đồng bộ.';showStudentReauth();view();return;}
     await flush();
     // Nếu lần trước mất ACK, gửi nốt snapshot mới sau khi đã xác nhận snapshot cũ.
     if(identity(owner) && !error && Object.keys(store(person()).pending).length) await flush();

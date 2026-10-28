@@ -20,6 +20,7 @@ async function advance(ms){const target=now+ms;while(true){let chosen;for(const 
  field.value='Thay đổi ở phút tiếp theo.';await advance(60000);assert.equal(calls.filter(call=>call.name==='saveStudentDraft').length,2);
  online=false;field.value='Phần mới khi mất mạng.';await advance(60000);assert.equal(calls.filter(call=>call.name==='saveStudentDraft').length,2);assert(w.localStorage.getItem('xoaychieu_v2').includes(field.value));
  online=true;await advance(60000);saves=calls.filter(call=>call.name==='saveStudentDraft');assert.equal(saves.length,3);assert.equal(saves.at(-1).input.draft.answers.thu_lam,field.value);
+ w.eval('studentAuth.expires=0');field.value='Nháp khi phiên đã hết hạn.';await advance(60000);assert.equal(calls.filter(call=>call.name==='saveStudentDraft').length,3);assert($('studentReauth'));assert(w.localStorage.getItem('xoaychieu_v2').includes(field.value));
  $('logout').click();for(let i=0;i<100&&!$('login');i++)await new Promise(resolve=>setTimeout(resolve,10));assert($('login'));const total=calls.filter(call=>call.name==='saveStudentDraft').length;await advance(120000);assert.equal(calls.filter(call=>call.name==='saveStudentDraft').length,total,'Logout must stop the old account timer');
  console.log('PASS minute synchronization: 59,999/60,000ms boundary, latest text during typing, repeated minutes, no unchanged writes, offline durability/reconnect, acknowledged timestamp and timer stop on logout');
  }finally{dom.window.close();}
