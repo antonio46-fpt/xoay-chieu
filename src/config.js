@@ -7,10 +7,11 @@
  * Nội dung giáo dục được sửa riêng trong content.json.
  */
 const APP_CONFIG = Object.freeze({
-  version: '2.7.1',
+  version: '2.8.0',
   authRequired: false, // build.py đặt true riêng cho bản Apps Script; mất bridge phải chặn đăng nhập.
   storageKey: 'xoaychieu_v2', // Giữ khóa cũ để không mất bài phiên bản 2.0.
   rpcTimeoutMs: 30000,
+  syncIntervalMs: 60000, // Tự đồng bộ nháp có thay đổi mỗi phút khi trang đang mở.
   retryBaseMs: 5000,
   retryMaxMs: 120000,
   maxBackupBytes: 10000000,

@@ -54,3 +54,7 @@ Bản thật xác thực mã học sinh có sẵn + PIN riêng theo trường/l�
 ## Cập nhật danh sách và tiến trình (2.7.0)
 
 Theo xác nhận mới: mở 10A3 (10 Tin), 11E1 (11 Văn), LB-11A (11A Lộc Bình); giữ Chi Lăng / 12A2 để truy cập dữ liệu cũ, không đổi danh tính. NT-10A6/NT-10A7 chờ bốc thăm, chưa kích hoạt cả hai. Bản này lưu/khôi phục nháp và bước đang làm của chính học sinh trên Sheet, có xử lý an toàn; Sổ trả lại bài đã nộp riêng để tuần sau/tuần 4 tiếp tục. Quyền giáo viên không mở rộng sang nội dung bài/nháp. Nháp không tính là bài hoàn thành hoặc điểm nghiên cứu.
+
+## Quản lý Sheet và chu kỳ phút (2.8.0)
+
+Nháp thay đổi được kiểm tra/gửi mỗi 60 giây khi trang đang mở và đã xác thực; checkpoint nộp/thoát vẫn lưu ngay. Chủ dự án có bảng tổng quan tài khoản và chi tiết câu trả lời an toàn theo tuần trong Sheet riêng được cấp quyền. Phần trăm chỉ là tuần đã nộp/ô đã điền, không phải điểm năng lực, không gửi điểm La bàn và không đổi quyền đọc nháp của GVCN.

@@ -20,7 +20,7 @@ const LearningSync = (() => {
     if(identity(owner)) await flush();
     if(identity(owner) && !error && Object.keys(store(person()).pending).length) await flush();
   }
-  function reset() {loadedOwner='';loading=false;error='';clearTimeout(timer);}
+  function reset() {loadedOwner='';loading=false;error='';clearInterval(timer);timer=null;}
   function begin() {reset();loading=true;}
   function remember() {
     if (!LIVE || !profile || loadedOwner !== Core.key(profile)) return;
@@ -32,9 +32,7 @@ const LearningSync = (() => {
       if (!pending || !pending.attempted) cloud.pending[week]={week:Number(week),mutationId:pending?.mutationId || Core.id(),expectedRevision:cloud.versions[week] || 0,draft:safe(draft),attempted:false};
     }
     for (const week of Object.keys(cloud.pending)) if (!p.drafts[week]) delete cloud.pending[week];
-    if (!busy && !timer && Object.keys(cloud.pending).some(week=>!cloud.conflicts[week])) {
-      timer=setTimeout(()=>{timer=null;flush();},15000);
-    }
+    if (!timer) timer=setInterval(syncMinute,APP_CONFIG.syncIntervalMs || 60000);
     view();
   }
   function conflict(cloud,week,remote,revision) {
@@ -94,10 +92,19 @@ const LearningSync = (() => {
     } catch(e) {if(identity(owner)) error=e.message+' Nháp trên máy vẫn được giữ.';}
     finally {if(identity(owner) && (!studentAuth || studentAuth===auth)){loading=false;view();}}
   }
+  async function syncMinute() {
+    if (!profile || loadedOwner!==Core.key(profile) || loadBroken || storageConflict) return;
+    const owner=Core.key(profile);
+    collect();
+    if(!persist())return;
+    remember();persist();
+    await flush();
+    // Nếu lần trước mất ACK, gửi nốt snapshot mới sau khi đã xác nhận snapshot cũ.
+    if(identity(owner) && !error && Object.keys(store(person()).pending).length) await flush();
+  }
   async function flush() {
-    clearTimeout(timer);timer=null;
     if(busy || !LIVE || !navigator.onLine || !studentAuthorized(profile) || loadedOwner!==Core.key(profile) || loadBroken || storageConflict) return;
-    remember();clearTimeout(timer);timer=null;
+    remember();
     const owner=Core.key(profile),auth=studentAuth,p=person(),cloud=store(p);
     busy=true;
     try {
@@ -109,7 +116,7 @@ const LearningSync = (() => {
         // Không cho ACK của tài khoản cũ tác động đến tài khoản đang mở.
         if(!identity(owner) || studentAuth!==auth)return;
         if(result?.ok && result.mutationId===item.mutationId && Number.isInteger(result.revision)) {
-          cloud.versions[week]=result.revision;cloud.saved[week]=fingerprint(item.draft);delete cloud.pending[week];error='';
+          cloud.versions[week]=result.revision;cloud.saved[week]=fingerprint(item.draft);delete cloud.pending[week];cloud.lastSyncedAt=result.updatedAt || new Date().toISOString();error='';
         } else if(result?.code==='STATE_CONFLICT') {
           conflict(cloud,week,result.draft,result.revision);
         } else if(result?.code==='ALREADY_SUBMITTED') {
@@ -145,10 +152,12 @@ const LearningSync = (() => {
     if(!LIVE || !profile || !$('page'))return;
     const cloud=store(person()), pending=Object.keys(cloud.pending).length;
     const text=error || (loading?'Đang khôi phục nháp và bài cũ từ Sheet…':busy?'Đang lưu nháp lên Sheet…':loadedOwner!==Core.key(profile)?'Chưa khôi phục tiến trình từ Sheet. Nháp trên máy vẫn được giữ.':pending?'Nháp đã lưu trên máy, đang chờ đồng bộ lên Sheet.':'Nháp đã đồng bộ. Tuần sau đăng nhập cùng tài khoản để tiếp tục.');
-    if($('draftStatus'))$('draftStatus').textContent=text;
+    const confirmed=cloud.lastSyncedAt && Number.isFinite(Date.parse(cloud.lastSyncedAt)) ? ' · Xác nhận gần nhất '+new Date(cloud.lastSyncedAt).toLocaleTimeString('vi-VN') : '';
+    const detail=text+' · Tự đồng bộ mỗi 60 giây khi có thay đổi'+confirmed;
+    if($('draftStatus'))$('draftStatus').textContent=detail;
     let status=$('learningStatus');
     if(!status){status=document.createElement('p');status.id='learningStatus';status.className='notice';status.setAttribute('role','status');$('page').prepend(status);}
-    status.textContent=text;
+    status.textContent=detail;
     $('learningNotice')?.remove();
     const conflicts=Object.entries(cloud.conflicts);
     if(!conflicts.length)return;

@@ -1,4 +1,4 @@
-# Xoay Chiều — mã nguồn đầy đủ 2.7.1
+# Xoay Chiều — mã nguồn đầy đủ 2.8.0
 
 Công cụ hoạt động và thu dữ liệu cho đề tài “Phát triển năng lực linh hoạt trong học tập của học sinh THPT tại Lạng Sơn”. Phạm vi bản bắt buộc: 3 lớp đang triển khai theo danh sách mới, giữ lớp Chi Lăng cũ; lớp thứ tư chờ chốt, 4 tuần can thiệp. Lịch triển khai và kết thúc chưa chốt. Không chấm đúng/sai, không xếp hạng, không tự suy ra điểm năng lực.
 
@@ -42,6 +42,7 @@ Xem [SCOPE.md](SCOPE.md) để đối chiếu yêu cầu, quyền dữ liệu v�
 | `src/app.js` | Điều hướng, màn hình, nháp, hàng đợi, giao tiếp máy chủ |
 | `src/style.css`, `src/shell.html` | CSS và khung HTML |
 | `apps-script/Code.gs` | Máy chủ kiểm tra dữ liệu, xác thực điều phối, ghi Sheet RAW |
+| `apps-script/Management.gs` | Hai bảng quản lý tự tính từ nguồn, không xuất PIN/hash/token |
 | `apps-script/Learning.gs` | Nháp theo tuần, khôi phục Sổ riêng và chống ghi đè giữa thiết bị |
 | `apps-script/Accounts.gs` | Cấp PIN riêng, xác thực học sinh, tổng hợp tiến độ trên Sheet |
 | `apps-script/Schema.gs` | Schema kiểm tra tự sinh từ JSON; không sửa tay |
@@ -122,3 +123,7 @@ Cấu hình lớp được cập nhật theo đợt triển khai (xem mục 2.7 
 ## Mã lớp 2.7.1
 
 Giá trị dữ liệu dùng 10A3, 11E1, LB-11A; chú thích chỉ hiển thị. Giữ tương thích tài khoản, mật khẩu, bài và nháp cũ. Cập nhật đồng bộ đủ 5 tệp Apps Script rồi New version, không đổi hàng loạt Sheet gốc. Xem [mã lớp và nâng cấp](docs/MA_LOP.md).
+
+## Quản lý trên Sheet và đồng bộ 1 phút (2.8.0)
+
+Thêm Management.gs, cập nhật đủ sáu tệp Apps Script và chạy setup_ hoặc setupManagement_, rồi New version. Hai trang quan_ly_hoc_sinh và quan_ly_hoc_tap tự hiện tiến độ và câu trả lời an toàn của từng tài khoản. Nháp tự gửi mỗi 60 giây khi có thay đổi; checkpoint nộp/thoát vẫn lưu ngay. Xem [hướng dẫn quản lý Sheet](docs/QUAN_LY_SHEET.md).

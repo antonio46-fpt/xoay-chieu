@@ -25,3 +25,7 @@
 - [ ] Chạy setup_ thêm nhap_hoc_tap; kiểm tra vào lại đúng bước, đổi thiết bị, tuần sau còn bài tuần trước, tuần 4 dùng được sản phẩm cũ. Chỉ học sinh có token đúng tài khoản đọc được nháp/Sổ; token giáo viên/điều phối bị từ chối.
 - [ ] Gửi nháp lặp không tạo thêm dòng; hai thiết bị sửa có xung đột rõ ràng và giữ bản sao; đóng khi offline không được báo đã đồng bộ. Nháp không xuất hiện trong số tuần hoàn thành hay dữ liệu bài nộp nghiên cứu.
 - [ ] Thêm tài khoản theo CSV mới không đổi mật khẩu cũ. Giữ nhóm Chi Lăng cũ; chưa bật NT-10A6/NT-10A7 trước khi có quyết định bốc thăm.
+
+- [ ] Cập nhật Management.gs, chạy setupManagement_ và kiểm tra hai bảng quan_ly_hoc_sinh/quan_ly_hoc_tap: mã/trường/lớp đúng, câu trả lời an toàn hiện theo tuần; không có PIN/hash/token.
+- [ ] Gõ liên tục qua mốc 60 giây; xác nhận nội dung mới nhất, offline vẫn giữ trên máy, không có ghi nháp khi không đổi, đăng xuất dừng timer.
+- [ ] Kiểm tra công thức ba vùng nguồn, locale, vùng bung mảng và quyền Sheet; thử quota/thời gian tính lại theo kế hoạch tải #4 trước dùng cả đợt.

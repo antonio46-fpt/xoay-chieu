@@ -1,4 +1,4 @@
-# Triển khai Xoay Chiều 2.7.1 vào Google Sheets
+# Triển khai Xoay Chiều 2.8.0 vào Google Sheets
 
 Bộ `apps-script/` đã có bản build sẵn; không cần cài Python hoặc Node chỉ để dán và triển khai. Bản Sites/HTML tĩnh dành cho xem thử, không phải link thu dữ liệu Google Sheets. Không sử dụng dữ liệu thật trong bước thử.
 
@@ -8,14 +8,14 @@ Bộ `apps-script/` đã có bản build sẵn; không cần cài Python hoặc 
 2. Trong Share / Chia sẻ, để Restricted / Hạn chế. Chỉ mời đúng tài khoản nhóm nghiên cứu cần xem/chỉnh sửa. Học sinh không cần quyền truy cập Sheet.
 3. Mở Tiện ích mở rộng → Apps Script.
 4. Thay nội dung `Code.gs` bằng `apps-script/Code.gs` của bộ này.
-5. Tạo thêm tệp Script tên `Schema` rồi dán `apps-script/Schema.gs`; tạo Script **Accounts** rồi dán `apps-script/Accounts.gs`; tạo Script **Learning** rồi dán `apps-script/Learning.gs`.
+5. Tạo thêm tệp Script tên `Schema` rồi dán `apps-script/Schema.gs`; tạo Script **Accounts** rồi dán `apps-script/Accounts.gs`; tạo Script **Learning** rồi dán `apps-script/Learning.gs`; tạo Script **Management** rồi dán `apps-script/Management.gs`.
 6. Tạo thêm tệp HTML tên **Index** rồi dán toàn bộ `apps-script/Index.html` (tên phải đúng chữ hoa).
 7. Bên trái, Services / Dịch vụ → dấu + → Google Sheets API → Add. Máy chủ dùng dịch vụ này để ghi RAW sau khi xử lý nội dung an toàn, không biến câu trả lời thành công thức. Nếu dự án Google Cloud riêng yêu cầu bật API, bật Google Sheets API cho chính dự án đó.
 
    Tệp `apps-script/appsscript.json` là manifest mẫu tương ứng. Với dự án MỚI, có thể bật “Show appsscript.json manifest file in editor” trong Project Settings rồi dán tệp này để đặt V8, múi giờ GMT+7 và Sheets v4. Không dán đè manifest của dự án đang có dịch vụ khác. Nếu đã thêm Sheets API bằng giao diện, giữ manifest Google tự tạo cũng được.
 
 8. Lưu. Ở danh sách hàm trên thanh công cụ, chọn **setup_**, bấm Run và cấp quyền cho dự án do bạn quản lý. Hàm có dấu gạch dưới cuối để trình duyệt không gọi được qua google.script.run.
-9. Kiểm tra Sheet có 6 trang: `chu_trinh`, `phieu_buoi`, `doi_y`, `tai_khoan`, `tien_do`, `nhap_hoc_tap`. `SPREADSHEET_ID` tự lưu trong Script Properties. Nếu báo cột không khớp, dùng Sheet mới; đừng xóa dữ liệu cũ để chữa lỗi.
+9. Kiểm tra Sheet có 8 trang: `chu_trinh`, `phieu_buoi`, `doi_y`, `tai_khoan`, `tien_do`, `nhap_hoc_tap`, `quan_ly_hoc_sinh`, `quan_ly_hoc_tap`. `SPREADSHEET_ID` tự lưu trong Script Properties. Nếu báo cột không khớp, dùng Sheet mới; đừng xóa dữ liệu cũ để chữa lỗi.
 
 ## A2. Cấp tài khoản học sinh trước khi triển khai
 
@@ -79,7 +79,7 @@ Tài liệu Google: https://developers.google.com/apps-script/guides/html/commun
 
 1. Sửa nội dung trong `src/content.json` trên máy. Nên tăng `phien_ban` khi thay nội dung chính thức.
 2. Chạy `python build.py`. Lần đầu cài thư viện kiểm thử bằng `npm ci --ignore-scripts`, sau đó chạy `npm test`. Chạy `python package_source.py` nếu cần tạo lại ZIP và trang đọc mã.
-3. Dán lại `Index.html` và `Schema.gs`; nếu sửa máy chủ thì cập nhật `Code.gs` và `Accounts.gs`.
+3. Dán lại `Index.html` và `Schema.gs`; cập nhật đồng bộ Code.gs, Accounts.gs, Learning.gs và Management.gs khi nâng bản máy chủ.
 4. Deploy → Manage deployments → Edit → New version → Deploy để giữ URL cũ. Chỉ Save code chưa cập nhật bản `/exec`.
 5. Không đổi cấu trúc câu hỏi/phiên bản giữa lúc học sinh đang làm. Thử trước trên bản sao.
 
@@ -89,7 +89,7 @@ Tài liệu Google: https://developers.google.com/apps-script/guides/html/commun
 - Chỉ bản sao **toàn bộ** mới được nhập lại bằng Cài đặt; tệp từng mã dùng để đọc/lưu riêng. Chỉ nhập trên trình duyệt chưa có dữ liệu; bài chờ được giữ nhưng chưa tự gửi đến khi bạn bấm Thử gửi lại.
 - Khi mất mạng, không xóa dữ liệu trình duyệt hay dùng chế độ ẩn danh. Không mở nhiều tab cùng một app trên một thiết bị khi đang làm.
 - Nếu bài ở trạng thái chờ: xem lỗi ở Cài đặt → Thử gửi lại. Kiểm tra đã bật Sheets API, chạy setup_, đúng phiên bản triển khai và đúng Sheet.
-- Dữ liệu Sheet là bản trung tâm để nghiên cứu; localStorage chỉ hỗ trợ thao tác và sản phẩm trên cùng máy, không đồng bộ lịch sử sang máy khác.
+- Dữ liệu Sheet là bản trung tâm để nghiên cứu; localStorage giữ bản gốc và phần chưa đồng bộ; nháp an toàn/bài đã được xác nhận trên Sheet có thể khôi phục khi đăng nhập trên máy khác.
 - Không xóa hàng đợi để làm mất thông báo lỗi. Với phiếu điều phối hết phiên, vào Điều phối nhập lại PIN.
 - Lỗi ID xung đột hoặc dữ liệu không hợp lệ làm gói tạm dừng. Xuất bản sao, đối chiếu Sheet và phiên bản nội dung trước khi gửi lại; không đổi ID để né lỗi vì có thể tạo dữ liệu lặp.
 - Ngày bắt đầu/chạy thử/kết thúc chờ chủ dự án xác nhận. App không tự khóa theo ngày; không triển khai tuần 5–8.
@@ -121,3 +121,7 @@ Cập nhật đủ Code.gs, Accounts.gs, **Learning.gs**, Schema.gs, Index.html;
 ## Mã lớp 2.7.1
 
 Giá trị dữ liệu dùng 10A3, 11E1, LB-11A; chú thích chỉ hiển thị. Giữ tương thích tài khoản, mật khẩu, bài và nháp cũ. Cập nhật đồng bộ đủ 5 tệp Apps Script rồi New version, không đổi hàng loạt Sheet gốc. Xem [mã lớp và nâng cấp](docs/MA_LOP.md).
+
+## Quản lý trên Sheet và đồng bộ 1 phút (2.8.0)
+
+Thêm Management.gs, cập nhật đủ sáu tệp Apps Script và chạy setup_ hoặc setupManagement_, rồi New version. Hai trang quan_ly_hoc_sinh và quan_ly_hoc_tap tự hiện tiến độ và câu trả lời an toàn của từng tài khoản. Nháp tự gửi mỗi 60 giây khi có thay đổi; checkpoint nộp/thoát vẫn lưu ngay. Xem [hướng dẫn quản lý Sheet](docs/QUAN_LY_SHEET.md).

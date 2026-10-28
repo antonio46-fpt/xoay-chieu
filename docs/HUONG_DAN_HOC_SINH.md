@@ -12,3 +12,5 @@
 Trước buổi học, giáo viên cần thử trên điện thoại thực tế. Hướng dẫn này chưa thay thế kiểm tra Zalo/Facebook, tiết kiệm pin, tắt màn hình và 4G mất/kết nối lại.
 
 Khi vào lại, chờ khôi phục tiến trình, chọn **Viết tiếp tuần…**. “Nháp trên máy/chờ đồng bộ” chưa có trên thiết bị khác; chỉ đóng trang sau khi trạng thái báo đã đồng bộ nếu muốn đổi máy. Nếu có hai bản nháp, chọn bản muốn tiếp tục; app giữ bản sao của cả hai trên máy. Nháp chưa được tính là tuần đã nộp.
+
+Từ 2.8, nháp có thay đổi tự đồng bộ mỗi 60 giây khi trang mở và có mạng. Màn hình có lần xác nhận gần nhất. Nộp/thoát vẫn thử lưu ngay; phần còn chờ chỉ ở máy nguồn.
