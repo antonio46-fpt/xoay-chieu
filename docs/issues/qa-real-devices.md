@@ -17,3 +17,16 @@ Nháp và hàng đợi nằm trong trình duyệt; test DOM/Chromium viewport kh
 - [ ] Báo cáo pass/fail/unrun theo từng tình huống, ảnh đã loại mã thật và nội dung thật.
 
 Hướng dẫn học sinh: docs/HUONG_DAN_HOC_SINH.md. Chưa thực hiện các kiểm tra vật lý trong môi trường lập trình này.
+
+## Kiểm toán mã 2.8.0
+
+Bốn ô dưới đây kiểm được bằng mã; phần còn lại bắt buộc thử trên máy thật.
+
+| Tiêu chí | Kết quả | Bằng chứng |
+|---|---|---|
+| Hai học sinh khác mã trên cùng trình duyệt không lẫn nháp/lịch sử | Đạt | `src/classes.js:8` khoá hồ sơ gồm cả `truong`, `lop`, `ma`; `db.profiles` tách theo khoá này |
+| Cảnh báo lỗi lưu/bộ nhớ đầy rõ ràng | Đạt | `src/app.js:407-417` báo rõ nguyên nhân và giữ nguyên dữ liệu, không âm thầm mất bài |
+| Bản LIVE không cho bỏ qua lưu bằng chế độ demo | Đạt | `src/app.js:14` đặt `AUTH_REQUIRED = APP_CONFIG.authRequired \|\| LIVE`; `src/app.js:379` chỉ bật `previewOnly` khi **không** ở bản LIVE |
+| Không ghi thông tin nhận diện thiết bị | Đạt | `src/app.js:7` nêu rõ; `Core.record` không có trường thiết bị |
+
+Còn mở: ma trận Android giá rẻ / Android tầm trung / iPhone, trình duyệt trong Zalo–Facebook, tiết kiệm pin và mất 4G giữa bài.

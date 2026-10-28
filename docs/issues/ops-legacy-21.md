@@ -16,3 +16,14 @@ Gói 2.1 có thể đã ghi nguyên văn ở Sheet nhưng mất ACK; bản mới
 - [ ] Có người chịu trách nhiệm thao tác dữ liệu thật nếu được phép; người hỗ trợ lập trình không truy cập sau triển khai chính thức.
 
 Chưa có migration tự động trong mã. Các ID_CONFLICT vẫn tạm dừng để kiểm tra, không được né bằng cách tạo ID mới.
+
+## Kiểm toán mã 2.8.0
+
+| Điều phải giữ | Kết quả | Bằng chứng |
+|---|---|---|
+| Không có migration tự động đụng dữ liệu cũ | Đạt | Không có hàm migration trong `apps-script/`; dữ liệu cũ chỉ được đọc tương thích qua `ClassIds.code` |
+| `ID_CONFLICT` làm gói tạm dừng, không tự gửi lại | Đạt | `src/app.js:179` đặt `error.permanent` cho `ID_CONFLICT` và `INVALID_RECORD`; `src/app.js:198` gán `item.paused` |
+| Không đổi ID để né xung đột | Đạt | Đường nộp giữ nguyên `draft.id`; `src/learning.js:144` chỉ cấp ID mới khi người học chủ động chọn "giữ bản trên máy" thành lượt mới |
+| Gói tạm dừng vẫn xuất được bản sao | Đạt | Hàng đợi nằm trong `localStorage` và được đưa vào bản sao toàn bộ |
+
+Còn mở: chủ dự án xác nhận có hay không có gói 2.1; nếu có, nhóm nghiên cứu phải chốt quy tắc xử lý trước khi nâng bản.

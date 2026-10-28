@@ -30,3 +30,15 @@ Fixture hai trường, bốn lớp; có mã chưa nộp, nộp nhiều lượt, 
 - [ ] Chỉ sau khi được duyệt, chọn nguồn roster chỉ gồm mã và quy trình chủ dự án cấp mã sẵn để tránh trùng. Không tự đưa danh sách học sinh vào repo.
 
 Nguồn roster chỉ gồm mã có thể được thiết kế sau quyết định; bảng đối chiếu có họ tên luôn nằm ngoài hệ thống. Đây là hai loại dữ liệu khác nhau.
+
+## Kiểm toán mã 2.8.0
+
+Roster **chưa được lập trình**, đúng quyết định tạm dừng P3. Đã rà lại để chắc không có suy luận ngầm nào:
+
+| Điều phải giữ | Kết quả | Bằng chứng |
+|---|---|---|
+| `getClassProgress` chỉ liệt kê mã đã có bài được xác nhận | Đạt | `apps-script/Code.gs:306-317` gom mã từ chính các dòng của `chu_trinh` |
+| Không âm thầm suy ra mã còn lại là chưa làm bài | Đạt | Không có nguồn roster nào trong mã; `src/app.js:951` ghi rõ giới hạn này ngay trên giao diện |
+| Không nhúng danh sách mã học sinh vào HTML phát cho học sinh | Đạt | `src/content.json` chỉ có tên trường và mã lớp, không có mã học sinh |
+
+Issue này chỉ đóng được bằng quyết định văn bản của nhóm nghiên cứu, không cần thêm mã.

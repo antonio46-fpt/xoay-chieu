@@ -35,3 +35,18 @@ Chỉ dùng mã và nội dung giả trên Sheet thử. Mô phỏng mất ACK, t
 ## Đã sửa và kiểm thử cục bộ
 
 Đường submit đọc tiêu đề/ID/bản ghi và append cùng Sheets API, UNFORMATTED_VALUE, khóa bao trùm toàn bộ. So sánh đúng kiểu số/boolean, coi ô trống bị lược cuối hàng là rỗng; chuỗi không trim/chuyển kiểu. Build áp giới hạn nội bộ 13.000 UTF-16 code units, kiểm tra tiền tố tuần 3 và tổng hợp tuần 4. `tests/backend-review.cjs` đã kiểm tra burst **tuần tự trong fixture**, không thay cho 20 request đồng thời trên Google.
+
+## Kiểm toán mã 2.8.0
+
+Rà trực tiếp đường nộp ngày 28/10/2026. Sáu tiêu chí kiểm được bằng mã đều đạt:
+
+| Tiêu chí | Kết quả | Bằng chứng |
+|---|---|---|
+| FE không gửi nguyên văn ô nhạy cảm; lịch sử máy giữ bản gốc | Đạt | `src/app.js:160` thay bản ghi trong hàng đợi bằng bản đã che; `src/app.js:659-665` lịch sử giữ đối tượng gốc nên không bị thay theo |
+| Gọi máy chủ trực tiếp vẫn không ghi nguyên văn | Đạt | `apps-script/Code.gs:207` gọi lại `Safety.redactRecord` trước khi kiểm tra và ghi |
+| Tuần 3 giữ tiền tố, tuần 4 giữ cột tổng hợp, không lộ lại nội dung đã che | Đạt | `src/safety.js:21-28` dựng lại tiền tố quanh `[đã ẩn – an toàn]`; `apps-script/Code.gs:148-157` kiểm tra lại phần khớp |
+| RAW không thực thi `=`, `+`, `-`, `@` thành công thức | Đạt | `apps-script/Code.gs:244-249` dùng `valueInputOption: 'RAW'` |
+| Retry sau mất ACK / reload / khôi phục tạo đúng một dòng | Đạt | `src/core.js:44-47` dùng lại `draft.id` đã cấp; `apps-script/Code.gs:229-239` là nhánh ACK lại |
+| Hai request cùng ID đồng thời không tạo hai dòng; nội dung khác bị từ chối | Đạt theo thiết kế | `apps-script/Code.gs:214-239` giữ khoá `LockService` bao trùm cả bước tìm ID và `append`; khác nội dung → `ID_CONFLICT` |
+
+Còn mở, chỉ làm được trên Sheet thử: 20 request cùng ID trong 2 giây, đọc lại ngay sau khi nhả khoá, và ghi/đọc từng ô ở đúng độ dài tối đa JSON.

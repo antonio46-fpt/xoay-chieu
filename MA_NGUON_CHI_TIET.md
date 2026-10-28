@@ -1,4 +1,4 @@
-# Hướng dẫn đọc và sửa mã nguồn Xoay Chiều 2.2.0
+# Hướng dẫn đọc và sửa mã nguồn Xoay Chiều 2.8.0
 
 ## 1. Kiến trúc và nơi dữ liệu đi qua
 

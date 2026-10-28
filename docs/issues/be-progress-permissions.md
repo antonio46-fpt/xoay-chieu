@@ -38,3 +38,16 @@ Tạo Sheet/deployment thử, cấu hình PIN thử bằng Script Properties ngo
 ## Phương án hiện tại
 
 Giữ giới hạn 8 lần/10 phút, chọn cách **hiển thị thời gian chờ còn lại** và chờ hết khóa; không tự thêm PIN dự phòng. Bộ đếm vẫn theo lớp nên chưa loại bỏ được nguy cơ bị cố tình khóa lớp. Cần nhóm nghiên cứu chấp thuận phương án hoặc yêu cầu quy trình dự phòng trước triển khai thật. Cache token/bộ đếm có thể bị Google loại sớm: không bảo đảm phiên đủ 6 giờ hay giữ bộ đếm đủ 10 phút. Test cục bộ đã kiểm tra hết phiên và khôi phục phiếu, tích hợp Google vẫn để mở.
+
+## Kiểm toán mã 2.8.0
+
+| Tiêu chí | Kết quả | Bằng chứng |
+|---|---|---|
+| PIN giáo viên đúng/sai + giới hạn thử PIN | Đạt | `apps-script/Code.gs:340-401`; sai 8 lần khoá lớp 600 giây |
+| Token sai, hết hạn, bị thu hồi, token điều phối, đổi lớp đều bị từ chối | Đạt | `apps-script/Code.gs:270-282` so cả `truong` và `lop`; cache tách tiền tố `teacher:` và `coord:` nên không dùng chéo được |
+| Chỉ nhận `ma` + `weeks`, không có bài/tự đánh giá/metadata | Đạt | `apps-script/Code.gs:316` chỉ dựng `{ma, weeks}`; `src/app.js:955` chỉ hiển thị mã và tuần |
+| Token giáo viên không nộp được phiếu điều phối | Đạt | `apps-script/Code.gs:210` gọi `authorizeCoordinator_`, tra khoá `coord:<token>` |
+| `RATE_LIMITED` trả `retryAfterSeconds`, nhấn lại không kéo dài hạn khoá | Đạt | `apps-script/Code.gs:354-359` đặt TTL bằng đúng số giây còn lại |
+| GVCN không có quyền mở Sheet nguồn | Chờ thao tác | Việc cấp quyền Google, không phải mã |
+
+Còn mở: chạy trên deployment thật với hai trình duyệt riêng vai trò, thử lúc Google loại cache sớm, và ghi ảnh chụp cấu hình đã che credential.

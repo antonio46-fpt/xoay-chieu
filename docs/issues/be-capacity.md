@@ -35,3 +35,16 @@ Chạy tải bằng mã giả, chỉ trên Sheet thử, trong giới hạn Googl
 - [ ] Nếu không đạt, đề xuất nộp lệch nhóm 1–2 phút và kiểm thử lại lịch mới.
 
 `loginTeacher`/`loginCoordinator` vẫn dùng cùng script lock với submit; tryLock chờ tối đa 1,5 giây. Đây là điểm cần đo, chưa thay khóa bằng cơ chế không bảo đảm nguyên tử. Chi tiết kế hoạch và mẫu báo cáo ở [LOAD_TEST_PLAN.md](../LOAD_TEST_PLAN.md).
+
+## Kiểm toán mã 2.8.0
+
+Không tiêu chí tải nào đo được từ mã; mục này chỉ xác nhận phần chuẩn bị đã đúng thiết kế.
+
+| Điều kiện chuẩn bị | Kết quả | Bằng chứng |
+|---|---|---|
+| Mọi đường vào dùng chung một khoá script | Đạt | `apps-script/Code.gs:214-219` (nộp bài), `:345-346` (đăng nhập vai trò), `apps-script/Learning.gs:97-98` đều `LockService.getScriptLock()` + `tryLock(1500)` |
+| Máy chủ trả `BUSY` thay vì treo khi bận | Đạt | `apps-script/Code.gs:215-219` trả mã `BUSY` để client thử lại |
+| Client giãn lần thử sau lỗi | Đạt | `src/core.js:87-92` backoff mũ + jitter, chặn trên 2 phút |
+| Không có đường ghi Sheet nào nằm ngoài khoá | Đạt | Cả `append`/`update` đều nằm trong nhánh còn giữ khoá |
+
+Còn mở nguyên vẹn: mọi số đo p50/p95, tỷ lệ ACK/BUSY/quota và thời gian xử lý hết hàng đợi — chỉ có được sau khi chủ dự án duyệt mức dừng và chạy trên Sheet thử.

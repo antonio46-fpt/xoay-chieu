@@ -1,4 +1,4 @@
-# Phạm vi Xoay Chiều 2.7.0
+# Phạm vi Xoay Chiều 2.8.0
 
 Mục tiêu: giúp học sinh THPT rèn năng lực linh hoạt trong học tập qua trải nghiệm, phản tư và điều chỉnh. Chương trình có 4 tuần; danh sách đang mở gồm THPT Chuyên Chu Văn An (10A3 / 10 Tin, 11E1 / 11 Văn) và Trường PTDTNT THCS & THPT Lộc Bình (LB-11A). Giữ THPT Chi Lăng (12A2) trong nhóm lớp cũ. Lớp thứ tư mới chưa chốt giữa NT-10A6/NT-10A7. Số người dùng đồng thời chưa được kiểm chứng trên Google thật.
 
