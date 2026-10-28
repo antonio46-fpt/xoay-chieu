@@ -121,7 +121,7 @@ function saveStudentDraft(input) {
     if (ids.some(row => row[0] === draft.id)) return {ok:false,code:'ALREADY_SUBMITTED',error:'Bài này đã nộp. Tải lại tiến trình trước khi làm lượt mới.'};
     if (current && current.row[6] === input.mutationId) {
       if (JSON.stringify(decodeLearningRow_(current.row)) !== json) fail_('Lần gửi nháp đã tồn tại với nội dung khác.', 'ID_CONFLICT');
-      return {ok:true,week:input.week,revision,mutationId:input.mutationId,duplicate:true};
+      return {ok:true,week:input.week,revision,mutationId:input.mutationId,updatedAt:current.row[7],duplicate:true};
     }
     if (input.expectedRevision !== revision) return {ok:false,code:'STATE_CONFLICT',error:'Nháp đã thay đổi trên thiết bị khác. Cả hai bản được giữ để bạn chọn.',week:input.week,revision,draft:current && !ids.some(row=>row[0]===current.row[4]) ? decodeLearningRow_(current.row) : null};
 
@@ -130,7 +130,7 @@ function saveStudentDraft(input) {
       const number = current.index + 2;
       Sheets.Spreadsheets.Values.update({values:[values]},id,"'nhap_hoc_tap'!A"+number+':X'+number,{valueInputOption:'RAW'});
     } else Sheets.Spreadsheets.Values.append({values:[values]},id,"'nhap_hoc_tap'!A1",{valueInputOption:'RAW',insertDataOption:'INSERT_ROWS'});
-    return {ok:true,week:input.week,revision:revision+1,mutationId:input.mutationId,duplicate:false};
+    return {ok:true,week:input.week,revision:revision+1,mutationId:input.mutationId,updatedAt:values[7],duplicate:false};
   } catch (error) {
     return {ok:false,code:error.code || 'SERVER_ERROR',error:error.code ? error.message : 'Chưa lưu được nháp lên Sheet. Bản trên máy vẫn được giữ.'};
   } finally {if (lock && lock.hasLock()) lock.releaseLock();}

@@ -16,3 +16,5 @@
 | [#7](https://github.com/antonio46-fpt/xoay-chieu/issues/7) | P2 | `docs(be): define handling of pending version 2.1 records` | [Nội dung](ops-legacy-21.md) |
 
 #1 tạm dừng code, chờ quyết định tự nguyện/đồng thuận. #4 chờ duyệt tải; xử lý 2.1 có quyết định nghiên cứu riêng. Không đưa credential hoặc dữ liệu thật vào issue. Xem [đối chiếu góp ý](../BACKEND_REVIEW.md), [checklist cấu hình](../DEPLOYMENT_CHECKLIST.md), [kế hoạch tải](../LOAD_TEST_PLAN.md) và [hướng dẫn học sinh](../HUONG_DAN_HOC_SINH.md).
+
+Nội dung [bảng quản lý + đồng bộ phút](be-minute-management.md) đã chuẩn bị nhưng **chưa đăng được issue**: API GitHub trả Forbidden cho cả GraphQL và REST trong phiên này. Không có số issue để dẫn hoặc đóng.

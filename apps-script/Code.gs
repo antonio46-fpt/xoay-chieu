@@ -1,5 +1,5 @@
 /**
- * XOAY CHIỀU — MÁY CHỦ GOOGLE APPS SCRIPT, phiên bản 2.7.1.
+ * XOAY CHIỀU — MÁY CHỦ GOOGLE APPS SCRIPT, phiên bản 2.8.0.
  *
  * Các điểm vào từ trình duyệt:
  *   doGet()                  → phục vụ giao diện Index.html.
@@ -9,7 +9,7 @@
  * Các hàm kết thúc bằng '_' là hàm nội bộ, không gọi được qua google.script.run.
  * API tiến độ chỉ trả mã và tuần, xác thực bằng phiên giáo viên của đúng lớp. Phiên giáo viên không đọc bài/nháp riêng; Learning.gs chỉ trả bài của chính học sinh đã xác thực.
  */
-const SERVER_VERSION = '2.7.1';
+const SERVER_VERSION = '2.8.0';
 
 const HEADERS = {
   chu_trinh: [
@@ -53,6 +53,7 @@ function setup_() {
     }
   }
   setupStudentStorage_(spreadsheet);
+  setupManagement_(spreadsheet);
   PropertiesService.getScriptProperties()
     .setProperty('SPREADSHEET_ID', spreadsheet.getId());
 }
