@@ -1343,6 +1343,9 @@ select:disabled {
 const APP_CONFIG = Object.freeze({
   version: '2.8.0',
   authRequired: true, // build.py đặt true riêng cho bản Apps Script; mất bridge phải chặn đăng nhập.
+  // Học sinh chỉ cần mã + trường/lớp, không cần mật khẩu. Đặt true để bắt buộc mật khẩu;
+  // khi đó phải đặt Script Property STUDENT_LOGIN_MODE = mat_khau cho khớp với máy chủ.
+  requireStudentPassword: false,
   storageKey: 'xoaychieu_v2', // Giữ khóa cũ để không mất bài phiên bản 2.0.
   rpcTimeoutMs: 30000,
   syncIntervalMs: 60000, // Tự đồng bộ nháp có thay đổi mỗi phút khi trang đang mở.
@@ -1612,7 +1615,7 @@ if (typeof module !== 'undefined') module.exports = Backup;
   <script>/** Đồng bộ nháp an toàn và Sổ của đúng tài khoản; bản gốc luôn được giữ trên máy. */
 const LearningSync = (() => {
   let loadedOwner = '', loading = false, busy = false, timer = null, error = '';
-  const store = p => p.cloud ||= {versions:{},saved:{},pending:{},conflicts:{},backups:[]};
+  const store = p => (p.cloud = p.cloud || {versions:{},saved:{},pending:{},conflicts:{},backups:[]});
   const identity = owner => profile && Core.key(profile) === owner;
   const safe = draft => {
     const copy = JSON.parse(JSON.stringify(draft));
@@ -1795,7 +1798,8 @@ const $ = id => document.getElementById(id),
   E = Core.esc,
   KEY = APP_CONFIG.storageKey,
   LIVE = !!globalThis.google?.script?.run,
-  AUTH_REQUIRED = APP_CONFIG.authRequired || LIVE;
+  AUTH_REQUIRED = APP_CONFIG.authRequired || LIVE,
+  NEEDS_PASSWORD = AUTH_REQUIRED && APP_CONFIG.requireStudentPassword !== false;
 // Một snapshot dùng để phát hiện tab khác vừa ghi; không ghi đè âm thầm.
 let storageSnapshot = null,
   storageConflict = false,
@@ -1837,7 +1841,7 @@ let profile = AUTH_REQUIRED ? null : db.current || null,
 if (profile) { profile = {...profile,lop:Core.classCode(profile.lop)}; db.current = profile; }
 const cloudSync = () => typeof LearningSync === 'undefined' ? null : LearningSync;
 let logoutPending = false;
-const person = () => profile ? (db.profiles[Core.key(profile)] ||= {
+const person = () => profile ? (db.profiles[Core.key(profile)] = db.profiles[Core.key(profile)] || {
   drafts: {},
   history: []
 }) : null;
@@ -1964,7 +1968,7 @@ async function sync(force = false) {
           throw error;
         }
         if (item.record.loai === 'chu_trinh' && profile && Core.key(profile) === Core.key(item.record)) {
-          studentProgress ||= { ...profile, weeks: [] };
+          if (!studentProgress) studentProgress = { ...profile, weeks: [] };
           studentProgress.weeks = [...new Set([...studentProgress.weeks, item.record.tuan])];
         }
         db.queue = db.queue.filter(q => q.record.id !== item.record.id);
@@ -2133,7 +2137,7 @@ function go(t) {
 function login() {
   const schools = Core.schools(CONTENT);
   $('page').innerHTML =
-    `<div class="welcome"><p class="eyebrow">Chào bạn, rất vui được gặp</p><h1>Một góc nhìn mới<br>bắt đầu từ bạn.</h1><p class="muted">Không có câu trả lời đúng hay sai. Hãy thử, lắng nghe và ghi lại những điều mình nhận ra.</p><form id="login" class="panel"><label class="field"><span>Mã của bạn</span><input id="code" placeholder="Ví dụ định dạng: AB12-C" maxlength="8" autocomplete="off" autocapitalize="characters" required><small>Dùng đúng mã trên phiếu khảo sát. Không nhập họ tên.</small></label><label class="field"><span>Trường</span><select id="school"><option value="">Chọn trường</option>${schools.map(s=>`<option value="${E(s.truong)}">${E(s.truong)}${CONTENT.truong_lop_cu?.some(old=>old.truong===s.truong)?' (lớp cũ)':''}</option>`).join('')}</select></label><label class="field"><span>Lớp</span><select id="class"><option value="">Chọn lớp</option></select></label><label class="field"><span>Mật khẩu</span><input id="studentPin" type="password" autocomplete="current-password" minlength="6" maxlength="64" ${AUTH_REQUIRED?'required':'disabled'}><small>${AUTH_REQUIRED?'Dùng mật khẩu được cấp riêng cùng mã học sinh. Quên mật khẩu? Liên hệ người phụ trách để được đặt lại.':'Đây là bản xem thử. Tài khoản thật đăng nhập tại link Apps Script do giáo viên cung cấp.'}</small></label>${AUTH_REQUIRED?'<button id="toggleStudentPassword" type="button" class="small" aria-controls="studentPin" aria-pressed="false">Hiện mật khẩu</button>':''}<p id="loginErr" class="error" role="alert"></p><button id="loginStart" type="button" class="primary" style="width:100%">${AUTH_REQUIRED?'Đăng nhập và bắt đầu →':'Vào bản xem thử →'}</button><div id="previewFallback" class="${!AUTH_REQUIRED&&storageUnavailable&&!loadBroken&&!storageConflict?'':'hidden'}"><p class="caption">Trình xem không cho lưu dữ liệu. Bạn có thể xem thử tạm thời; bài sẽ mất khi đóng hoặc tải lại trang.</p><button id="previewStart" type="button" class="ghost" style="width:100%">Xem thử không lưu →</button></div><details style="margin-top:18px"><summary>${AUTH_REQUIRED?'Tài khoản được cấp':'Cách tạo mã theo phiếu khảo sát'}</summary>${AUTH_REQUIRED?'<p class="caption">Dùng mã trên phiếu khảo sát đã được người phụ trách đăng ký cùng trường/lớp và mật khẩu riêng được cấp. Nếu mã chưa được đăng ký hoặc bạn quên mật khẩu, hãy liên hệ người phụ trách.</p>':CONTENT.huong_dan_ma.buoc.map(b=>`<p class="caption">${E(b)}</p>`).join('')}</details></form><p class="caption">Câu trả lời lưu trên trình duyệt này${AUTH_REQUIRED?'; nháp và bài đã xử lý an toàn được đồng bộ lên Sheet để tuần sau tiếp tục':''}. Không nhập số điện thoại, địa chỉ hay thông tin nhận diện người khác. Ô có từ khóa an toàn được thay bằng “[đã ẩn – an toàn]” trước khi gửi; bản gốc vẫn ở trên máy.</p></div>`;
+    `<div class="welcome"><p class="eyebrow">Chào bạn, rất vui được gặp</p><h1>Một góc nhìn mới<br>bắt đầu từ bạn.</h1><p class="muted">Không có câu trả lời đúng hay sai. Hãy thử, lắng nghe và ghi lại những điều mình nhận ra.</p><form id="login" class="panel"><label class="field"><span>Mã của bạn</span><input id="code" placeholder="Ví dụ định dạng: AB12-C" maxlength="8" autocomplete="off" autocapitalize="characters" required><small>Dùng đúng mã trên phiếu khảo sát. Không nhập họ tên.</small></label><label class="field"><span>Trường</span><select id="school"><option value="">Chọn trường</option>${schools.map(s=>`<option value="${E(s.truong)}">${E(s.truong)}${CONTENT.truong_lop_cu?.some(old=>old.truong===s.truong)?' (lớp cũ)':''}</option>`).join('')}</select></label><label class="field"><span>Lớp</span><select id="class"><option value="">Chọn lớp</option></select></label><label class="field"><span>Mật khẩu${NEEDS_PASSWORD?'':' (không bắt buộc)'}</span><input id="studentPin" type="password" autocomplete="current-password" minlength="6" maxlength="64" ${NEEDS_PASSWORD?'required':AUTH_REQUIRED?'':'disabled'}><small>${!AUTH_REQUIRED?'Đây là bản xem thử. Tài khoản thật đăng nhập tại link Apps Script do giáo viên cung cấp.':NEEDS_PASSWORD?'Dùng mật khẩu được cấp riêng cùng mã học sinh. Quên mật khẩu? Liên hệ người phụ trách để được đặt lại.':'Máy chủ đang để chế độ chỉ cần mã: có thể để trống ô này và bấm Đăng nhập.'}</small></label>${AUTH_REQUIRED?'<button id="toggleStudentPassword" type="button" class="small" aria-controls="studentPin" aria-pressed="false">Hiện mật khẩu</button>':''}<p id="loginErr" class="error" role="alert"></p><button id="loginStart" type="button" class="primary" style="width:100%">${AUTH_REQUIRED?'Đăng nhập và bắt đầu →':'Vào bản xem thử →'}</button><div id="previewFallback" class="${!AUTH_REQUIRED&&storageUnavailable&&!loadBroken&&!storageConflict?'':'hidden'}"><p class="caption">Trình xem không cho lưu dữ liệu. Bạn có thể xem thử tạm thời; bài sẽ mất khi đóng hoặc tải lại trang.</p><button id="previewStart" type="button" class="ghost" style="width:100%">Xem thử không lưu →</button></div><details style="margin-top:18px"><summary>${AUTH_REQUIRED?'Tài khoản được cấp':'Cách tạo mã theo phiếu khảo sát'}</summary>${AUTH_REQUIRED?'<p class="caption">Dùng mã trên phiếu khảo sát đã được người phụ trách đăng ký cùng trường/lớp và mật khẩu riêng được cấp. Nếu mã chưa được đăng ký hoặc bạn quên mật khẩu, hãy liên hệ người phụ trách.</p>':CONTENT.huong_dan_ma.buoc.map(b=>`<p class="caption">${E(b)}</p>`).join('')}</details></form><p class="caption">Câu trả lời lưu trên trình duyệt này${AUTH_REQUIRED?'; nháp và bài đã xử lý an toàn được đồng bộ lên Sheet để tuần sau tiếp tục':''}. Không nhập số điện thoại, địa chỉ hay thông tin nhận diện người khác. Ô có từ khóa an toàn được thay bằng “[đã ẩn – an toàn]” trước khi gửi; bản gốc vẫn ở trên máy.</p></div>`;
   $('school').onchange = () => {
     $('class').innerHTML = '<option value="">Chọn lớp</option>' + (schools.find(s => s.truong ===
       $('school').value)?.lop || []).map(c => `<option value="${E(c)}">${E(Core.classLabel(c))}</option>`).join('');
@@ -2168,7 +2172,7 @@ function login() {
       if (!LIVE) { $('loginErr').textContent = 'Chưa kết nối được máy chủ xác thực. Hãy mở link web đã triển khai hoặc tải lại trang; chưa thể vào bài học.'; return; }
       const pin = $('studentPin').value;
       $('studentPin').value = '';
-      if (!validStudentPassword(pin)) { $('loginErr').textContent = 'Nhập mật khẩu riêng được cấp (8–64 ký tự); PIN số cũ 6–12 chữ số vẫn dùng được.'; return; }
+      if (NEEDS_PASSWORD && !validStudentPassword(pin)) { $('loginErr').textContent = 'Nhập mật khẩu riêng được cấp (8–64 ký tự); PIN số cũ 6–12 chữ số vẫn dùng được.'; return; }
       if (!navigator.onLine) { $('loginErr').textContent = 'Cần có mạng để đăng nhập. Nháp và bài chờ gửi vẫn được giữ.'; return; }
       button.disabled = true;
       try {
@@ -2644,7 +2648,7 @@ function coord() {
 /** Lưu nháp phiếu điều phối giống bài học sinh, tách theo hồ sơ và form. */
 function bindCoordinatorDrafts() {
   const p = person();
-  p.coordDrafts ||= {};
+  if (!p.coordDrafts) p.coordDrafts = {};
   for (const formId of ['sessionForm', 'debateForm']) {
     const form = $(formId),
       draft = p.coordDrafts[formId];
@@ -2684,7 +2688,7 @@ function localDate() {
 }
 
 function saveCoord(form, data) {
-  form.dataset.id ||= Core.id();
+  if (!form.dataset.id) form.dataset.id = Core.id();
   const record = {
     ...data,
     id: form.dataset.id,
@@ -2830,7 +2834,7 @@ function showStudentReauth() {
   if (!LIVE || !profile || !$('page') || $('studentReauth')) return;
   const notice = document.createElement('section'), owner = { ...profile };
   notice.id = 'studentReauth'; notice.className = 'notice';
-  notice.innerHTML = `<p role="status">Đăng nhập lại để đồng bộ mã ${E(owner.ma)}. Bạn vẫn có thể viết; nháp và bài chờ gửi được giữ trên máy.</p><form id="studentReauthForm"><label class="field"><span>Mật khẩu của bạn</span><input id="studentReauthPin" type="password" minlength="6" maxlength="64" autocomplete="current-password" required></label><button type="submit" class="primary">Xác thực lại</button><p id="studentReauthError" class="error" role="alert"></p></form>`;
+  notice.innerHTML = `<p role="status">Đăng nhập lại để đồng bộ mã ${E(owner.ma)}. Bạn vẫn có thể viết; nháp và bài chờ gửi được giữ trên máy.</p><form id="studentReauthForm"><label class="field"><span>Mật khẩu của bạn</span><input id="studentReauthPin" type="password" minlength="6" maxlength="64" autocomplete="current-password"${NEEDS_PASSWORD?' required':''}></label><button type="submit" class="primary">Xác thực lại</button><p id="studentReauthError" class="error" role="alert"></p></form>`;
   $('page').prepend(notice);
   const form = $('studentReauthForm');
   form.onsubmit = async event => {
@@ -2838,7 +2842,7 @@ function showStudentReauth() {
     const button = form.querySelector('button'), input = $('studentReauthPin'), errorBox = $('studentReauthError');
     if (button.disabled) return;
     const pin = input.value; input.value = ''; errorBox.textContent = '';
-    if (!validStudentPassword(pin)) { errorBox.textContent = 'Nhập đúng mật khẩu được cấp.'; return; }
+    if (NEEDS_PASSWORD && !validStudentPassword(pin)) { errorBox.textContent = 'Nhập đúng mật khẩu được cấp.'; return; }
     button.disabled = true;
     try {
       const result = await rpc('loginStudent', { ...owner, password: pin });

@@ -79,7 +79,7 @@ function XOAY_STUDENTS(accounts, drafts, records) {
 /** Chỉ chủ dự án chạy từ editor; không xóa bảng nguồn hay nội dung có sẵn. */
 function setupManagement_(spreadsheet) {
   const supplied=!!spreadsheet;
-  spreadsheet ||= SpreadsheetApp.getActiveSpreadsheet();
+  if(!spreadsheet)spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   if(!spreadsheet)fail_('Mở Apps Script từ Sheet của dự án.', 'SETUP_REQUIRED');
   const configured=PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
   if(!supplied && (!configured || configured!==spreadsheet.getId()))fail_('Sheet không khớp cấu hình. Chạy setup_ trên đúng dự án trước.', 'SETUP_REQUIRED');

@@ -80,6 +80,16 @@ function studentPassword_(input) {
     (value.length >= 8 && value.length <= 64 && !/[\x00-\x20\x7f]/.test(value))) ? value : '';
 }
 
+/**
+ * Chế độ đăng nhập của học sinh:
+ *   'ma' (mặc định) — chỉ cần mã + trường/lớp, không kiểm tra mật khẩu.
+ *   'mat_khau'      — bắt buộc mật khẩu đã cấp; phải khớp cờ requireStudentPassword ở frontend.
+ */
+function studentLoginMode_() {
+  return String(PropertiesService.getScriptProperties()
+    .getProperty('STUDENT_LOGIN_MODE') || 'ma').toLowerCase() === 'mat_khau' ? 'mat_khau' : 'ma';
+}
+
 function loginStudent(input) {
   let lock;
   try {
@@ -91,12 +101,26 @@ function loginStudent(input) {
     const cache = CacheService.getScriptCache(), key = 'login:student:' + accountKey_(input);
     let state;
     try { state = JSON.parse(cache.get(key) || 'null'); } catch { state = null; }
-    state ||= { attempts: 0, blockedUntil: 0 };
+    if (!state) state = { attempts: 0, blockedUntil: 0 };
     if (state.blockedUntil > Date.now()) return { ok: false, code: 'RATE_LIMITED',
       retryAfterSeconds: Math.max(1, Math.ceil((state.blockedUntil - Date.now()) / 1000)),
       error: 'Mã này đang tạm khóa đăng nhập. Thử lại sau ' + Math.max(1, Math.ceil((state.blockedUntil - Date.now()) / 1000)) + ' giây.' };
     if (state.blockedUntil) state = { attempts: 0, blockedUntil: 0 };
     const account = studentAccounts_(id).find(item => accountKey_(item) === accountKey_(input));
+    // Chế độ chỉ cần mã: bỏ kiểm tra mật khẩu. Dòng tai_khoan (nếu có) chỉ dùng để biết mã bị khóa.
+    if (studentLoginMode_() === 'ma') {
+      if (account && account.status !== 'hoat_dong') fail_('Tài khoản này đang bị khóa. Liên hệ người phụ trách.', 'AUTH_REQUIRED');
+      cache.remove(key);
+      const codeToken = Utilities.getUuid() + Utilities.getUuid(), codeExpires = Date.now() + 21600000;
+      cache.put('student:' + codeToken, JSON.stringify({
+        ma: account ? account.ma : input.ma,
+        truong: account ? account.truong : input.truong,
+        lop: account ? account.lop : ClassIds.code(input.lop),
+        expires: codeExpires,
+        credentialVersion: account ? account.pinHash : ''
+      }), 21600);
+      return { ok: true, token: codeToken, expires: codeExpires };
+    }
     // Tính digest cả với tài khoản không tồn tại để không trả thông tin danh sách mã.
     const candidate = account || { ...input, salt: 'unregistered' };
     const suppliedPin = studentPassword_(input);
@@ -128,6 +152,10 @@ function authorizeStudent_(token, data, id) {
   try { auth = JSON.parse(CacheService.getScriptCache().get('student:' + token) || 'null'); } catch { auth = null; }
   if (!auth || !Number.isFinite(auth.expires) || auth.expires <= Date.now() || accountKey_(auth) !== accountKey_(data)) fail_('Phiên học sinh hết hạn hoặc không đúng mã/trường/lớp.', 'AUTH_REQUIRED');
   const account = studentAccounts_(id).find(item => accountKey_(item) === accountKey_(data));
+  if (studentLoginMode_() === 'ma') {
+    if (account && account.status !== 'hoat_dong') fail_('Tài khoản đã khóa. Hãy đăng nhập lại.', 'AUTH_REQUIRED');
+    return account || { ma: data.ma, truong: data.truong, lop: ClassIds.code(data.lop), status: 'hoat_dong' };
+  }
   if (!account || account.status !== 'hoat_dong' || !account.pinHash || account.pinHash !== auth.credentialVersion) fail_('Tài khoản đã khóa hoặc PIN đã thay đổi. Hãy đăng nhập lại.', 'AUTH_REQUIRED');
   return account;
 }

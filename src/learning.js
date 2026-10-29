@@ -1,7 +1,7 @@
 /** Đồng bộ nháp an toàn và Sổ của đúng tài khoản; bản gốc luôn được giữ trên máy. */
 const LearningSync = (() => {
   let loadedOwner = '', loading = false, busy = false, timer = null, error = '';
-  const store = p => p.cloud ||= {versions:{},saved:{},pending:{},conflicts:{},backups:[]};
+  const store = p => (p.cloud = p.cloud || {versions:{},saved:{},pending:{},conflicts:{},backups:[]});
   const identity = owner => profile && Core.key(profile) === owner;
   const safe = draft => {
     const copy = JSON.parse(JSON.stringify(draft));

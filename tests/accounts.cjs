@@ -3,7 +3,7 @@ const Core=require('../src/core.js'),content=require('../src/content.json');
 let now=Date.now(),locked=false,failProgress=false,batchCalls=0,display='',selected=2;
 class Clock extends Date {static now(){return now;}}
 const school=content.truong_lop[0].truong,klass=content.truong_lop[0].lop[0];
-const props={SPREADSHEET_ID:'fake-account-sheet'},cache=new Map(),tables={tai_khoan:[],tien_do:[],chu_trinh:[]};
+const props={SPREADSHEET_ID:'fake-account-sheet',STUDENT_LOGIN_MODE:'mat_khau'},cache=new Map(),tables={tai_khoan:[],tien_do:[],chu_trinh:[]};
 const ui={showModalDialog:html=>display=html.value,alert:()=>assert(!locked,'Release lock before a blocking UI alert')};
 const api={
  get:(id,range,opts)=>{
@@ -117,5 +117,19 @@ assert(!call('loginStudent',{ma:oldMa,truong:school,lop:klass+' (unapproved)',pa
 tables.tai_khoan=[tables.tai_khoan[0],...Array.from({length:150},(_,i)=>['AA'+String(Math.floor(i/26)).padStart(2,'0')+'-'+String.fromCharCode(65+i%26),school,klass])];
 const batchesBefore=batchCalls;assert.equal(call('provisionStudentAccounts_').created,150);assert.equal(batchCalls-batchesBefore,1);
 assert(tables.tai_khoan.slice(1).every(row=>/^[a-f0-9]{64}$/.test(row[5])));
+// Chế độ chỉ cần mã (mặc định): học sinh vào bằng mã + trường/lớp, không cần mật khẩu.
+props.STUDENT_LOGIN_MODE='ma';
+assert.equal(vm.runInContext('studentLoginMode_()',c),'ma');
+const codeOnly=call('loginStudent',{ma:'AA00-A',truong:school,lop:klass});
+assert(codeOnly.ok,'Code-only mode accepts a rostered code without a password');
+assert(typeof codeOnly.token==='string'&&codeOnly.token.length>=20);
+assert(call('loginStudent',{ma:'ZZ99-Z',truong:school,lop:klass}).ok,'Code-only mode does not need a tai_khoan row');
+assert(!call('loginStudent',{ma:'AA00-A',truong:'Trường không có trong danh sách',lop:klass}).ok,'Code-only mode still enforces the school list');
+assert(!call('loginStudent',{ma:'ZZ99',truong:school,lop:klass}).ok,'Code-only mode still enforces the AB12-C format');
+tables.tai_khoan.push(['ZZ66-X',school,klass,'khoa']);
+assert.equal(call('loginStudent',{ma:'ZZ66-X',truong:school,lop:klass}).code,'AUTH_REQUIRED','Code-only mode rejects a locked account');
+props.STUDENT_LOGIN_MODE='mat_khau';
+assert.equal(vm.runInContext('studentLoginMode_()',c),'mat_khau');
+assert(!call('loginStudent',{ma:'AA00-A',truong:school,lop:klass}).ok,'Password mode still rejects a passwordless request');
 assert(!locked);
 console.log('PASS student accounts: batched one-time PIN provisioning, HMAC, exact account scope, lock/reset/revoke/expiry, cooldown, safe submission, progress recovery after partial failure, four-week progress on new device, duplicate roster rejection');

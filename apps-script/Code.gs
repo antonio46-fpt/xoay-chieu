@@ -350,7 +350,7 @@ function loginRole_(input, role, property) {
     try { state = JSON.parse(cache.get(key) || 'null'); } catch { state = null; }
     // Đọc cả bộ đếm cũ khi nâng cấp; không vô tình bỏ qua thời gian khóa còn lại.
     if (typeof state === 'number') state = { attempts: state, blockedUntil: state >= 8 ? Date.now() + 600000 : 0 };
-    state ||= { attempts: 0, blockedUntil: 0 };
+    if (!state) state = { attempts: 0, blockedUntil: 0 };
     if (state.blockedUntil > Date.now()) {
       const seconds = Math.max(1, Math.ceil((state.blockedUntil - Date.now()) / 1000));
       cache.put(key, JSON.stringify(state), seconds);

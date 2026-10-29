@@ -47,3 +47,19 @@ Môi trường phát triển không đọc/ghi Sheet có dữ liệu thật đã
 Bản Apps Script được build với `authRequired: true`: nếu bridge Google chưa có, màn hình báo chưa kết nối máy chủ và chặn mở bài, không chuyển sang demo. Khi triển khai phải dùng đúng `apps-script/Index.html`, không dùng `dist/index.html`.
 
 Chi tiết tiến trình, lớp cũ và lớp chờ chọn: [tiếp tục hành trình qua các tuần](TIEN_TRINH_HOC_TAP.md). Không tự đổi mật khẩu tài khoản đã có hoặc chuyển mã Chi Lăng sang Lộc Bình.
+
+## Đổi chế độ đăng nhập: chỉ cần mã (29/10/2026)
+
+Chủ dự án quyết định học sinh đăng nhập bằng **mã + trường/lớp**, không cần mật khẩu. Thay đổi này đảo ngược yêu cầu chính của issue #9 ("biết mã chưa đủ để vào học").
+
+- Máy chủ đọc Script Property `STUDENT_LOGIN_MODE`. Giá trị `ma` (**mặc định**) bỏ hoàn toàn bước kiểm tra mật khẩu; giá trị `mat_khau` quay lại hành vi cũ.
+- Ở chế độ `ma`, dòng trong `tai_khoan` là **không bắt buộc**. Nếu có dòng và `trang_thai = khoa` thì vẫn bị từ chối.
+- Frontend điều khiển bằng cờ `requireStudentPassword` trong `src/config.js`. **Đổi một phía mà không đổi phía kia sẽ khoá toàn bộ học sinh**, vì frontend gửi mật khẩu rỗng còn máy chủ lại đòi mật khẩu.
+
+Hệ quả cần chấp nhận: mã học sinh thường in trên phiếu khảo sát và học sinh cùng lớp biết mã của nhau. Ai biết mã đều nộp bài thay được và đọc được nháp, tiến độ của mã đó. Nếu dùng cho dữ liệu thật, nên bật lại `mat_khau` trước buổi chính thức.
+
+Bật lại mật khẩu: đặt `STUDENT_LOGIN_MODE = mat_khau`, đặt `requireStudentPassword: true` trong `src/config.js`, chạy `python build.py`, dán lại `apps-script/Index.html`, rồi Deploy New version.
+
+## Sửa lỗi cú pháp `||=` (29/10/2026)
+
+Apps Script V8 trả `ParseError: Unexpected token =` và chặn **toàn bộ** tệp `.gs` khi gặp toán tử gán logic `||=` (ES2021). Đã thay cả 8 chỗ dùng `||=`, `&&=`, `??=` trong `Accounts.gs`, `Code.gs`, `Management.gs`, `src/app.js`, `src/learning.js` bằng cấu trúc `if`. Các toán tử ES2020 như `??` và `?.` vẫn dùng được.
