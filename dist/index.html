@@ -7,20 +7,30 @@
   <title>Xoay Chiều — Hành trình 4 tuần</title>
   <meta name="description" content="Thử, nghĩ, nối và chia sẻ. Một cuốn sổ trải nghiệm học tập trong bốn tuần.">
   <style>:root {
-  --radius-control: 16px;
-  --radius-panel: 26px;
+  --radius-control: 14px;
+  --radius-panel: 24px;
+  --radius-pill: 999px;
   --font-ui: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --bg: #eee5d6;
-  --paper: #fffaf0;
-  --ink: #202b4b;
-  --muted: #646b7c;
-  --line: #dbcfbd;
+  --bg: #ece3d3;
+  --paper: #fffdf7;
+  --ink: #1d2745;
+  --muted: #616879;
+  --line: #ded2bf;
   --accent: #1e2a5e;
-  --gold: #c69432;
+  --gold: #c08b2a;
   --rose: #a83f53;
-  --green: #297765;
-  --soft: #efe7da;
-  --shadow: 0 12px 36px #6950380d;
+  --green: #277f6b;
+  --soft: #f2ebdd;
+  --glow: #fffaf033;
+  --sheet: #ffffffb8;
+  --shadow: 0 1px 2px #4a341c0f, 0 10px 28px #69503812;
+  --shadow-lift: 0 2px 5px #4a341c12, 0 20px 44px #69503820;
+  --ring: #c6943240;
+  --primary-top: #33427e;
+  --primary-bottom: #16204a;
+  --primary-edge: #16204a;
+  --primary-text: #fffdf7;
+  --primary-shadow: #1e2a5e2e;
   --dream-gold: #d5af7052;
   --dream-rose: #c79baf38;
   --dream-lilac: #a3a1c742;
@@ -37,23 +47,35 @@ body {
   margin: 0;
   background-color: var(--bg);
   background-image:
+    radial-gradient(130% 90% at 50% -12%, var(--glow) 0%, transparent 62%),
     repeating-linear-gradient(0deg, var(--paper-grain) 0 1px, transparent 1px 4px),
     repeating-linear-gradient(90deg, var(--paper-grain) 0 1px, transparent 1px 7px);
   color: var(--ink);
-  font: 16px/1.65 var(--font-ui)
+  font: 16px/1.65 var(--font-ui);
+  -webkit-font-smoothing: antialiased
 }
 
 body.dark {
-  --bg: #151c2d;
-  --paper: #202a3c;
-  --ink: #f1eee5;
-  --muted: #b5bdcc;
-  --line: #3a4558;
+  --bg: #141b2b;
+  --paper: #1f2940;
+  --ink: #f2efe6;
+  --muted: #b7bfcf;
+  --line: #38445a;
   --accent: #aebcff;
-  --soft: #293548;
-  --gold: #edc16e;
+  --soft: #273346;
+  --gold: #eec579;
   --rose: #f19aaa;
   --green: #8bd6b8;
+  --glow: #7d9dff12;
+  --sheet: #ffffff0a;
+  --shadow: 0 1px 2px #00000033, 0 12px 30px #0000003d;
+  --shadow-lift: 0 2px 6px #00000040, 0 22px 48px #00000052;
+  --ring: #eec57959;
+  --primary-top: #f7f4ec;
+  --primary-bottom: #dcd6c8;
+  --primary-edge: #cbc5b6;
+  --primary-text: #17203a;
+  --primary-shadow: #00000059;
   --dream-gold: #b9935130;
   --dream-rose: #af7e9d24;
   --dream-lilac: #8585ba38;
@@ -91,7 +113,7 @@ a:focus-visible,
 input:focus,
 textarea:focus,
 select:focus {
-  outline: 3px solid #c6943280;
+  outline: 3px solid var(--gold);
   outline-offset: 3px
 }
 
@@ -101,17 +123,30 @@ button {
   background: var(--paper);
   color: var(--ink);
   padding: 10px 17px;
-  min-height: 44px
+  min-height: 44px;
+  font-weight: 600;
+  transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease, transform .12s ease
 }
 
 button:hover {
-  border-color: var(--gold)
+  border-color: var(--gold);
+  box-shadow: 0 3px 12px #c08b2a24
+}
+
+button:active {
+  transform: translateY(1px)
 }
 
 button.primary {
-  background: var(--ink);
-  color: var(--paper);
-  border-color: var(--ink)
+  background: linear-gradient(180deg, var(--primary-top) 0%, var(--primary-bottom) 100%);
+  color: var(--primary-text);
+  border-color: var(--primary-edge);
+  box-shadow: inset 0 1px 0 #ffffff2b, 0 8px 20px var(--primary-shadow)
+}
+
+button.primary:hover {
+  border-color: var(--primary-edge);
+  box-shadow: inset 0 1px 0 #ffffff33, 0 12px 26px var(--primary-shadow)
 }
 
 button.ghost {
@@ -139,7 +174,8 @@ h2,
 .serif {
   font-family: var(--font-ui);
   font-weight: 650;
-  line-height: 1.3
+  line-height: 1.3;
+  text-wrap: balance
 }
 
 h1 {
@@ -256,7 +292,8 @@ small,
 .nav button.on {
   background: var(--soft);
   color: var(--ink);
-  font-weight: 700
+  font-weight: 700;
+  box-shadow: inset 3px 0 0 var(--gold)
 }
 
 .nav span {
@@ -387,7 +424,8 @@ small,
 
 .card,
 .panel {
-  background: var(--paper);
+  background-color: var(--paper);
+  background-image: linear-gradient(180deg, var(--sheet) 0%, transparent 130px);
   border: 1px solid var(--line);
   border-radius: var(--radius-panel);
   padding: 26px;
@@ -441,6 +479,7 @@ small,
   padding: 13px 18px;
   background: var(--soft);
   border-radius: var(--radius-control);
+  border-left: 3px solid var(--gold);
   font-size: 13px;
   margin: 16px 0
 }
@@ -486,10 +525,12 @@ textarea {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: var(--radius-control);
-  padding: 12px;
-  background: var(--bg);
+  padding: 12px 14px;
+  background-color: var(--paper);
   color: var(--ink);
-  min-height: 48px
+  min-height: 48px;
+  box-shadow: inset 0 1px 2px #4a341c0f;
+  transition: border-color .18s ease, box-shadow .18s ease
 }
 
 textarea {
@@ -1323,6 +1364,75 @@ select:disabled {
 #logout { flex-shrink: 0; border-color: var(--gold) }
 @media(max-width:900px) { .session-bar { padding-inline: 28px } }
 @media(max-width:640px) { .session-bar { padding: 10px 16px; font-size: 12px } }
+
+
+/* ---------------------------------------------------------------
+   Lớp hoàn thiện giao diện: độ nổi, bảng, nhãn trạng thái, chuyển động.
+   Giữ nguyên bảng màu chàm – kem; tôn trọng prefers-reduced-motion.
+   --------------------------------------------------------------- */
+
+.session-bar {
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  -webkit-backdrop-filter: saturate(140%) blur(8px);
+  backdrop-filter: saturate(140%) blur(8px)
+}
+
+.side {
+  background-image: linear-gradient(180deg, var(--sheet) 0%, transparent 220px)
+}
+
+.progress-table {
+  font-variant-numeric: tabular-nums
+}
+
+.progress-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--paper);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase
+}
+
+.progress-table tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--soft) 55%, transparent)
+}
+
+.tag,
+.badge {
+  border-radius: var(--radius-pill);
+  font-weight: 600
+}
+
+.eyebrow {
+  letter-spacing: 2.4px
+}
+
+@media(hover:hover) {
+  .card {
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lift);
+    border-color: color-mix(in srgb, var(--gold) 45%, var(--line))
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  .card,
+  .card:hover {
+    transition: none;
+    transform: none
+  }
+
+  button {
+    transition: none
+  }
+}
 </style>
 </head>
 <body>
