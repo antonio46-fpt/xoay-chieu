@@ -9,3 +9,6 @@ coverage/
 .env.*
 !.env.example
 .clasp.json
+
+# Ảnh chụp giao diện sinh ra bởi tools/screenshot.cjs
+docs/preview/

@@ -1369,10 +1369,6 @@ select:disabled {
   backdrop-filter: saturate(140%) blur(8px)
 }
 
-.side {
-  background-image: linear-gradient(180deg, var(--sheet) 0%, transparent 220px)
-}
-
 .progress-table {
   font-variant-numeric: tabular-nums
 }
@@ -1423,5 +1419,30 @@ select:disabled {
 
   button {
     transition: none
+  }
+}
+
+
+/* Màn hình hẹp: gợi ý thanh điều hướng còn cuộn được, và gọn thanh trên. */
+@media(max-width:640px) {
+  .nav {
+    -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 30px), transparent 100%);
+    mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 30px), transparent 100%);
+    padding-right: 30px
+  }
+
+  /* Nhãn này lặp lại thông tin đã có ở đầu trang; bỏ để thanh trên cao một dòng. */
+  .top > .caption {
+    display: none
+  }
+
+  .top {
+    padding: 8px 16px
+  }
+
+  .top .status {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: right
   }
 }
