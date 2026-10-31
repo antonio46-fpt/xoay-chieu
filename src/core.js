@@ -60,6 +60,8 @@ const Core = (() => {
       thoi_gian_troi_giay: Math.max(0, Math.round((Date.now() - Date.parse(draft.started)) /
         1000)),
       ban_goc_id: draft.sourceId || '',
+      // Số lần dán vào các ô của lượt này; chỉ để nhóm đối chiếu, không chặn dán.
+      so_lan_dan: Number(draft.pastes) || 0,
     };
     const fields = [
       'thu_lam', 'nghi_1', 'nghi_2', 'nghi_3', 'noi', 'dang_san_pham',

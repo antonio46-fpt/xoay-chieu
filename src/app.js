@@ -569,6 +569,13 @@ function work() {
       cloudSync()?.remember();
     }, 250);
   }));
+  // Đếm số lần dán để nhóm nghiên cứu đối chiếu với thời gian làm bài (G11).
+  // Không chặn dán; chỉ ghi nhận trung thực.
+  document.querySelectorAll('[data-field]').forEach(el => el.addEventListener('paste', () => {
+    d.pastes = (d.pastes || 0) + 1;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { persist(); cloudSync()?.remember(); }, 250);
+  }));
   if ($('hint')) $('hint').onclick = () => {
     d.hints[d.step] = Math.min(s.hints.length, (d.hints[d.step] || 0) + 1);
     persist();

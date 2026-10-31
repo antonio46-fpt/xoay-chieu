@@ -17,7 +17,7 @@ const HEADERS = {
     'thu_lam', 'nghi_1', 'nghi_2', 'nghi_3', 'noi', 'dang_san_pham', 'san_pham',
     'chia_se', 'tu_danh_gia', 'thoi_luong_giay', 'thoi_gian_troi_giay', 'phe',
     'doi_hay_giu', 'kiem_soat', 'ngoai_kiem_soat', 'ban_goc_id',
-    'phien_ban_app', 'phien_ban_noi_dung',
+    'phien_ban_app', 'phien_ban_noi_dung', 'so_lan_dan',
   ],
   phieu_buoi: [
     'id', 'thoi_gian_nhan', 'thoi_gian', 'truong', 'lop', 'tuan', 'ngay', 'khung_gio',
@@ -63,6 +63,33 @@ function doGet() {
   return HtmlService.createHtmlOutputFromFile('Index')
     .setTitle('Xoay Chiều — Hành trình 4 tuần')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
+/**
+ * Thêm cột mới vào CUỐI bảng đang chạy, chỉ khi phần đầu khớp đúng thứ tự cũ.
+ * Chạy MỘT LẦN từ editor sau khi cập nhật mã (bản 2.8.1 thêm so_lan_dan).
+ * Không xoá, không đổi thứ tự, không ghi đè dữ liệu đã có.
+ */
+function migrateAddTrailingColumns_() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  if (!spreadsheet) fail_('Mở Apps Script từ Sheet của dự án.', 'SETUP_REQUIRED');
+  const report = [];
+  for (const name of Object.keys(HEADERS)) {
+    const sheet = spreadsheet.getSheetByName(name);
+    if (!sheet) { report.push(name + ': thiếu trang'); continue; }
+    const columns = HEADERS[name];
+    const width = sheet.getLastColumn() || 0;
+    const current = width ? sheet.getRange(1, 1, 1, width).getValues()[0].map(String) : [];
+    const prefixOK = current.every((value, index) => value === columns[index]);
+    if (!prefixOK) fail_('Cột ' + name + ' không khớp phần đầu. Dừng để tránh ghi đè; dùng Sheet mới.', 'SETUP_REQUIRED');
+    if (current.length >= columns.length) { report.push(name + ': đã đủ ' + columns.length + ' cột'); continue; }
+    const extra = columns.slice(current.length);
+    const target = sheet.getRange(1, current.length + 1, 1, extra.length);
+    target.setValues([extra]);
+    target.setFontWeight('bold').setBackground('#1e2a5e').setFontColor('#ffffff');
+    report.push(name + ': thêm ' + extra.join(', '));
+  }
+  return report;
 }
 
 function headersMatch_(sheet, columns) {
@@ -160,6 +187,8 @@ function validateStudent_(data) {
   if (!num_(data.thoi_luong_giay, 0, 604800) ||
     !num_(data.thoi_gian_troi_giay, 0, 31536000) ||
     !isFinite(Date.parse(data.bat_dau))) fail_('Thời lượng không hợp lệ.');
+  // Cột thêm ở bản 2.8.1: bản ghi cũ không có thì bỏ qua, không chặn gửi lại.
+  if (data.so_lan_dan !== undefined && !num_(data.so_lan_dan, 0, 100000)) fail_('Số lần dán không hợp lệ.');
 }
 
 function validateSession_(data) {

@@ -1634,6 +1634,8 @@ const Core = (() => {
       thoi_gian_troi_giay: Math.max(0, Math.round((Date.now() - Date.parse(draft.started)) /
         1000)),
       ban_goc_id: draft.sourceId || '',
+      // Số lần dán vào các ô của lượt này; chỉ để nhóm đối chiếu, không chặn dán.
+      so_lan_dan: Number(draft.pastes) || 0,
     };
     const fields = [
       'thu_lam', 'nghi_1', 'nghi_2', 'nghi_3', 'noi', 'dang_san_pham',
@@ -2538,6 +2540,13 @@ function work() {
         'Đã lưu nháp trên máy · Đồng hồ chỉ gợi ý';
       cloudSync()?.remember();
     }, 250);
+  }));
+  // Đếm số lần dán để nhóm nghiên cứu đối chiếu với thời gian làm bài (G11).
+  // Không chặn dán; chỉ ghi nhận trung thực.
+  document.querySelectorAll('[data-field]').forEach(el => el.addEventListener('paste', () => {
+    d.pastes = (d.pastes || 0) + 1;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { persist(); cloudSync()?.remember(); }, 250);
   }));
   if ($('hint')) $('hint').onclick = () => {
     d.hints[d.step] = Math.min(s.hints.length, (d.hints[d.step] || 0) + 1);

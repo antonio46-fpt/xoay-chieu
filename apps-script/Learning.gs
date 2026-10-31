@@ -6,12 +6,12 @@ function cleanStudentDraft_(draft, week) {
   const plain = value => value && typeof value === 'object' && !Array.isArray(value);
   const spec = SCHEMA.workflow && SCHEMA.workflow[week - 1];
   if (!spec) fail_('Cần cập nhật Schema.gs và Learning.gs cùng phiên bản.', 'SETUP_REQUIRED');
-  if (!plain(draft) || Object.keys(draft).some(key => !['id','version','step','answers','started','activeMs','stageTimes','hints','sourceId'].includes(key)) ||
+  if (!plain(draft) || Object.keys(draft).some(key => !['id','version','step','answers','started','activeMs','stageTimes','hints','sourceId','pastes'].includes(key)) ||
       typeof draft.id !== 'string' || !/^[a-zA-Z0-9-]{12,80}$/.test(draft.id) ||
       typeof draft.version !== 'string' || draft.version.length > 40 ||
       !Number.isInteger(draft.step) || draft.step < 0 || draft.step >= spec.length ||
       typeof draft.started !== 'string' || !isFinite(Date.parse(draft.started)) ||
-      !num_(draft.activeMs, 0, 604800000) || !plain(draft.answers) || !plain(draft.stageTimes) || !plain(draft.hints)) fail_('Cấu trúc nháp không hợp lệ.');
+      !num_(draft.activeMs, 0, 604800000) || !plain(draft.answers) || !plain(draft.stageTimes) || !plain(draft.hints) || (draft.pastes !== undefined && !num_(draft.pastes, 0, 100000))) fail_('Cấu trúc nháp không hợp lệ.');
   const fields = SCHEMA.weeks[week - 1], answers = {};
   if (Object.keys(draft.answers).some(key => !fields.some(field => field.key === key))) fail_('Nháp chứa câu trả lời ngoài nhiệm vụ.');
   for (const field of fields) {
@@ -32,6 +32,7 @@ function cleanStudentDraft_(draft, week) {
     hints[key] = draft.hints[key];
   }
   const result = {id:draft.id,version:draft.version,step:draft.step,answers,started:draft.started,activeMs:draft.activeMs,stageTimes,hints};
+  if (Number.isInteger(draft.pastes)) result.pastes = draft.pastes;
   if (draft.sourceId !== undefined) {
     if (typeof draft.sourceId !== 'string' || !/^[a-zA-Z0-9-]{12,80}$/.test(draft.sourceId)) fail_('Liên kết sản phẩm gốc không hợp lệ.');
     result.sourceId = draft.sourceId;
