@@ -119,12 +119,14 @@ try {
   const previousId = app.get('person().history[0].record.id');
   window.document.querySelector('[data-week="1"]').click();
   assert.notEqual(app.get('current().id'), previousId, 'Intentional repeat creates a new ID');
-  window.document.querySelector('[data-tab="coord"]').click();
+  window.document.querySelector('#staffEntry').click();
+  window.document.querySelector('#toCoord').click();
   $('coordWeek').value = '3';
   $('coordWeek').dispatchEvent(new window.Event('change'));
   app.input($('sessionForm').elements.dieu_tot, raw);
   window.document.querySelector('[data-tab="home"]').click();
-  window.document.querySelector('[data-tab="coord"]').click();
+  window.document.querySelector('#staffEntry').click();
+  window.document.querySelector('#toCoord').click();
   assert.equal($('coordWeek').value, '3');
   assert.equal($('sessionForm').elements.dieu_tot.value, raw, 'Coordinator draft persists');
   console.log(

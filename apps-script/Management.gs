@@ -103,3 +103,76 @@ function setupManagement_(spreadsheet) {
   }
   return {ok:true,tabs:targets.map(item=>item[0]),intervalSeconds:60};
 }
+
+
+/* ------------------------------------------------------------------
+   Sao lưu Sheet hằng ngày (góp ý G17).
+   Bản sao nằm trong thư mục riêng trên Drive, KHÔNG sửa Sheet gốc.
+   Chủ dự án chạy installDailyBackup_ một lần từ editor.
+   ------------------------------------------------------------------ */
+
+/** Thư mục chứa bản sao; đổi tên bằng Script Property BACKUP_FOLDER_NAME. */
+function backupFolder_() {
+  const name = PropertiesService.getScriptProperties().getProperty('BACKUP_FOLDER_NAME') || 'XoayChieu_Backups';
+  const found = DriveApp.getFoldersByName(name);
+  return found.hasNext() ? found.next() : DriveApp.createFolder(name);
+}
+
+/** Ngày theo giờ Việt Nam, dùng làm tên bản sao và chống tạo trùng trong ngày. */
+function backupStamp_() {
+  return Utilities.formatDate(new Date(), 'Asia/Ho_Chi_Minh', 'yyyy-MM-dd');
+}
+
+/**
+ * Tạo bản sao của Sheet cho hôm nay. Gọi lặp trong cùng ngày thì bỏ qua,
+ * nên có thể chạy tay mà không sinh thêm tệp trùng.
+ * BACKUP_SHARE_EMAILS: danh sách email cách nhau dấu phẩy được cấp quyền xem.
+ * BACKUP_KEEP_DAYS: số ngày giữ bản sao, mặc định 120.
+ */
+function dailyBackup() {
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty('SPREADSHEET_ID');
+  if (!id) return { ok: false, code: 'SETUP_REQUIRED', error: 'Chưa có SPREADSHEET_ID; chạy setup_ trước.' };
+  const folder = backupFolder_();
+  const name = 'XoayChieu_backup_' + backupStamp_();
+  if (folder.getFilesByName(name).hasNext()) return { ok: true, skipped: true, name };
+  const file = DriveApp.getFileById(id).makeCopy(name, folder);
+  const shared = (props.getProperty('BACKUP_SHARE_EMAILS') || '')
+    .split(',').map(value => value.trim()).filter(Boolean);
+  shared.forEach(email => { try { file.addViewer(email); } catch (error) { console.error('Không cấp quyền cho ' + email); } });
+  // Dọn bản sao cũ để không phình Drive trong hai đợt.
+  const keepDays = Number(props.getProperty('BACKUP_KEEP_DAYS') || 120);
+  if (keepDays > 0) {
+    const cutoff = Date.now() - keepDays * 86400000;
+    const files = folder.getFiles();
+    while (files.hasNext()) {
+      const old = files.next();
+      if (old.getDateCreated().getTime() < cutoff) old.setTrashed(true);
+    }
+  }
+  return { ok: true, name, id: file.getId(), shared: shared.length };
+}
+
+/** Chạy MỘT LẦN từ editor: đặt lịch sao lưu hằng ngày, thay lịch cũ nếu có. */
+function installDailyBackup_() {
+  removeDailyBackup_();
+  ScriptApp.newTrigger('dailyBackup').timeBased()
+    .atHour(23).nearMinute(30).everyDays(1).create();
+  return { ok: true, at: '23:30 Asia/Ho_Chi_Minh' };
+}
+
+/** Gỡ lịch sao lưu; không xoá các bản sao đã tạo. */
+function removeDailyBackup_() {
+  ScriptApp.getProjectTriggers().forEach(trigger => {
+    if (trigger.getHandlerFunction() === 'dailyBackup') ScriptApp.deleteTrigger(trigger);
+  });
+  return { ok: true };
+}
+
+/** Danh sách bản sao đã tạo, để chủ dự án đối chiếu. */
+function listBackups_() {
+  const folder = backupFolder_();
+  const files = folder.getFiles(), names = [];
+  while (files.hasNext()) names.push(files.next().getName());
+  return { ok: true, count: names.length, names: names.sort().reverse() };
+}

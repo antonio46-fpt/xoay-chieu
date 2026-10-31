@@ -99,7 +99,7 @@ assert(!login({pin:'123456'}).ok,'Throttling blocks repeated incorrect PIN attem
 console.log('PASS scope permissions: role separation, wrong class, filtered response, invalid/revoked sessions, PIN throttling');
 const dom = new JSDOM(fs.readFileSync('dist/index.html','utf8'),{url:'https://xoaychieu.test/',runScripts:'dangerously',beforeParse(w){w.setInterval=()=>0;w.scrollTo=()=>{};}});
 try {
-  dom.window.document.querySelector('[data-tab="teacher"]').click();
+  dom.window.document.querySelector('#staffEntry').click();
   assert(dom.window.document.querySelector('#teacherLogin'));
   assert.equal(dom.window.document.querySelector('#teacherPin').disabled,true);
   assert(dom.window.document.querySelector('.progress-table').textContent.includes('ZZ01-A'));

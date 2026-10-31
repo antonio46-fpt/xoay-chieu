@@ -246,12 +246,10 @@ function render() {
     ['home', '⌂', 'Hành trình'],
     ['notebook', '▤', 'Sổ của mình'],
     ['letters', '✉', 'Hộp thư'],
-    ['coord', '◷', 'Điều phối'],
-    ['teacher', '▦', 'Tiến độ lớp'],
     ['settings', '⚙', 'Cài đặt']
   ];
   $('app').innerHTML =
-    `<div class="shell"><aside class="side"><a class="brand" id="brandHome" href="#home" aria-label="Xoay Chiều — về trang chính">${logo()}<div><strong>Xoay Chiều</strong><small>Mỗi góc nhìn, một điều mới</small></div></a><nav class="nav" aria-label="Chính">${names.map(([k,ic,n])=>`<button data-tab="${k}" class="${tab===k?'on':''}" ${tab===k?'aria-current="page"':''}><span>${ic}</span>${n}</button>`).join('')}</nav><div class="sidefoot"><p>THỬ · NGHĨ · NỐI · CHIA SẺ</p><p>Một hành trình nhỏ.<br>Nhiều cách nhìn mới.</p><div class="profile">${profile?`<strong>${E(profile.ma)}</strong><br>${E(profile.lop)}<br><small>${E(profile.truong)}</small>`:'Chưa chọn mã học sinh'}</div></div></aside><main class="main"><header class="top"><span class="caption">HÀNH TRÌNH HỌC TẬP / ${CONTENT.so_tuan} TUẦN</span><div class="row"><span id="net" class="status" aria-live="polite"></span><button class="small" id="theme" aria-label="Đổi giao diện sáng tối">${db.theme==='dark'?'☀':'☾'}</button></div></header><section id="sessionBar" class="session-bar ${profile||teacherAuth?'':'hidden'}" aria-label="Phiên đang sử dụng"><span id="sessionIdentity"></span><button id="logout" class="small" type="button">Đăng xuất <span aria-hidden="true">↗</span></button></section><div id="conflict" class="notice hidden" role="alert">Dữ liệu đã đổi ở một tab khác. Tải bản sao của tab này trước khi tải lại trang. <button id="conflictBackup">Tải bản sao tab này</button><button id="conflictReload">Tải lại trang</button></div>${previewOnly?'<div class="notice preview-notice" role="status">Đang xem thử không lưu. Bài chỉ giữ trong phiên này, mất khi tải lại hoặc đóng trang; không gửi Google Sheets. Muốn lưu lâu dài, hãy tải HTML xuống và mở bằng trình duyệt cho phép lưu dữ liệu.</div>':''}<div class="page" id="page"></div></main></div>`;
+    `<div class="shell"><aside class="side"><a class="brand" id="brandHome" href="#home" aria-label="Xoay Chiều — về trang chính">${logo()}<div><strong>Xoay Chiều</strong><small>Mỗi góc nhìn, một điều mới</small></div></a><nav class="nav" aria-label="Chính">${names.map(([k,ic,n])=>`<button data-tab="${k}" class="${tab===k?'on':''}" ${tab===k?'aria-current="page"':''}><span>${ic}</span>${n}</button>`).join('')}</nav><div class="sidefoot"><p>THỬ · NGHĨ · NỐI · CHIA SẺ</p><p>Một hành trình nhỏ.<br>Nhiều cách nhìn mới.</p><div class="profile">${profile?`<strong>${E(profile.ma)}</strong><br>${E(profile.lop)}<br><small>${E(profile.truong)}</small>`:'Chưa chọn mã học sinh'}</div><button type="button" class="small" id="staffEntry">Giáo viên / Điều phối</button></div></aside><main class="main"><header class="top"><span class="caption">HÀNH TRÌNH HỌC TẬP / ${CONTENT.so_tuan} TUẦN</span><div class="row"><span id="net" class="status" aria-live="polite"></span><button class="small" id="theme" aria-label="Đổi giao diện sáng tối">${db.theme==='dark'?'☀':'☾'}</button></div></header><section id="sessionBar" class="session-bar ${profile||teacherAuth?'':'hidden'}" aria-label="Phiên đang sử dụng"><span id="sessionIdentity"></span><button id="logout" class="small" type="button">Đăng xuất <span aria-hidden="true">↗</span></button></section><div id="conflict" class="notice hidden" role="alert">Dữ liệu đã đổi ở một tab khác. Tải bản sao của tab này trước khi tải lại trang. <button id="conflictBackup">Tải bản sao tab này</button><button id="conflictReload">Tải lại trang</button></div>${previewOnly?'<div class="notice preview-notice" role="status">Đang xem thử không lưu. Bài chỉ giữ trong phiên này, mất khi tải lại hoặc đóng trang; không gửi Google Sheets. Muốn lưu lâu dài, hãy tải HTML xuống và mở bằng trình duyệt cho phép lưu dữ liệu.</div>':''}<div class="page" id="page"></div></main></div>`;
   document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => go(b.dataset.tab));
   $('brandHome').onclick = event => {
     event.preventDefault();
@@ -263,6 +261,7 @@ function render() {
     render();
   };
   $('logout').onclick = logout;
+  $('staffEntry').onclick = () => go('teacher');
   updateSessionControls();
   status();
   $('conflictBackup').onclick = () => download('XoayChieu-tab-backup.json', JSON.stringify(db, null,
@@ -955,6 +954,13 @@ function teacher() {
   }
   updateSessionControls();
   page.innerHTML = `<p class="eyebrow">DÀNH CHO GIÁO VIÊN CHỦ NHIỆM</p><h1>Tiến độ lớp</h1><p class="muted">Chỉ xem mã và tuần đã được máy chủ xác nhận. Không đọc câu trả lời, sản phẩm hay mức tự đánh giá.</p>${!LIVE ? '<div class="notice">Bản xem thử chưa kết nối Sheet. Bảng dưới đây chỉ dùng dữ liệu giả để minh họa.</div>' : ''}${active ? `<section class="panel"><div class="row between"><h2>${E(teacherAuth.lop)}</h2><button id="teacherLogout">Đăng xuất</button></div><p>${E(teacherAuth.truong)}</p><button id="teacherRefresh">Làm mới tiến độ</button><div id="teacherResult" aria-live="polite"></div></section>` : `<form id="teacherLogin" class="panel"><label class="field"><span>Trường phụ trách</span><select id="teacherSchool">${Core.schools(CONTENT).map(s => `<option>${E(s.truong)}</option>`).join('')}</select></label><label class="field"><span>Lớp phụ trách</span><select id="teacherClass"></select></label><label class="field"><span>PIN giáo viên</span><input id="teacherPin" type="password" inputmode="numeric" pattern="[0-9]{6,12}" required autocomplete="off" ${LIVE ? '' : 'disabled'}></label><button class="primary" ${LIVE ? '' : 'disabled'}>Xem tiến độ lớp</button><p id="teacherError" class="error" role="alert"></p></form>${!LIVE ? '<section class="panel" style="margin-top:20px"><h2>Minh họa bằng dữ liệu giả</h2><div id="teacherResult"></div></section>' : ''}`}<p class="caption">Bảng chỉ liệt kê mã đã có ít nhất một bài được xác nhận. Chưa có danh sách mã được cấp để kết luận các mã chưa xuất hiện là chưa làm bài. Giáo viên không được chia sẻ PIN hoặc dùng chung thiết bị đang mở Sổ của mình với học sinh.</p>`;
+  // Lối vào Điều phối: học sinh không còn thấy tab này trên menu chính.
+  const staffLink = document.createElement('p');
+  staffLink.className = 'caption';
+  staffLink.innerHTML = 'Điều phối viên buổi học: <button type="button" class="small" id="toCoord">Mở Điều phối</button>';
+  page.appendChild(staffLink);
+  $('toCoord').onclick = () => go('coord');
+
   function showStudents(students) {
     const result = $('teacherResult');
     if (!result || $('page') !== page) return;
