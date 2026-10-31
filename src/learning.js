@@ -93,7 +93,9 @@ const LearningSync = (() => {
     finally {if(identity(owner) && (!studentAuth || studentAuth===auth)){loading=false;view();}}
   }
   async function syncMinute() {
-    if (!profile || loadedOwner!==Core.key(profile) || loadBroken || storageConflict) return;
+    // Tab đang ẩn không đẩy nháp lên Sheet: tránh dồn tải khi học sinh để tab nền.
+    // Quay lại tab sẽ kích hoạt đồng bộ qua sự kiện visibilitychange.
+    if (!profile || document.hidden || loadedOwner!==Core.key(profile) || loadBroken || storageConflict) return;
     const owner=Core.key(profile);
     collect();
     if(!persist())return;

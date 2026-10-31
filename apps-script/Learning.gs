@@ -94,8 +94,8 @@ function getStudentLearning(input) {
   let lock;
   try {
     if (!input) fail_('Cần đăng nhập để tải tiến trình.', 'AUTH_REQUIRED');
-    const id = accountSheetId_(); lock = LockService.getScriptLock();
-    if (!lock.tryLock(1500)) fail_('Máy chủ đang bận. Nháp trên máy vẫn được giữ.', 'BUSY');
+    const id = accountSheetId_();
+    // Chỉ đọc: không lấy khoá toàn cục, nếu không mỗi lượt đăng nhập lại xếp hàng.
     const account = authorizeStudent_(input.token,input,id), records = studentRecords_(id,account);
     const submitted = new Set(records.map(record => record.id));
     const states = ownLearningRows_(learningRows_(id),account).map(({row}) => ({week:row[3],revision:row[5],mutationId:row[6],updatedAt:row[7],

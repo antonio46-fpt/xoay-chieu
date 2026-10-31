@@ -213,14 +213,15 @@ function submitRecord(payload) {
 
     const spreadsheetId = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
     if (!spreadsheetId) fail_('Máy chủ chưa chạy setup_.', 'SETUP_REQUIRED');
+    // Xác thực TRƯỚC khi lấy khoá: đây chỉ là lệnh đọc, không cần tuần tự hoá, và
+    // giữ khoá trong lúc đọc bảng tài khoản làm cả lớp xếp hàng chờ nhau.
+    const student = data.loai === 'chu_trinh' ? authorizeStudent_(payload.token, data, spreadsheetId) : null;
     lock = LockService.getScriptLock();
     if (!lock.tryLock(1500)) return {
       ok: false,
       code: 'BUSY',
       error: 'Máy chủ đang bận; bài được giữ để gửi lại.'
     };
-
-    const student = data.loai === 'chu_trinh' ? authorizeStudent_(payload.token, data, spreadsheetId) : null;
     // Đọc ID, đọc bản ghi và append qua cùng Sheets API; khóa giữ đến khi append trả về.
     const columns = HEADERS[data.loai], range = "'" + data.loai + "'!";
     const readOptions = { valueRenderOption: 'UNFORMATTED_VALUE', dateTimeRenderOption: 'SERIAL_NUMBER' };

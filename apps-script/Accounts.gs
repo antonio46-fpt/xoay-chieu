@@ -54,8 +54,39 @@ function normalizeAccounts_(rows) {
   return result;
 }
 
+/** Khoá nhớ tạm bảng tài khoản; đổi hậu tố nếu đổi cấu trúc cột. */
+const ACCOUNT_CACHE_KEY = 'tai_khoan:v2';
+
+/**
+ * Đọc bảng tài khoản, nhớ tạm 20 giây.
+ * Mỗi lần đăng nhập, nộp bài hay lưu nháp đều cần bảng này; đọc lại cả trang cho
+ * từng yêu cầu là chi phí lớn nhất khi cả lớp vào cùng lúc. Bản nhớ tạm chấp nhận
+ * trễ tối đa 20 giây khi khoá hoặc mở một tài khoản.
+ */
 function studentAccounts_(id) {
-  return normalizeAccounts_(readSystemTable_(id, 'tai_khoan', ACCOUNT_HEADERS));
+  // Nhớ tạm chỉ là tối ưu: cache lỗi hoặc thiếu hàm thì vẫn đọc thẳng, không chặn đăng nhập.
+  let cache = null;
+  try { cache = CacheService.getScriptCache(); } catch (error) { cache = null; }
+  if (cache) {
+    let hit = null;
+    try { hit = cache.get(ACCOUNT_CACHE_KEY); } catch (error) { hit = null; }
+    if (hit) {
+      try { return JSON.parse(hit); } catch (error) { /* hỏng thì đọc lại */ }
+    }
+  }
+  const accounts = normalizeAccounts_(readSystemTable_(id, 'tai_khoan', ACCOUNT_HEADERS));
+  if (cache) {
+    try {
+      const text = JSON.stringify(accounts);
+      if (text.length < 90000 && typeof cache.put === 'function') cache.put(ACCOUNT_CACHE_KEY, text, 20);
+    } catch (error) { /* bỏ qua */ }
+  }
+  return accounts;
+}
+
+/** Xoá bản nhớ tạm sau khi cấp/đặt lại mật khẩu hoặc nhập danh sách mới. */
+function clearAccountCache_() {
+  CacheService.getScriptCache().remove(ACCOUNT_CACHE_KEY);
 }
 
 function pinDigest_(pin, account) {
@@ -97,8 +128,8 @@ function loginStudent(input) {
     input = ClassIds.profile(input);
     if ((SCHEMA.maCam || []).includes(input.ma)) fail_('Đây là mã ví dụ trong tài liệu, không dùng để vào học. Hãy tạo mã theo phiếu khảo sát.', 'AUTH_REQUIRED');
     const id = accountSheetId_();
-    lock = LockService.getScriptLock();
-    if (!lock.tryLock(1500)) fail_('Máy chủ đang bận. Thử lại sau vài giây.', 'BUSY');
+    // Không lấy khoá ở đây: bộ đếm chống dò chỉ cần đúng tương đối, còn khoá toàn
+    // cục biến 30 lượt đăng nhập đồng thời thành 30 lượt xếp hàng.
     const cache = CacheService.getScriptCache(), key = 'login:student:' + accountKey_(input);
     let state;
     try { state = JSON.parse(cache.get(key) || 'null'); } catch { state = null; }
@@ -191,6 +222,7 @@ function getStudentProgress(input) {
   try {
     if (!input) fail_('Hãy đăng nhập để xem tiến độ.', 'AUTH_REQUIRED');
     const id = accountSheetId_();
+    // Giữ khoá vì hàm này vừa đọc vừa ghi bảng tien_do.
     lock = LockService.getScriptLock();
     if (!lock.tryLock(1500)) fail_('Máy chủ đang bận. Thử lại sau vài giây.', 'BUSY');
     const account = authorizeStudent_(input.token, input, id);
@@ -245,6 +277,7 @@ function provisionStudentAccounts_() {
     if (data.length) {
       // Một yêu cầu cho cả đợt, tránh 150 lệnh ghi riêng vượt quota theo phút.
       Sheets.Spreadsheets.Values.batchUpdate({ valueInputOption: 'RAW', data }, id);
+      clearAccountCache_();
       issued = pending;
     }
   } finally {
@@ -274,6 +307,7 @@ function resetSelectedStudentPin_() {
     account.pinHash = pinDigest_(pin, account); account.issuedAt = new Date().toISOString();
     Sheets.Spreadsheets.Values.update({ values: [accountRow_(account)] }, id,
       "'tai_khoan'!A" + account.rowNumber + ':G' + account.rowNumber, { valueInputOption: 'RAW' });
+    clearAccountCache_();
     issued = { ma: account.ma, truong: account.truong, lop: account.lop, pin };
   } finally { if (lock && lock.hasLock()) lock.releaseLock(); }
   showIssuedPins_(ui, [issued], 'Các phiên cũ của mã này phải nhập lại mật khẩu.');
@@ -306,6 +340,7 @@ function importStudentRoster_() {
     const fresh = incoming.filter(account => !existing.has(accountKey_(account)));
     if (fresh.length) Sheets.Spreadsheets.Values.append({values: fresh.map(accountRow_)}, id,
       "'tai_khoan'!A1", {valueInputOption:'RAW', insertDataOption:'INSERT_ROWS'});
+    if (fresh.length) clearAccountCache_();
     result = {created: fresh.length, existing: incoming.length - fresh.length};
   } finally { if (lock && lock.hasLock()) lock.releaseLock(); }
   // Ui.alert tạm dừng server: phải thả khóa trước khi chờ người dùng.

@@ -4,7 +4,7 @@ const school=content.truong_lop[0].truong,klass=content.truong_lop[0].lop[0],has
 const a={ma:'ZZ01-A',truong:school,lop:klass,token:'fake-learning-student-session-123456'},b={...a,ma:'ZZ02-B',token:'fake-other-student-session-123456'};
 const tables={},cache=new Map(),props={SPREADSHEET_ID:'fake-learning-sheet'};let locked=false,failWrite=false;
 const api={
- get(id,range,options){assert(locked);assert.equal(options.valueRenderOption,'UNFORMATTED_VALUE');assert.equal(options.dateTimeRenderOption,'SERIAL_NUMBER');const [name,cells]=range.replaceAll("'",'').split('!'),rows=tables[name];assert(rows,range);
+ get(id,range,options){assert.equal(options.valueRenderOption,'UNFORMATTED_VALUE');assert.equal(options.dateTimeRenderOption,'SERIAL_NUMBER');const [name,cells]=range.replaceAll("'",'').split('!'),rows=tables[name];assert(rows,range);
   if(cells==='E2:H')return {values:rows.slice(1).map(row=>row.slice(4,8))};
   if(cells==='A2:A')return {values:rows.slice(1).map(row=>[row[0]])};
   if(cells==='1:1')return {values:[rows[0]]};

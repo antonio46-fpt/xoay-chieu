@@ -4,6 +4,8 @@ let now=0,nextId=0,online=true;const intervals=new Map(),calls=[];
 const dom=new JSDOM(fs.readFileSync('dist/index.html','utf8'),{url:'https://xoaychieu.test',runScripts:'dangerously',beforeParse(w){
  w.scrollTo=()=>{};w.confirm=()=>true;w.google={script:{run:{}}};
  Object.defineProperty(w.navigator,'onLine',{get:()=>online});
+ // jsdom coi trang là ẩn; app bỏ qua đồng bộ khi tab ẩn nên phải ép trang hiện.
+ Object.defineProperty(w.document,'hidden',{get:()=>false,configurable:true});
  w.setInterval=(fn,ms)=>{const id=++nextId;intervals.set(id,{fn,ms,next:now+ms});return id;};w.clearInterval=id=>intervals.delete(id);
 }});
 const w=dom.window,$=id=>w.document.getElementById(id);

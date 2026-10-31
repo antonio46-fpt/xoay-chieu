@@ -7,7 +7,7 @@ const props={SPREADSHEET_ID:'fake-account-sheet',STUDENT_LOGIN_MODE:'mat_khau'},
 const ui={showModalDialog:html=>display=html.value,alert:()=>assert(!locked,'Release lock before a blocking UI alert')};
 const api={
  get:(id,range,opts)=>{
-  assert(locked);assert.equal(opts.valueRenderOption,'UNFORMATTED_VALUE');assert.equal(opts.dateTimeRenderOption,'SERIAL_NUMBER');
+  assert.equal(opts.valueRenderOption,'UNFORMATTED_VALUE');assert.equal(opts.dateTimeRenderOption,'SERIAL_NUMBER');
   const [name,cells]=range.replaceAll("'",'').split('!'),table=tables[name]; assert(table,range);
   if(cells==='E2:H')return {values:table.slice(1).map(row=>row.slice(4,8))};
   if(/^A1:[A-Z]$/.test(cells))return {values:table};
@@ -29,7 +29,9 @@ const api={
 };
 const c=vm.createContext({Date:Clock,console:{error(){}},
  PropertiesService:{getScriptProperties:()=>({getProperty:key=>props[key],setProperty:(k,v)=>props[k]=v})},
- CacheService:{getScriptCache:()=>({get:key=>cache.get(key)||null,put:(k,v)=>cache.set(k,v),remove:k=>cache.delete(k)})},
+ // Bảng tài khoản được nhớ tạm trong bản thật; ở đây bỏ qua đúng khoá đó vì test
+ // sửa trực tiếp bảng fixture và cần thấy thay đổi ngay ở lần gọi kế tiếp.
+ CacheService:{getScriptCache:()=>({get:key=>key.startsWith('tai_khoan:')?null:(cache.get(key)||null),put:(k,v)=>{if(!k.startsWith('tai_khoan:'))cache.set(k,v);},remove:k=>cache.delete(k)})},
  Utilities:{getUuid:()=>crypto.randomUUID(),Charset:{UTF_8:'UTF-8'},computeHmacSha256Signature:(message,secret)=>Array.from(crypto.createHmac('sha256',secret).update(message).digest())},
  LockService:{getScriptLock:()=>({tryLock:()=>locked=true,hasLock:()=>locked,releaseLock:()=>locked=false})},
  Sheets:{Spreadsheets:{Values:api}},
