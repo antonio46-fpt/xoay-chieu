@@ -4,13 +4,23 @@
       "truong": "THPT Chuyên Chu Văn An",
       "lop": [
         "10A3",
-        "11E1"
+        "11E1",
+        "10D3",
+        "11 Lý"
       ]
     },
     {
       "truong": "Trường PTDTNT THCS & THPT Lộc Bình",
       "lop": [
-        "LB-11A"
+        "LB-11A",
+        "LB-11B"
+      ]
+    },
+    {
+      "truong": "THPT Chi Lăng",
+      "lop": [
+        "CL-12A2",
+        "CL-12A7"
       ]
     }
   ],
@@ -1102,22 +1112,6 @@
       "Chatbot kịch bản"
     ]
   },
-  "truong_lop_cu": [
-    {
-      "truong": "THPT Chi Lăng",
-      "lop": [
-        "12A2"
-      ]
-    }
-  ],
-  "lop_cho_chot": [
-    {
-      "truong": "THPT Dân tộc nội trú tỉnh",
-      "lop": [
-        "NT-10A6",
-        "NT-10A7"
-      ],
-      "trang_thai": "Chưa bốc thăm; chưa kích hoạt tài khoản"
-    }
-  ]
+  "truong_lop_cu": [],
+  "lop_cho_chot": []
 }

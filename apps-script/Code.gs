@@ -71,7 +71,7 @@ function headersMatch_(sheet, columns) {
 }
 
 function schoolOK_(data) {
-  return SCHEMA.schools.some(s => s.truong === data.truong && s.lop.includes(ClassIds.code(data.lop)));
+  return SCHEMA.schools.some(s => s.truong === data.truong && s.lop.includes(ClassIds.code(data.lop, data.truong)));
 }
 
 function count_(value) {
