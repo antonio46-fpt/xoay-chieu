@@ -104,6 +104,8 @@ function valid_(data) {
   if (typeof data.id !== 'string' || !/^[a-zA-Z0-9-]{12,80}$/.test(data.id)) fail_(
     'ID bản ghi không hợp lệ.');
   if (!schoolOK_(data)) fail_('Trường/lớp không thuộc danh sách.');
+  if ((SCHEMA.maCam || []).includes(data.ma)) fail_(
+    'Đây là mã ví dụ trong tài liệu, không dùng để nộp bài. Hãy tạo mã theo phiếu khảo sát.');
   if (!Number.isInteger(data.tuan) || data.tuan < 1 || data.tuan > SCHEMA.weeks.length) {
     fail_('Tuần không hợp lệ.');
   }

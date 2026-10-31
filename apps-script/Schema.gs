@@ -82,6 +82,10 @@ const SCHEMA = {
     "loi_nhan": "Cảm ơn bạn đã chia sẻ. Điều bạn đang gặp rất quan trọng. Hãy nói chuyện ngay với thầy cô chủ nhiệm hoặc cán bộ tư vấn học đường của trường – bạn không phải tự mình vượt qua một mình. Phần trả lời có từ khóa sẽ được thay bằng “[đã ẩn – an toàn]” khi gửi; bản gốc vẫn nằm trên máy và trong bản sao bạn tải về.",
     "lien_he": ""
   },
+  "maCam": [
+    "AB12-C",
+    "HO07-T"
+  ],
   "workflow": [
     [
       {

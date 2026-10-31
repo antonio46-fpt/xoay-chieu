@@ -95,6 +95,7 @@ function loginStudent(input) {
   try {
     if (!input || !schoolOK_(input) || typeof input.ma !== 'string' || !/^[A-Z]{2}[0-9]{2}-[A-Z]$/.test(input.ma)) fail_('Mã, trường/lớp hoặc mật khẩu không đúng.', 'AUTH_REQUIRED');
     input = ClassIds.profile(input);
+    if ((SCHEMA.maCam || []).includes(input.ma)) fail_('Đây là mã ví dụ trong tài liệu, không dùng để vào học. Hãy tạo mã theo phiếu khảo sát.', 'AUTH_REQUIRED');
     const id = accountSheetId_();
     lock = LockService.getScriptLock();
     if (!lock.tryLock(1500)) fail_('Máy chủ đang bận. Thử lại sau vài giây.', 'BUSY');

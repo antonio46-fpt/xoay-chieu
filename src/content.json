@@ -21,6 +21,7 @@
       "Chữ cái đầu của tên đệm của bạn (viết HOA, không dấu); không có tên đệm thì ghi X. Ví dụ: Nguyễn Thị Mai → T."
     ],
     "mau": "^[A-Z]{2}[0-9]{2}-[A-Z]$",
+    "ma_cam": ["AB12-C", "HO07-T"],
     "nhac": "Dùng đúng mã bạn đã ghi ở phiếu khảo sát."
   },
   "mat_nang_luc": [

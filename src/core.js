@@ -9,6 +9,8 @@ const Core = (() => {
   const words = value => String(value ?? '').trim().split(/\s+/u).filter(Boolean).length;
   const normalize = value => String(value ?? '').toUpperCase().replace(/\s/g, '');
   const validCode = value => /^[A-Z]{2}[0-9]{2}-[A-Z]$/.test(value);
+  // Mã ví dụ in trong tài liệu không gắn với học sinh nào; cấm dùng thật.
+  const bannedCode = (value, content) => ((content && content.huong_dan_ma && content.huong_dan_ma.ma_cam) || []).includes(value);
 
   // Mọi văn bản tự do đều được escape trước khi chèn vào HTML.
   const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({
@@ -101,6 +103,7 @@ const Core = (() => {
     words,
     normalize,
     validCode,
+    bannedCode,
     esc,
     validate,
     key,

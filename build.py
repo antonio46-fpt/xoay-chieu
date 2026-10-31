@@ -84,6 +84,7 @@ def build():
         "cellMax": MAX_CELL_CHARS,
         "schools": content["truong_lop"] + content.get("truong_lop_cu", []),
         "safety": content["an_toan"],
+        "maCam": content.get("huong_dan_ma", {}).get("ma_cam", []),
         "workflow": [[{"stage": step["stage"], "hints": len(step["hints"])} for step in week["steps"]] for week in content["weeks"]],
         "weeks": [[field for step in week["steps"] for field in step["fields"]]
                   for week in content["weeks"]],
