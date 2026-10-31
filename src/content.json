@@ -31,7 +31,10 @@
       "Chữ cái đầu của tên đệm của bạn (viết HOA, không dấu); không có tên đệm thì ghi X. Ví dụ: Nguyễn Thị Mai → T."
     ],
     "mau": "^[A-Z]{2}[0-9]{2}-[A-Z]$",
-    "ma_cam": ["AB12-C", "HO07-T"],
+    "ma_cam": [
+      "AB12-C",
+      "HO07-T"
+    ],
     "nhac": "Dùng đúng mã bạn đã ghi ở phiếu khảo sát."
   },
   "mat_nang_luc": [
@@ -74,15 +77,15 @@
   "tieu_chi_san_pham": [
     [
       1,
-      "Mới nhắc lại điều đã học"
+      "Làm đủ các bước nhưng chưa chỉ ra được chỗ vấp hay điều gì mới."
     ],
     [
       2,
-      "Có nối sang môn khác hoặc đời sống"
+      "Chỉ ra được một chỗ tưởng hiểu nhưng chưa hiểu, chưa nói rõ vì sao hoặc lần sau làm khác thế nào."
     ],
     [
       3,
-      "Nối được và nói lên điều mình tự nhận ra về cách học"
+      "Chỉ ra chỗ vấp cụ thể, vì sao trước đó tưởng đã hiểu, và một việc cụ thể sẽ làm khác lần sau."
     ]
   ],
   "dang_san_pham": [
@@ -374,7 +377,7 @@
           "fields": [
             {
               "key": "chia_se",
-              "label": "Điều mình vừa nghe được từ bạn",
+              "label": "Hỏi một bạn trong nhóm: Bạn đã từng tưởng mình hiểu một điều gì trong học tập nhưng hóa ra chưa? Bạn nhận ra lúc nào và sau đó làm gì? Ghi lại 1–2 câu theo lời bạn ấy, không ghi tên.",
               "min": 5,
               "kind": "text",
               "max": 6000
@@ -589,7 +592,7 @@
           "fields": [
             {
               "key": "chia_se",
-              "label": "Điều mình nghe được từ bạn",
+              "label": "Hỏi một bạn trong nhóm: Bạn đã từng tưởng mình hiểu một điều gì trong học tập nhưng hóa ra chưa? Bạn nhận ra lúc nào và sau đó làm gì? Ghi lại 1–2 câu theo lời bạn ấy, không ghi tên.",
               "min": 5,
               "kind": "text",
               "max": 6000

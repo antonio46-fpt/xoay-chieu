@@ -355,7 +355,7 @@ const SCHEMA = {
       },
       {
         "key": "chia_se",
-        "label": "Điều mình vừa nghe được từ bạn",
+        "label": "Hỏi một bạn trong nhóm: Bạn đã từng tưởng mình hiểu một điều gì trong học tập nhưng hóa ra chưa? Bạn nhận ra lúc nào và sau đó làm gì? Ghi lại 1–2 câu theo lời bạn ấy, không ghi tên.",
         "min": 5,
         "kind": "text",
         "max": 6000
@@ -430,7 +430,7 @@ const SCHEMA = {
       },
       {
         "key": "chia_se",
-        "label": "Điều mình nghe được từ bạn",
+        "label": "Hỏi một bạn trong nhóm: Bạn đã từng tưởng mình hiểu một điều gì trong học tập nhưng hóa ra chưa? Bạn nhận ra lúc nào và sau đó làm gì? Ghi lại 1–2 câu theo lời bạn ấy, không ghi tên.",
         "min": 5,
         "kind": "text",
         "max": 6000
