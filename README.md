@@ -1,4 +1,4 @@
-# Xoay Chiều — mã nguồn đầy đủ 2.8.0
+# Xoay Chiều — mã nguồn đầy đủ 2.8.1
 
 Công cụ hoạt động và thu dữ liệu cho đề tài “Phát triển năng lực linh hoạt trong học tập của học sinh THPT tại Lạng Sơn”. Phạm vi bản bắt buộc: 3 lớp đang triển khai theo danh sách mới, giữ lớp Chi Lăng cũ; lớp thứ tư chờ chốt, 4 tuần can thiệp. Lịch triển khai và kết thúc chưa chốt. Không chấm đúng/sai, không xếp hạng, không tự suy ra điểm năng lực.
 

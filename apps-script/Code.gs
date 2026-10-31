@@ -9,7 +9,7 @@
  * Các hàm kết thúc bằng '_' là hàm nội bộ, không gọi được qua google.script.run.
  * API tiến độ chỉ trả mã và tuần, xác thực bằng phiên giáo viên của đúng lớp. Phiên giáo viên không đọc bài/nháp riêng; Learning.gs chỉ trả bài của chính học sinh đã xác thực.
  */
-const SERVER_VERSION = '2.8.0';
+const SERVER_VERSION = '2.8.1';
 
 const HEADERS = {
   chu_trinh: [

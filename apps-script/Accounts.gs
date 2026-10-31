@@ -89,6 +89,19 @@ function clearAccountCache_() {
   CacheService.getScriptCache().remove(ACCOUNT_CACHE_KEY);
 }
 
+/**
+ * Công tắc mở/khoá lớp, điều khiển bằng Script Property LOP_DANG_MO.
+ * Giá trị là danh sách mã lớp cách nhau dấu phẩy, ví dụ: "10A3,11E1,LB-11A,CL-12A2".
+ * Để trống hoặc không đặt thì mọi lớp trong danh sách đều mở.
+ * Học sinh lớp đang khoá nhận mã lỗi LOP_CHUA_MO và không vào được bài.
+ */
+function classOpen_(lop) {
+  const raw = String(PropertiesService.getScriptProperties().getProperty('LOP_DANG_MO') || '').trim();
+  if (!raw) return true;
+  const codes = raw.split(',').map(value => ClassIds.code(value.trim())).filter(Boolean);
+  return codes.includes(ClassIds.code(lop));
+}
+
 function pinDigest_(pin, account) {
   const secret = PropertiesService.getScriptProperties().getProperty('STUDENT_PIN_SECRET');
   if (!secret) fail_('Chủ dự án cần cấp mật khẩu trước khi đăng nhập học sinh.', 'SETUP_REQUIRED');
@@ -127,6 +140,7 @@ function loginStudent(input) {
     if (!input || !schoolOK_(input) || typeof input.ma !== 'string' || !/^[A-Z]{2}[0-9]{2}-[A-Z]$/.test(input.ma)) fail_('Mã, trường/lớp hoặc mật khẩu không đúng.', 'AUTH_REQUIRED');
     input = ClassIds.profile(input);
     if ((SCHEMA.maCam || []).includes(input.ma)) fail_('Đây là mã ví dụ trong tài liệu, không dùng để vào học. Hãy tạo mã theo phiếu khảo sát.', 'AUTH_REQUIRED');
+    if (!classOpen_(input.lop)) fail_('Lớp của em chưa mở đợt dùng app. Liên hệ người phụ trách để biết lịch.', 'LOP_CHUA_MO');
     const id = accountSheetId_();
     // Không lấy khoá ở đây: bộ đếm chống dò chỉ cần đúng tương đối, còn khoá toàn
     // cục biến 30 lượt đăng nhập đồng thời thành 30 lượt xếp hàng.
