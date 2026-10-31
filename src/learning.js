@@ -40,7 +40,7 @@ const LearningSync = (() => {
     error='Có nháp khác trên Sheet. Hai bản vẫn được giữ; hãy chọn bản muốn tiếp tục.';
   }
   async function load() {
-    if (!LIVE || !studentAuthorized(profile)) {loading=false;return;}
+    if (!LIVE || !studentAuthorized(profile)) {loading=false;return false;}
     const auth=studentAuth, owner=Core.key(profile), p=person(), before=JSON.stringify(p.drafts);
     loading=true;view();
     try {
@@ -59,6 +59,12 @@ const LearningSync = (() => {
         else if (Object.entries(record).every(([key,value])=>key==='thoi_gian_nhan' || (Core.safeRecord(old.record,CONTENT.an_toan)[key] ?? '')===value)) old.sent=true;
       }
       p.history.sort((a,b)=>String(a.record.thoi_gian).localeCompare(String(b.record.thoi_gian)));
+      // Tiến độ suy ra từ chính danh sách bài đã nộp: bỏ được RPC getStudentProgress,
+      // nên một lượt vào lớp chỉ còn một lời gọi máy chủ.
+      studentProgress = { ...profile, weeks: [...new Set(result.records
+        .map(record => Number(record.tuan))
+        .filter(week => Number.isInteger(week) && week >= 1 && week <= 4))].sort((a, b) => a - b) };
+      studentProgressError = '';
       const states=new Map(result.states.filter(state=>Number.isInteger(state.week)&&state.week>=1&&state.week<=4&&Number.isInteger(state.revision)).map(state=>[String(state.week),state]));
       for(let number=1;number<=4;number++) {
         const week=String(number), state=states.get(week)||{week:number,revision:0,draft:null}, local=p.drafts[week], pending=cloud.pending[week];
@@ -89,7 +95,8 @@ const LearningSync = (() => {
       if (!persist()) throw Error('Chưa ghi được tiến trình tải về trên thiết bị; không tự gửi nháp.');
       loadedOwner=owner;error=Object.keys(cloud.conflicts).length?'Có hai bản nháp cần bạn chọn.':'';
       remember();persist();
-    } catch(e) {if(identity(owner)) error=e.message+' Nháp trên máy vẫn được giữ.';}
+      return true;
+    } catch(e) {if(identity(owner)) error=e.message+' Nháp trên máy vẫn được giữ.';return false;}
     finally {if(identity(owner) && (!studentAuth || studentAuth===auth)){loading=false;view();}}
   }
   async function syncMinute() {

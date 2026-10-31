@@ -25,7 +25,7 @@ Không tự thay mã, trường/lớp trên dòng đang dùng để di chuyển 
 ## Dữ liệu được lưu
 
 - `chu_trinh`: bài đã xử lý an toàn, mã/trường/lớp, tuần, ID, thời gian và phiên bản. Không chứa PIN/token. Bản gốc trước khi che và nháp giữ trên thiết bị đã viết.
-- `tien_do`: `ma, truong, lop, tuan_1, tuan_2, tuan_3, tuan_4, so_tuan_da_nop, cap_nhat`. Cờ tuần là TRUE/FALSE; số tuần là số đếm hoàn thành, **không phải điểm năng lực/nghiên cứu**. Được máy chủ tổng hợp từ bài đã nhận; không tin dữ liệu tiến độ client. Bảng có dòng khi học sinh đăng nhập/tải tiến độ hoặc nộp bài. Tài khoản chưa dùng có thể chưa có dòng tiến độ.
+- `tien_do`: `ma, truong, lop, tuan_1, tuan_2, tuan_3, tuan_4, so_tuan_da_nop, cap_nhat`. Cờ tuần là TRUE/FALSE; số tuần là số đếm hoàn thành, **không phải điểm năng lực/nghiên cứu**. Được máy chủ tổng hợp từ bài đã nhận; không tin dữ liệu tiến độ client. Bảng có dòng khi học sinh **nộp bài**; tài khoản chưa nộp lần nào chưa có dòng tiến độ, vì tiến độ trên app được suy ra trực tiếp từ danh sách bài đã nộp nên không cần ghi trước.
 - Gửi lại cùng ID/nội dung không thêm bài. Nếu ghi bài thành công nhưng cập nhật tiến độ lỗi, lần gửi lại cùng ID phục hồi tiến độ trước khi xác nhận.
 - Đăng nhập trên thiết bị mới tải lại các tuần đã nộp từ Sheet. Khôi phục nháp/bài đã xử lý an toàn từ Sheet; phần chưa đồng bộ và bản gốc trước khi che vẫn cần thiết bị cũ/bản sao. Không coi thiếu bài trong Sổ là bài đã mất trên Sheet.
 - GVCN vẫn chỉ thấy mã đã nộp và tuần trong đúng lớp qua API tiến độ giáo viên. Không trả danh sách tài khoản chưa nộp, hash hay bài riêng tư; quyết định roster ở #1 vẫn tạm dừng. Người có quyền trực tiếp với Sheet phải do chủ dự án kiểm soát.

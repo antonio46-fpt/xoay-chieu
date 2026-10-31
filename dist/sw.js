@@ -1,4 +1,4 @@
-const CACHE = 'xc-99a061949634';
+const CACHE = 'xc-51af0c2edd23';
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(['./', './index.html'])));

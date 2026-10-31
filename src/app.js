@@ -1034,23 +1034,33 @@ function studentAuthorized(record) {
     Core.key(studentAuth) === Core.key(record) && Core.key(profile) === Core.key(record));
 }
 
+/**
+ * Tiến độ lấy luôn từ danh sách bài đã nộp trong phản hồi getStudentLearning,
+ * nên mỗi lượt vào lớp chỉ còn MỘT lời gọi máy chủ thay vì hai. Giảm một nửa
+ * số lần tranh khoá khi cả lớp cùng đăng nhập.
+ */
 async function refreshStudentProgress() {
   if (!LIVE || !studentAuthorized(profile)) { showStudentReauth(); return; }
-  const auth = studentAuth, owner = { ...profile };
-  try {
-    const result = await rpc('getStudentProgress', { ...owner, token: auth.token });
-    if (studentAuth !== auth || !profile || Core.key(profile) !== Core.key(owner)) return;
-    if (!result?.ok) {
-      if (result?.code === 'AUTH_REQUIRED') { studentAuth = null; showStudentReauth(); }
-      throw Error(result?.error || 'Chưa tải được tiến độ.');
+  const owner = { ...profile };
+  const loadedNow = (await cloudSync()?.load()) === true;
+  // Bản máy chủ cũ chưa trả danh sách bài đã nộp: quay lại RPC tiến độ riêng để
+  // không mất tính năng. Với bản mới, nhánh này không chạy nên chỉ còn một lời gọi.
+  if (!loadedNow && profile && Core.key(profile) === Core.key(owner) && studentAuthorized(profile)) {
+    const auth = studentAuth;
+    try {
+      const result = await rpc('getStudentProgress', { ...owner, token: auth.token });
+      if (studentAuth !== auth || !profile || Core.key(profile) !== Core.key(owner)) return;
+      if (!result?.ok) {
+        if (result?.code === 'AUTH_REQUIRED') { studentAuth = null; showStudentReauth(); }
+        throw Error(result?.error || 'Chưa tải được tiến độ.');
+      }
+      studentProgress = { ...owner, weeks: result.weeks.filter(n => Number.isInteger(n) && n >= 1 && n <= 4) };
+      studentProgressError = '';
+    } catch (error) {
+      if (!profile || Core.key(profile) !== Core.key(owner) || (studentAuth && studentAuth !== auth)) return;
+      studentProgressError = error.message + ' Tiến độ trên máy và nháp vẫn được giữ.';
     }
-    studentProgress = { ...owner, weeks: result.weeks.filter(n => Number.isInteger(n) && n >= 1 && n <= 4) };
-    studentProgressError = '';
-  } catch (error) {
-    if (!profile || Core.key(profile) !== Core.key(owner) || (studentAuth && studentAuth !== auth)) return;
-    studentProgressError = error.message + ' Tiến độ trên máy và nháp vẫn được giữ.';
   }
-  if (profile && Core.key(profile) === Core.key(owner) && studentAuthorized(profile)) await cloudSync()?.load();
   if (profile && Core.key(profile) === Core.key(owner) && tab === 'home') home();
 }
 
