@@ -1162,6 +1162,59 @@ function showButtonRipple(event) {
 }
 
 /** Đăng ký vòng đời sau khi giao diện được dựng. */
+/**
+ * Hạc giấy bay theo con trỏ.
+ *
+ * Chỉ là trang trí: lớp phủ không nhận sự kiện chuột, không đọc và không gửi dữ
+ * liệu nào. Tự tắt trên thiết bị cảm ứng và khi người dùng bật giảm chuyển động.
+ * Vòng lặp tự dừng khi hạc đã bám sát con trỏ, nên không tốn pin lúc rảnh.
+ */
+function followCursor() {
+  const layer = $('craneLayer'), crane = $('crane');
+  if (!layer || !crane) return;
+  if (matchMedia('(hover: none)').matches) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const OFFSET_X = -20, OFFSET_Y = -26, EASE = .14;
+  let targetX = innerWidth / 2, targetY = innerHeight / 2;
+  let x = targetX, y = targetY, facing = 1, frame = null, started = false;
+
+  const draw = () => {
+    const dx = targetX - x, dy = targetY - y;
+    x += dx * EASE;
+    y += dy * EASE;
+    if (Math.abs(dx) > 2.5) facing = dx > 0 ? 1 : -1;
+    const tilt = Math.max(-15, Math.min(15, dy * 1.4));
+    crane.style.transform = 'translate3d(' + (x + OFFSET_X).toFixed(2) + 'px,' +
+      (y + OFFSET_Y).toFixed(2) + 'px,0) rotate(' + tilt.toFixed(2) + 'deg) scaleX(' + facing + ')';
+    frame = (Math.abs(dx) > .35 || Math.abs(dy) > .35) ? requestAnimationFrame(draw) : null;
+  };
+  const wake = () => { if (!frame) frame = requestAnimationFrame(draw); };
+  const show = () => { if (started) layer.classList.add('is-on'); };
+  const hide = () => layer.classList.remove('is-on');
+
+  addEventListener('pointermove', event => {
+    targetX = event.clientX;
+    targetY = event.clientY;
+    if (!started) {
+      started = true;
+      x = targetX;
+      y = targetY;
+      layer.classList.add('is-on');
+    }
+    wake();
+  }, { passive: true });
+
+  document.documentElement.addEventListener('mouseleave', hide);
+  document.documentElement.addEventListener('mouseenter', show);
+  addEventListener('blur', hide);
+  addEventListener('focus', show);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) hide();
+    else show();
+  });
+}
+
 function boot() {
   document.addEventListener('click', showButtonRipple);
   window.addEventListener('online', () => {
@@ -1181,6 +1234,7 @@ function boot() {
     if (document.hidden) flushDraft();
   });
   render();
+  followCursor();
   if (loadBroken) toast('Dữ liệu trên máy không đọc được. Chưa ghi đè dữ liệu cũ.');
   if (LIVE) sync();
   // Kiểm tra định kỳ, nhưng mỗi bản ghi có backoff riêng sau lỗi mạng/quota.

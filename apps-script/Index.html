@@ -2500,12 +2500,138 @@ body.dark select:focus,
 body.dark textarea:focus {
   background-color: #1c2742
 }
+
+
+/* ---------- 17. Hạc giấy bay theo con trỏ ---------- */
+.crane-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+  overflow: hidden;
+  display: none
+}
+
+.crane-layer.is-on {
+  display: block
+}
+
+.crane {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 58px;
+  height: 58px;
+  margin: -29px 0 0 -29px;
+  opacity: 0;
+  transition: opacity .4s var(--ease);
+  will-change: transform;
+  filter: drop-shadow(0 8px 14px #17203a2e)
+}
+
+.crane-layer.is-on .crane {
+  opacity: .96
+}
+
+/* Hạc giấy vẽ nét: cùng ngôn ngữ với bộ icon, nét tròn đều nên sạch ở cỡ nhỏ. */
+.crane-line,
+.crane-wing {
+  fill: none;
+  stroke: color-mix(in srgb, var(--gold) 88%, var(--ink));
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round
+}
+
+.crane-wing {
+  stroke: color-mix(in srgb, var(--gold) 62%, var(--accent-2))
+}
+
+.crane-wing--far {
+  opacity: .72;
+  stroke-width: 2.1
+}
+
+.crane-eye {
+  fill: color-mix(in srgb, var(--gold) 88%, var(--ink));
+  stroke: none
+}
+
+body.dark .crane-line {
+  stroke: var(--gold)
+}
+
+body.dark .crane-wing {
+  stroke: color-mix(in srgb, var(--gold) 55%, var(--accent))
+}
+
+body.dark .crane-eye {
+  fill: var(--gold)
+}
+
+.crane-shape {
+  transform-box: view-box;
+  transform-origin: 32px 32px;
+  animation: xc-crane-bob 3.6s ease-in-out infinite
+}
+
+.crane-wing {
+  transform-box: view-box;
+  transform-origin: 32px 32px;
+  animation: xc-crane-flap 1.1s ease-in-out infinite alternate
+}
+
+.crane-wing--far {
+  animation-delay: .07s
+}
+
+@keyframes xc-crane-flap {
+  from {
+    transform: rotate(-8deg)
+  }
+
+  to {
+    transform: rotate(10deg)
+  }
+}
+
+@keyframes xc-crane-bob {
+
+  0%,
+  100% {
+    transform: translateY(0)
+  }
+
+  50% {
+    transform: translateY(-2.5px)
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  .crane-layer {
+    display: none !important
+  }
+}
 </style>
 </head>
 <body>
   <div class="stripe" aria-hidden="true"></div>
   <div id="app"></div>
   <noscript>Hãy bật JavaScript trong trình duyệt để mở hoạt động và lưu bản nháp.</noscript>
+  <!-- Hạc giấy bay theo con trỏ. Chỉ trang trí: không nhận chuột, không đọc dữ liệu. -->
+  <div class="crane-layer" id="craneLayer" aria-hidden="true">
+    <svg class="crane" id="crane" viewBox="0 0 64 64" width="58" height="58" focusable="false">
+      <g class="crane-shape">
+        <path class="crane-wing crane-wing--far" d="M34,33 C36,25 39,20 44,17"/>
+        <path class="crane-wing crane-wing--near" d="M31,34.5 C27,23 21,15 12,9"/>
+        <path class="crane-line" d="M7,45 C16,41 23,38 30,36"/>
+        <path class="crane-line" d="M30,36 C35,34 39,32 43,30"/>
+        <path class="crane-line" d="M43,30 C50,25 54,19 57,14"/>
+        <path class="crane-line" d="M57,14 L62,11"/>
+        <circle class="crane-eye" cx="55" cy="17" r="1.3"/>
+      </g>
+    </svg>
+  </div>
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
   <dialog id="letterDialog" aria-label="Lá thư mở đầu"></dialog>
   <!-- build.py ghép theo thứ tự phụ thuộc; không cần CDN hay thư viện. -->
@@ -4180,6 +4306,59 @@ function showButtonRipple(event) {
 }
 
 /** Đăng ký vòng đời sau khi giao diện được dựng. */
+/**
+ * Hạc giấy bay theo con trỏ.
+ *
+ * Chỉ là trang trí: lớp phủ không nhận sự kiện chuột, không đọc và không gửi dữ
+ * liệu nào. Tự tắt trên thiết bị cảm ứng và khi người dùng bật giảm chuyển động.
+ * Vòng lặp tự dừng khi hạc đã bám sát con trỏ, nên không tốn pin lúc rảnh.
+ */
+function followCursor() {
+  const layer = $('craneLayer'), crane = $('crane');
+  if (!layer || !crane) return;
+  if (matchMedia('(hover: none)').matches) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const OFFSET_X = -20, OFFSET_Y = -26, EASE = .14;
+  let targetX = innerWidth / 2, targetY = innerHeight / 2;
+  let x = targetX, y = targetY, facing = 1, frame = null, started = false;
+
+  const draw = () => {
+    const dx = targetX - x, dy = targetY - y;
+    x += dx * EASE;
+    y += dy * EASE;
+    if (Math.abs(dx) > 2.5) facing = dx > 0 ? 1 : -1;
+    const tilt = Math.max(-15, Math.min(15, dy * 1.4));
+    crane.style.transform = 'translate3d(' + (x + OFFSET_X).toFixed(2) + 'px,' +
+      (y + OFFSET_Y).toFixed(2) + 'px,0) rotate(' + tilt.toFixed(2) + 'deg) scaleX(' + facing + ')';
+    frame = (Math.abs(dx) > .35 || Math.abs(dy) > .35) ? requestAnimationFrame(draw) : null;
+  };
+  const wake = () => { if (!frame) frame = requestAnimationFrame(draw); };
+  const show = () => { if (started) layer.classList.add('is-on'); };
+  const hide = () => layer.classList.remove('is-on');
+
+  addEventListener('pointermove', event => {
+    targetX = event.clientX;
+    targetY = event.clientY;
+    if (!started) {
+      started = true;
+      x = targetX;
+      y = targetY;
+      layer.classList.add('is-on');
+    }
+    wake();
+  }, { passive: true });
+
+  document.documentElement.addEventListener('mouseleave', hide);
+  document.documentElement.addEventListener('mouseenter', show);
+  addEventListener('blur', hide);
+  addEventListener('focus', show);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) hide();
+    else show();
+  });
+}
+
 function boot() {
   document.addEventListener('click', showButtonRipple);
   window.addEventListener('online', () => {
@@ -4199,6 +4378,7 @@ function boot() {
     if (document.hidden) flushDraft();
   });
   render();
+  followCursor();
   if (loadBroken) toast('Dữ liệu trên máy không đọc được. Chưa ghi đè dữ liệu cũ.');
   if (LIVE) sync();
   // Kiểm tra định kỳ, nhưng mỗi bản ghi có backoff riêng sau lỗi mạng/quota.
