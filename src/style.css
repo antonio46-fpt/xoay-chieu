@@ -2494,113 +2494,74 @@ body.dark textarea:focus {
 }
 
 
-/* ---------- 17. Hạc giấy bay theo con trỏ ---------- */
-.crane-layer {
+/* ---------- 17. Cánh hoa anh đào rơi ---------- */
+.petal-layer {
   position: fixed;
   inset: 0;
-  z-index: 45;
+  z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  display: none
+  contain: strict
 }
 
-.crane-layer.is-on {
-  display: block
+/* Nội dung nằm trên lớp hoa. Chỉ thêm ngăn xếp, không đổi bố cục. */
+#app {
+  position: relative;
+  z-index: 1
 }
 
-.crane {
+.petal {
   position: absolute;
   top: 0;
-  left: 0;
-  width: 58px;
-  height: 58px;
-  margin: -29px 0 0 -29px;
+  left: var(--x);
+  width: var(--size);
+  height: calc(var(--size) * 1.2);
   opacity: 0;
-  transition: opacity .4s var(--ease);
-  will-change: transform;
-  filter: drop-shadow(0 8px 14px #17203a2e)
+  will-change: transform, opacity;
+  animation: xc-petal-fall var(--dur) linear var(--delay) infinite
 }
 
-.crane-layer.is-on .crane {
-  opacity: .96
+.petal svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 3px 5px #b45a7812)
 }
 
-/* Hạc giấy vẽ nét: cùng ngôn ngữ với bộ icon, nét tròn đều nên sạch ở cỡ nhỏ. */
-.crane-line,
-.crane-wing {
-  fill: none;
-  stroke: color-mix(in srgb, var(--gold) 88%, var(--ink));
-  stroke-width: 2.4;
-  stroke-linecap: round;
-  stroke-linejoin: round
-}
-
-.crane-wing {
-  stroke: color-mix(in srgb, var(--gold) 62%, var(--accent-2))
-}
-
-.crane-wing--far {
-  opacity: .72;
-  stroke-width: 2.1
-}
-
-.crane-eye {
-  fill: color-mix(in srgb, var(--gold) 88%, var(--ink));
-  stroke: none
-}
-
-body.dark .crane-line {
-  stroke: var(--gold)
-}
-
-body.dark .crane-wing {
-  stroke: color-mix(in srgb, var(--gold) 55%, var(--accent))
-}
-
-body.dark .crane-eye {
-  fill: var(--gold)
-}
-
-.crane-shape {
-  transform-box: view-box;
-  transform-origin: 32px 32px;
-  animation: xc-crane-bob 3.6s ease-in-out infinite
-}
-
-.crane-wing {
-  transform-box: view-box;
-  transform-origin: 32px 32px;
-  animation: xc-crane-flap 1.1s ease-in-out infinite alternate
-}
-
-.crane-wing--far {
-  animation-delay: .07s
-}
-
-@keyframes xc-crane-flap {
-  from {
-    transform: rotate(-8deg)
+@keyframes xc-petal-fall {
+  0% {
+    transform: translate3d(0, -12vh, 0) rotate(0deg);
+    opacity: 0
   }
 
-  to {
-    transform: rotate(10deg)
+  6% {
+    opacity: var(--o)
   }
-}
 
-@keyframes xc-crane-bob {
-
-  0%,
-  100% {
-    transform: translateY(0)
+  25% {
+    transform: translate3d(calc(var(--sway) * .65), 22vh, 0) rotate(80deg)
   }
 
   50% {
-    transform: translateY(-2.5px)
+    transform: translate3d(var(--sway), 50vh, 0) rotate(170deg)
+  }
+
+  75% {
+    transform: translate3d(calc(var(--sway) * -.35), 78vh, 0) rotate(265deg)
+  }
+
+  92% {
+    opacity: var(--o)
+  }
+
+  100% {
+    transform: translate3d(calc(var(--sway) * -.7), 110vh, 0) rotate(360deg);
+    opacity: 0
   }
 }
 
 @media(prefers-reduced-motion:reduce) {
-  .crane-layer {
+  .petal-layer {
     display: none !important
   }
 }

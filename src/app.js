@@ -1161,60 +1161,45 @@ function showButtonRipple(event) {
   setTimeout(() => ripple.remove(), 650);
 }
 
-/** Đăng ký vòng đời sau khi giao diện được dựng. */
 /**
- * Hạc giấy bay theo con trỏ.
+ * Cánh hoa anh đào rơi.
  *
- * Chỉ là trang trí: lớp phủ không nhận sự kiện chuột, không đọc và không gửi dữ
- * liệu nào. Tự tắt trên thiết bị cảm ứng và khi người dùng bật giảm chuyển động.
- * Vòng lặp tự dừng khi hạc đã bám sát con trỏ, nên không tốn pin lúc rảnh.
+ * Chỉ là trang trí: lớp hoa nằm SAU nội dung, không nhận sự kiện chuột và không
+ * đọc dữ liệu nào. Dùng hoạt ảnh CSS nên không có vòng lặp JavaScript, không tốn
+ * pin. Tự tắt khi người dùng bật giảm chuyển động.
  */
-function followCursor() {
-  const layer = $('craneLayer'), crane = $('crane');
-  if (!layer || !crane) return;
-  if (matchMedia('(hover: none)').matches) return;
+function petalFall() {
+  const layer = $('petalLayer');
+  if (!layer || layer.childElementCount) return;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  const OFFSET_X = -20, OFFSET_Y = -26, EASE = .14;
-  let targetX = innerWidth / 2, targetY = innerHeight / 2;
-  let x = targetX, y = targetY, facing = 1, frame = null, started = false;
+  const narrow = matchMedia('(max-width: 640px)').matches;
+  const count = narrow ? 14 : 26;
+  const colors = ['#f9c6d4', '#f7a8bd', '#f48ca8', '#ef7f9e', '#fde4ec', '#e86b8f'];
+  const petal = color =>
+    '<svg viewBox="0 0 20 24" aria-hidden="true">' +
+    '<path d="M10,1 C14,6 18,11 18,16 C18,20.4 14.4,23 10,23 C5.6,23 2,20.4 2,16 C2,11 6,6 10,1 Z" fill="' + color + '"/>' +
+    '<path d="M10,4.5 L10,20.5" stroke="#ffffff" stroke-opacity=".45" stroke-width=".7" stroke-linecap="round"/>' +
+    '</svg>';
 
-  const draw = () => {
-    const dx = targetX - x, dy = targetY - y;
-    x += dx * EASE;
-    y += dy * EASE;
-    if (Math.abs(dx) > 2.5) facing = dx > 0 ? 1 : -1;
-    const tilt = Math.max(-15, Math.min(15, dy * 1.4));
-    crane.style.transform = 'translate3d(' + (x + OFFSET_X).toFixed(2) + 'px,' +
-      (y + OFFSET_Y).toFixed(2) + 'px,0) rotate(' + tilt.toFixed(2) + 'deg) scaleX(' + facing + ')';
-    frame = (Math.abs(dx) > .35 || Math.abs(dy) > .35) ? requestAnimationFrame(draw) : null;
-  };
-  const wake = () => { if (!frame) frame = requestAnimationFrame(draw); };
-  const show = () => { if (started) layer.classList.add('is-on'); };
-  const hide = () => layer.classList.remove('is-on');
-
-  addEventListener('pointermove', event => {
-    targetX = event.clientX;
-    targetY = event.clientY;
-    if (!started) {
-      started = true;
-      x = targetX;
-      y = targetY;
-      layer.classList.add('is-on');
-    }
-    wake();
-  }, { passive: true });
-
-  document.documentElement.addEventListener('mouseleave', hide);
-  document.documentElement.addEventListener('mouseenter', show);
-  addEventListener('blur', hide);
-  addEventListener('focus', show);
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) hide();
-    else show();
-  });
+  const parts = [];
+  for (let i = 0; i < count; i += 1) {
+    const size = 12 + Math.round(Math.random() * 15);
+    const duration = 13 + Math.random() * 12;
+    const delay = -Math.random() * duration;
+    const sway = (Math.random() > .5 ? 1 : -1) * (18 + Math.random() * 44);
+    parts.push(
+      '<span class="petal" style="--x:' + (Math.random() * 100).toFixed(2) + '%;' +
+      '--size:' + size + 'px;--dur:' + duration.toFixed(1) + 's;' +
+      '--delay:' + delay.toFixed(1) + 's;--sway:' + sway.toFixed(0) + 'px;' +
+      '--o:' + (.34 + Math.random() * .3).toFixed(2) + '">' +
+      petal(colors[i % colors.length]) + '</span>'
+    );
+  }
+  layer.innerHTML = parts.join('');
 }
 
+/** Đăng ký vòng đời sau khi giao diện được dựng. */
 function boot() {
   document.addEventListener('click', showButtonRipple);
   window.addEventListener('online', () => {
@@ -1234,7 +1219,7 @@ function boot() {
     if (document.hidden) flushDraft();
   });
   render();
-  followCursor();
+  petalFall();
   if (loadBroken) toast('Dữ liệu trên máy không đọc được. Chưa ghi đè dữ liệu cũ.');
   if (LIVE) sync();
   // Kiểm tra định kỳ, nhưng mỗi bản ghi có backoff riêng sau lỗi mạng/quota.
