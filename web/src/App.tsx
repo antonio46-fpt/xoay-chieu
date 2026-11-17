@@ -3,6 +3,10 @@ import { authApi, type PhienNguoiDung } from './api/client';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import WeekPage from './pages/WeekPage';
+import ReviewPage from './pages/ReviewPage';
+import { batDauTheoDoiMang } from './lib/queue';
+
+type ManHinh = { ten: 'dashboard' } | { ten: 'week'; tuan: number } | { ten: 'review' };
 
 /**
  * Trạng thái cấp cao nhất: đang kiểm tra phiên → chưa đăng nhập → đã đăng nhập.
@@ -13,7 +17,10 @@ import WeekPage from './pages/WeekPage';
 export default function App(): JSX.Element {
   const [phien, setPhien] = useState<PhienNguoiDung | null>(null);
   const [dangKiemTra, setDangKiemTra] = useState(true);
-  const [tuanDangLam, setTuanDangLam] = useState<number | null>(null);
+  const [manHinh, setManHinh] = useState<ManHinh>({ ten: 'dashboard' });
+
+  // Gửi lại bài còn trong hàng đợi mỗi khi có mạng.
+  useEffect(() => batDauTheoDoiMang(), []);
 
   useEffect(() => {
     let huy = false;
@@ -70,15 +77,26 @@ export default function App(): JSX.Element {
     );
   }
 
-  if (tuanDangLam !== null) {
+  if (manHinh.ten === 'week') {
     return (
       <WeekPage
-        tuan={tuanDangLam}
-        onThoat={() => setTuanDangLam(null)}
+        tuan={manHinh.tuan}
+        onThoat={() => setManHinh({ ten: 'dashboard' })}
         onDaNop={() => undefined}
       />
     );
   }
 
-  return <Dashboard phien={phien} onLoggedOut={() => setPhien(null)} onOpenWeek={setTuanDangLam} />;
+  if (manHinh.ten === 'review') {
+    return <ReviewPage onThoat={() => setManHinh({ ten: 'dashboard' })} />;
+  }
+
+  return (
+    <Dashboard
+      phien={phien}
+      onLoggedOut={() => setPhien(null)}
+      onOpenWeek={tuan => setManHinh({ ten: 'week', tuan })}
+      onOpenReview={() => setManHinh({ ten: 'review' })}
+    />
+  );
 }

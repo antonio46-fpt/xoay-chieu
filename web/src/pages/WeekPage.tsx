@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ApiError, api, type TongQuan } from '../api/client';
 import { demTu, layTuan, PHIEN_BAN_NOI_DUNG, THANG_TU_DANH_GIA, type Buoc, type O } from '../content';
+import { xepCho } from '../lib/queue';
 
 type Props = {
   tuan: number;
@@ -155,27 +156,33 @@ export default function WeekPage({ tuan, onThoat, onDaNop, trangThai }: Props): 
     if (dangNop) return;
     setLoiNop(null);
     setDangNop(true);
+
+    const duLieuGui = {
+      tuan,
+      ...giaTri,
+      thoi_luong_giay: tongGiay,
+      phien_ban_app: '3.0.0',
+      phien_ban_noi_dung: PHIEN_BAN_NOI_DUNG,
+      so_lan_dan: soLanDan
+    };
+
     try {
       await api('/api/me/submissions', {
         method: 'POST',
-        body: {
-          id: submissionId.current,
-          tuan,
-          ...giaTri,
-          thoi_luong_giay: tongGiay,
-          phien_ban_app: '3.0.0',
-          phien_ban_noi_dung: PHIEN_BAN_NOI_DUNG,
-          so_lan_dan: soLanDan
-        }
+        body: { id: submissionId.current, ...duLieuGui }
       });
       setDaNopXong(true);
       onDaNop();
     } catch (e) {
-      setLoiNop(
-        e instanceof ApiError
-          ? e.message
-          : 'Chưa nộp được. Bài vẫn còn trên máy — thử lại khi có mạng.'
-      );
+      // Mất mạng: giữ bài trong hàng đợi với đúng id, tự gửi lại khi có mạng.
+      if (e instanceof ApiError && (e.status === 0 || e.status >= 500)) {
+        xepCho(submissionId.current, tuan, duLieuGui);
+        setLoiNop(
+          'Chưa gửi được vì mất kết nối. Bài đã được giữ trên máy này và sẽ tự gửi lại khi có mạng — bạn có thể đóng trang.'
+        );
+      } else {
+        setLoiNop(e instanceof ApiError ? e.message : 'Chưa nộp được. Vui lòng thử lại.');
+      }
     } finally {
       setDangNop(false);
     }

@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 import { ApiError, authApi, meApi, type PhienNguoiDung, type TongQuan } from '../api/client';
+import { soBaiCho, theoDoi } from '../lib/queue';
 
-type Props = { phien: PhienNguoiDung; onLoggedOut: () => void; onOpenWeek: (tuan: number) => void };
+type Props = {
+  phien: PhienNguoiDung;
+  onLoggedOut: () => void;
+  onOpenWeek: (tuan: number) => void;
+  onOpenReview: () => void;
+};
 
 const TUAN = [
   { so: 1, ten: 'Tự nhận thức', phut: 15, mo_ta: 'Mình đã thật sự hiểu chưa?' },
@@ -17,10 +23,13 @@ function dinhDangNgay(iso: string | null): string {
   return ngay.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-export default function Dashboard({ phien, onLoggedOut, onOpenWeek }: Props): JSX.Element {
+export default function Dashboard({ phien, onLoggedOut, onOpenWeek, onOpenReview }: Props): JSX.Element {
   const [tongQuan, setTongQuan] = useState<TongQuan | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
   const [dangTai, setDangTai] = useState(true);
+  const [soCho, setSoCho] = useState(soBaiCho());
+
+  useEffect(() => theoDoi(setSoCho), []);
 
   useEffect(() => {
     let huy = false;
@@ -106,6 +115,21 @@ export default function Dashboard({ phien, onLoggedOut, onOpenWeek }: Props): JS
             </p>
           )}
         </section>
+
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={onOpenReview}
+            className="rounded-xl border border-ink/10 bg-paper/70 px-4 py-2.5 text-sm font-semibold text-ink-muted transition hover:border-gold/50 hover:text-ink"
+          >
+            Xem bài đã nộp
+          </button>
+          {soCho > 0 && (
+            <span className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-900">
+              Còn {soCho} bài chờ gửi lại
+            </span>
+          )}
+        </div>
 
         {dangTai && (
           <p className="mt-8 flex items-center gap-3 text-sm text-ink-muted" role="status">

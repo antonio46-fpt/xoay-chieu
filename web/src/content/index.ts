@@ -70,3 +70,25 @@ export function tatCaTuan(): Tuan[] {
 export function demTu(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
+
+/** Nhãn hiển thị của một ô, tra theo khoá. Dùng khi xem lại bài đã nộp. */
+const NHAN_THEO_KHOA: Map<string, string> = (() => {
+  const bang = new Map<string, string>();
+  for (const tuan of noiDung.weeks) {
+    for (const buoc of tuan.steps) {
+      for (const o of buoc.fields) {
+        if (!bang.has(o.key)) bang.set(o.key, o.label);
+      }
+    }
+  }
+  return bang;
+})();
+
+export function nhanCuaO(key: string): string {
+  return NHAN_THEO_KHOA.get(key) ?? key;
+}
+
+/** Các khoá nội dung theo đúng thứ tự xuất hiện trong chương trình. */
+export function cacKhoaNoiDung(): string[] {
+  return [...NHAN_THEO_KHOA.keys()];
+}

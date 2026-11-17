@@ -215,6 +215,31 @@ export async function studentRoutes(app: FastifyInstance, opts: PhuThuocRoute): 
     return reply.code(201).send({ ok: true, id: ketQua.id, daChe });
   });
 
+  // ------------------------------------------- chi tiết một bài đã nộp
+  // Chỉ chủ nhân đọc được. Điều kiện student_id nằm trong câu SQL, nên đoán
+  // id của người khác cũng không lấy được gì.
+  app.get('/submissions/:id', async (request: FastifyRequest, reply: FastifyReply) => {
+    const hs = await hocSinhCuaPhien(request, db);
+    if (!hs) return reply.code(401).send({ error: 'CHUA_DANG_NHAP', message: 'Chưa đăng nhập.' });
+
+    const { id } = request.params as { id: string };
+    const row = await queryOne<Record<string, unknown>>(
+      db,
+      `select id, tuan, nhan_luc, da_che, bat_dau,
+              thu_lam, nghi_1, nghi_2, nghi_3, noi, dang_san_pham, san_pham,
+              chia_se, tu_danh_gia, phe, doi_hay_giu, kiem_soat, ngoai_kiem_soat,
+              thoi_luong_giay, thoi_gian_troi_giay, ban_goc_id, so_lan_dan
+         from submissions where id = $1 and student_id = $2`,
+      [id, hs.studentId]
+    );
+
+    if (!row) {
+      return reply.code(404).send({ error: 'KHONG_TIM_THAY', message: 'Không tìm thấy bài nộp của bạn.' });
+    }
+
+    return reply.send({ baiNop: row });
+  });
+
   // -------------------------------------------------------- bản nháp
   app.get('/drafts/:tuan', async (request: FastifyRequest, reply: FastifyReply) => {
     const hs = await hocSinhCuaPhien(request, db);

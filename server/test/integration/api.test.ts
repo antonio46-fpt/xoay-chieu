@@ -184,8 +184,43 @@ chay('tích hợp: đăng nhập, nộp bài, nháp, phân quyền', () => {
     assert.equal(dem.rows[0].n, 1);
   });
 
-  test('bài nộp không sửa được ở tầng cơ sở dữ liệu', async () => {
-    await assert.rejects(
+  test('học sinh đọc được chi tiết bài của mình, nội dung đã che', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/me/submissions/11111111-1111-4111-8111-111111111111',
+      headers: { cookie }
+    });
+    assert.equal(res.statusCode, 200);
+    const body = JSON.parse(res.body);
+    assert.equal(body.baiNop.tuan, 1);
+    assert.equal(body.baiNop.nghi_1, '[đã ẩn – an toàn]');
+    assert.equal(res.body.includes('em muốn tự tử'), false, 'không được trả lại nội dung gốc');
+  });
+
+  test('biết id cũng không đọc được bài của người khác', async () => {
+    const khac = await db.query(
+      `insert into students (ma, school_id, class_id)
+       select 'CH99-X', school_id, class_id from students where id = $1 returning id`,
+      [studentId]
+    );
+    const baiKhac = '33333333-3333-4333-8333-333333333333';
+    await db.query(
+      `insert into submissions (id, student_id, school_id, class_id, tuan, thu_lam)
+       select $1, $2, school_id, class_id, 2, 'bài của người khác'
+         from students where id = $2`,
+      [baiKhac, khac.rows[0].id]
+    );
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/me/submissions/${baiKhac}`,
+      headers: { cookie }
+    });
+    assert.equal(res.statusCode, 404);
+    assert.equal(res.body.includes('bài của người khác'), false);
+  });
+
+  test('bài nộp không sửa được ở tầng cơ sở dữ liệu', async () => {    await assert.rejects(
       async () => {
         await db.query(`update submissions set thu_lam = 'sua trom' where id = '11111111-1111-4111-8111-111111111111'`);
       },
@@ -269,8 +304,8 @@ chay('tích hợp: đăng nhập, nộp bài, nháp, phân quyền', () => {
     assert.equal(body.hopLe, 1);
     assert.equal(body.loi, 2);
 
-    const dem = await db.query(`select count(*)::int as n from students`);
-    assert.equal(dem.rows[0].n, 1, 'xem trước không được ghi vào CSDL');
+    const dem = await db.query(`select count(*)::int as n from students where ma like 'HS-%'`);
+    assert.equal(dem.rows[0].n, 0, 'xem trước không được ghi vào CSDL');
   });
 
   test('nhập CSV còn dòng lỗi thì không ghi', async () => {

@@ -105,6 +105,12 @@ export const authApi = {
     })
 };
 
+export type BaiNopTomTat = { id: string; tuan: number; nhanLuc: string; daChe: boolean };
+
+export type BaiNopChiTiet = Record<string, unknown>;
+
 export const meApi = {
-  overview: () => api<TongQuan>('/api/me/overview')
+  overview: () => api<TongQuan>('/api/me/overview'),
+  submissions: () => api<{ items: BaiNopTomTat[] }>('/api/me/submissions'),
+  submission: (id: string) => api<{ baiNop: BaiNopChiTiet }>(`/api/me/submissions/${id}`)
 };
