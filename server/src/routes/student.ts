@@ -9,9 +9,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type pg from 'pg';
 import { query, queryOne, transaction } from '../db.ts';
 import { phienHienTai, type PhuThuocRoute } from '../auth/routes.ts';
-import { hashPassword, passwordIssues, verifyPassword } from '../security/password.ts';
 import { cheBaiNop } from '../security/redact.ts';
-import { thuHoiMoiPhienCua } from '../auth/service.ts';
 import { DraftSchema, SubmissionSchema } from '../validation.ts';
 
 type PhienHocSinh = {
@@ -312,51 +310,4 @@ export async function studentRoutes(app: FastifyInstance, opts: PhuThuocRoute): 
 
     return reply.send({ ok: true, revision: revisionNow + 1 });
   });
-
-  // --------------------------------------------------- đổi mật khẩu
-  app.post('/change-password', async (request: FastifyRequest, reply: FastifyReply) => {
-    const phien = await phienHienTai(request, db);
-    if (!phien) return reply.code(401).send({ error: 'CHUA_DANG_NHAP', message: 'Chưa đăng nhập.' });
-
-    const body = request.body as { currentPassword?: unknown; newPassword?: unknown };
-    if (typeof body?.currentPassword !== 'string' || typeof body?.newPassword !== 'string') {
-      return reply.code(400).send({ error: 'DU_LIEU_KHONG_HOP_LE', message: 'Thiếu mật khẩu hiện tại hoặc mật khẩu mới.' });
-    }
-
-    const loiMatKhau = passwordIssues(body.newPassword);
-    if (loiMatKhau.length > 0) {
-      return reply.code(400).send({ error: 'MAT_KHAU_YEU', message: loiMatKhau.join(' ') });
-    }
-    if (body.currentPassword === body.newPassword) {
-      return reply.code(400).send({ error: 'MAT_KHAU_TRUNG', message: 'Mật khẩu mới phải khác mật khẩu hiện tại.' });
-    }
-
-    const nguoiDung = await queryOne<{ password_hash: string }>(
-      db,
-      `select password_hash from users where id = $1`,
-      [phien.user.id]
-    );
-    if (!nguoiDung || !(await verifyPassword(nguoiDung.password_hash, body.currentPassword))) {
-      return reply.code(401).send({ error: 'SAI_MAT_KHAU', message: 'Mật khẩu hiện tại không đúng.' });
-    }
-
-    const hash = await hashPassword(body.newPassword);
-    await query(
-      db,
-      `update users set password_hash = $2, phai_doi_mat_khau = false, cap_nhat_luc = now() where id = $1`,
-      [phien.user.id, hash]
-    );
-
-    // Đổi mật khẩu thì thu hồi mọi phiên khác, giữ phiên hiện tại.
-    await query(
-      db,
-      `update sessions set thu_hoi_luc = now()
-        where user_id = $1 and id <> $2 and thu_hoi_luc is null`,
-      [phien.user.id, phien.sessionId]
-    );
-
-    return reply.send({ ok: true });
-  });
 }
-
-export { thuHoiMoiPhienCua };

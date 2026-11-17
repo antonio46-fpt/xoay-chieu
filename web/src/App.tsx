@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import WeekPage from './pages/WeekPage';
 import ReviewPage from './pages/ReviewPage';
+import ChangePasswordPage from './pages/ChangePasswordPage';
 import { batDauTheoDoiMang } from './lib/queue';
 
 type ManHinh = { ten: 'dashboard' } | { ten: 'week'; tuan: number } | { ten: 'review' };
@@ -18,6 +19,7 @@ export default function App(): JSX.Element {
   const [phien, setPhien] = useState<PhienNguoiDung | null>(null);
   const [dangKiemTra, setDangKiemTra] = useState(true);
   const [manHinh, setManHinh] = useState<ManHinh>({ ten: 'dashboard' });
+  const [dangDoiMatKhau, setDangDoiMatKhau] = useState(false);
 
   // Gửi lại bài còn trong hàng đợi mỗi khi có mạng.
   useEffect(() => batDauTheoDoiMang(), []);
@@ -77,6 +79,28 @@ export default function App(): JSX.Element {
     );
   }
 
+  // Bắt buộc đổi mật khẩu ở lần đăng nhập đầu: chặn mọi màn hình khác.
+  if (phien.user.phaiDoiMatKhau) {
+    return (
+      <ChangePasswordPage
+        batBuoc
+        onXong={() => {
+          setPhien({ ...phien, user: { ...phien.user, phaiDoiMatKhau: false } });
+        }}
+      />
+    );
+  }
+
+  if (dangDoiMatKhau) {
+    return (
+      <ChangePasswordPage
+        batBuoc={false}
+        onXong={() => setDangDoiMatKhau(false)}
+        onHuy={() => setDangDoiMatKhau(false)}
+      />
+    );
+  }
+
   if (manHinh.ten === 'week') {
     return (
       <WeekPage
@@ -97,6 +121,7 @@ export default function App(): JSX.Element {
       onLoggedOut={() => setPhien(null)}
       onOpenWeek={tuan => setManHinh({ ten: 'week', tuan })}
       onOpenReview={() => setManHinh({ ten: 'review' })}
+      onOpenChangePassword={() => setDangDoiMatKhau(true)}
     />
   );
 }

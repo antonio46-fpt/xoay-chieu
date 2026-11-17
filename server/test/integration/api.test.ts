@@ -500,4 +500,87 @@ chay('tích hợp: đăng nhập, nộp bài, nháp, phân quyền', () => {
       /không khớp vai tài khoản/
     );
   });
+
+  // ------------------------------------------------- đổi mật khẩu
+  // Đặt cuối tệp vì các test này đổi mật khẩu của hs01/ch12-t.
+
+  test('đổi mật khẩu: chưa đăng nhập thì bị chặn', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/auth/change-password',
+      payload: { currentPassword: 'MatKhau123', newPassword: 'MatKhau456' }
+    });
+    assert.equal(res.statusCode, 401);
+  });
+
+  test('đổi mật khẩu: mật khẩu mới yếu bị từ chối', async () => {
+    const dn = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { username: 'ch12-t', password: 'MatKhau123' }
+    });
+    const c = String(dn.headers['set-cookie']).split(';')[0];
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/auth/change-password',
+      headers: { cookie: c },
+      payload: { currentPassword: 'MatKhau123', newPassword: 'abc' }
+    });
+    assert.equal(res.statusCode, 400);
+    assert.equal(JSON.parse(res.body).error, 'MAT_KHAU_YEU');
+  });
+
+  test('đổi mật khẩu: sai mật khẩu hiện tại bị từ chối', async () => {
+    const dn = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { username: 'ch12-t', password: 'MatKhau123' }
+    });
+    const c = String(dn.headers['set-cookie']).split(';')[0];
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/auth/change-password',
+      headers: { cookie: c },
+      payload: { currentPassword: 'sai-hoan-toan', newPassword: 'MatKhau456' }
+    });
+    assert.equal(res.statusCode, 401);
+    assert.equal(JSON.parse(res.body).error, 'SAI_MAT_KHAU');
+  });
+
+  test('đổi mật khẩu thành công: mật khẩu cũ hết hiệu lực, cờ bắt buộc đổi được xoá', async () => {
+    await db.query(`update users set phai_doi_mat_khau = true where username = 'ch12-t'`);
+    const dn = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { username: 'ch12-t', password: 'MatKhau123' }
+    });
+    const c = String(dn.headers['set-cookie']).split(';')[0];
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/auth/change-password',
+      headers: { cookie: c },
+      payload: { currentPassword: 'MatKhau123', newPassword: 'MatKhau456' }
+    });
+    assert.equal(res.statusCode, 200);
+
+    const cu = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { username: 'ch12-t', password: 'MatKhau123' }
+    });
+    assert.equal(cu.statusCode, 401, 'mật khẩu cũ phải hết hiệu lực');
+
+    const moi = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { username: 'ch12-t', password: 'MatKhau456' }
+    });
+    assert.equal(moi.statusCode, 200);
+
+    const kiem = await db.query(`select phai_doi_mat_khau from users where username = 'ch12-t'`);
+    assert.equal(kiem.rows[0].phai_doi_mat_khau, false);
+  });
 });

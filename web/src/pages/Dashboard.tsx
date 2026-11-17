@@ -7,6 +7,7 @@ type Props = {
   onLoggedOut: () => void;
   onOpenWeek: (tuan: number) => void;
   onOpenReview: () => void;
+  onOpenChangePassword: () => void;
 };
 
 const TUAN = [
@@ -23,7 +24,7 @@ function dinhDangNgay(iso: string | null): string {
   return ngay.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-export default function Dashboard({ phien, onLoggedOut, onOpenWeek, onOpenReview }: Props): JSX.Element {
+export default function Dashboard({ phien, onLoggedOut, onOpenWeek, onOpenReview, onOpenChangePassword }: Props): JSX.Element {
   const [tongQuan, setTongQuan] = useState<TongQuan | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
   const [dangTai, setDangTai] = useState(true);
@@ -123,6 +124,13 @@ export default function Dashboard({ phien, onLoggedOut, onOpenWeek, onOpenReview
             className="rounded-xl border border-ink/10 bg-paper/70 px-4 py-2.5 text-sm font-semibold text-ink-muted transition hover:border-gold/50 hover:text-ink"
           >
             Xem bài đã nộp
+          </button>
+          <button
+            type="button"
+            onClick={onOpenChangePassword}
+            className="rounded-xl border border-ink/10 bg-paper/70 px-4 py-2.5 text-sm font-semibold text-ink-muted transition hover:border-gold/50 hover:text-ink"
+          >
+            Đổi mật khẩu
           </button>
           {soCho > 0 && (
             <span className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-900">

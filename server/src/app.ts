@@ -42,7 +42,8 @@ export async function buildApp(config: AppConfig): Promise<FastifyInstance> {
   });
 
   await app.register(rateLimit, {
-    max: 120,
+    // Bộ kiểm thử đăng nhập nhiều lần liên tiếp nên dùng hạn mức rộng hơn.
+    max: config.NODE_ENV === 'test' ? 10000 : 120,
     timeWindow: '1 minute',
     errorResponseBuilder: () => ({
       error: 'QUA_NHIEU_YEU_CAU',
