@@ -12,3 +12,7 @@ coverage/
 
 # Ảnh chụp giao diện sinh ra bởi tools/screenshot.cjs
 docs/preview/
+server/node_modules/
+server/.env
+server/dist/
+*.log
