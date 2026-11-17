@@ -68,8 +68,8 @@ export default function Dashboard({
   const theThongKe = [
     { nhan: 'Tuần đã nộp', giaTri: `${daNop}/4`, mau: 'bg-primary-soft text-primary', icon: '✓' },
     { nhan: 'Hoàn thành', giaTri: `${phanTram}%`, mau: 'bg-success-soft text-success', icon: '▲' },
-    { nhan: 'Bài chờ gửi', giaTri: String(soCho), mau: 'bg-warning-soft text-warning', icon: '⏳' },
-    { nhan: 'Lớp', giaTri: hocSinh?.lop ?? '—', mau: 'bg-info-soft text-info', icon: '👥' }
+    { nhan: 'Tuần còn lại', giaTri: String(4 - daNop), mau: 'bg-warning-soft text-warning', icon: '◷' },
+    { nhan: 'Bài chờ gửi', giaTri: String(soCho), mau: 'bg-info-soft text-info', icon: '⏳' }
   ];
 
   return (
