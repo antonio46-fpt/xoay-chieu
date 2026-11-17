@@ -4,20 +4,24 @@ export default {
   theme: {
     extend: {
       colors: {
-        ink: { DEFAULT: '#17203a', soft: '#2a3450', muted: '#5d6679' },
-        paper: '#fffdf9',
-        sand: '#f3eee4',
-        gold: { DEFAULT: '#b07d24', soft: '#e8d3a8' },
-        indigo: { DEFAULT: '#23305f', mid: '#3d4d92' }
+        // Bảng màu theo phong cách Sneat: tím chàm làm màu chính, nền xám lạnh.
+        primary: { DEFAULT: '#696cff', dark: '#5f61e6', soft: '#e7e7ff' },
+        surface: '#ffffff',
+        canvas: '#f5f5f9',
+        ink: { DEFAULT: '#566a7f', strong: '#384551', muted: '#a1acb8' },
+        line: '#e7e7f0',
+        success: { DEFAULT: '#71dd37', soft: '#e8fadf' },
+        warning: { DEFAULT: '#ffab00', soft: '#fff2d6' },
+        danger: { DEFAULT: '#ff3e1d', soft: '#ffe0db' },
+        info: { DEFAULT: '#03c3ec', soft: '#d7f8fe' }
       },
       fontFamily: {
-        sans: ['"Segoe UI Variable Text"', '"Segoe UI"', 'Inter', 'system-ui', 'sans-serif'],
-        display: ['"Segoe UI Variable Display"', '"Segoe UI"', 'Inter', 'system-ui', 'sans-serif']
+        sans: ['"Public Sans"', '"Segoe UI"', 'Inter', 'system-ui', 'sans-serif']
       },
-      borderRadius: { xl2: '1.375rem' },
+      borderRadius: { card: '10px', pill: '9999px' },
       boxShadow: {
-        soft: '0 1px 2px rgba(16,24,40,.05), 0 12px 28px -12px rgba(23,32,58,.20)',
-        lift: '0 4px 10px rgba(16,24,40,.06), 0 26px 52px -20px rgba(23,32,58,.32)'
+        card: '0 2px 6px rgba(67, 89, 113, 0.12)',
+        pop: '0 6px 20px rgba(67, 89, 113, 0.18)'
       }
     }
   },
