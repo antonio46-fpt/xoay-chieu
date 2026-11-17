@@ -301,4 +301,72 @@ export async function adminRoutes(app: FastifyInstance, opts: PhuThuocRoute): Pr
 
     return reply.send({ ok: true });
   });
+
+  // ------------------------------------------------ phân công nhân sự
+  // Gán giáo viên hoặc điều phối viên vào một lớp. Không có phân công thì
+  // hai vai đó không xem được gì, kể cả khi tài khoản hợp lệ.
+  app.get('/assignments', async (request: FastifyRequest, reply: FastifyReply) => {
+    if (!(await canQuyen(request, reply, db, 'school.manage'))) return;
+
+    const rows = await query<{
+      user_id: string;
+      username: string;
+      vai: string;
+      class_id: string;
+      lop: string;
+      truong: string;
+    }>(
+      db,
+      `select a.user_id, u.username, a.vai, a.class_id, c.ten as lop, s.ten as truong
+         from staff_assignments a
+         join users u on u.id = a.user_id
+         join classes c on c.id = a.class_id
+         join schools s on s.id = c.school_id
+        order by s.ten, c.ten, u.username`
+    );
+
+    return reply.send({
+      items: rows.map(r => ({
+        userId: r.user_id,
+        username: r.username,
+        vai: r.vai,
+        classId: r.class_id,
+        lop: r.lop,
+        truong: r.truong
+      }))
+    });
+  });
+
+  app.post('/assignments', async (request: FastifyRequest, reply: FastifyReply) => {
+    const phien = await canQuyen(request, reply, db, 'school.manage');
+    if (!phien) return;
+
+    const body = request.body as { userId?: unknown; classId?: unknown; vai?: unknown };
+    const vai = String(body?.vai ?? '');
+    if (
+      typeof body?.userId !== 'string' ||
+      typeof body?.classId !== 'string' ||
+      !['teacher', 'coordinator'].includes(vai)
+    ) {
+      return reply.code(400).send({
+        error: 'INVALID_INPUT',
+        message: 'Cần userId, classId và vai là teacher hoặc coordinator.'
+      });
+    }
+
+    try {
+      await query(
+        db,
+        `insert into staff_assignments (user_id, class_id, vai) values ($1, $2, $3)
+         on conflict do nothing`,
+        [body.userId, body.classId, vai]
+      );
+    } catch (loi) {
+      // Trigger trong CSDL chặn khi vai phân công khác vai tài khoản.
+      return reply.code(400).send({ error: 'KHONG_HOP_LE', message: (loi as Error).message });
+    }
+
+    await ghiNhatKy(db, phien.user.id, 'staff.assign', 'class', body.classId, { userId: body.userId, vai }, request.ip);
+    return reply.code(201).send({ ok: true });
+  });
 }

@@ -20,6 +20,9 @@ chay('tích hợp: đăng nhập, nộp bài, nháp, phân quyền', () => {
   let cookie = '';
   let adminCookie = '';
   let studentId = '';
+  let classId = '';
+  let teacherCookie = '';
+  let coordinatorCookie = '';
 
   const config = {
     NODE_ENV: 'test' as const,
@@ -49,6 +52,7 @@ chay('tích hợp: đăng nhập, nộp bài, nháp, phân quyền', () => {
       [truong.rows[0].id, lop.rows[0].id]
     );
     studentId = hocSinh.rows[0].id;
+    classId = lop.rows[0].id;
 
     const hash = await hashPassword('MatKhau123');
     await db.query(
@@ -59,6 +63,28 @@ chay('tích hợp: đăng nhập, nộp bài, nháp, phân quyền', () => {
       `insert into users (username, password_hash, role) values ('quantri', $1, 'super_admin')`,
       [hash]
     );
+
+    // Giáo viên và điều phối viên, kèm phân công vào lớp 10A3.
+    const giaoVien = await db.query(
+      `insert into users (username, password_hash, role) values ('giaovien1', $1, 'teacher') returning id`,
+      [hash]
+    );
+    const dieuPhoi = await db.query(
+      `insert into users (username, password_hash, role) values ('dieuphoi1', $1, 'coordinator') returning id`,
+      [hash]
+    );
+    await db.query(
+      `insert into users (username, password_hash, role) values ('giaovien2', $1, 'teacher') returning id`,
+      [hash]
+    );
+    await db.query(`insert into staff_assignments (user_id, class_id, vai) values ($1, $2, 'teacher')`, [
+      giaoVien.rows[0].id,
+      classId
+    ]);
+    await db.query(`insert into staff_assignments (user_id, class_id, vai) values ($1, $2, 'coordinator')`, [
+      dieuPhoi.rows[0].id,
+      classId
+    ]);
 
     app = await buildApp(config);
   });
@@ -313,5 +339,130 @@ chay('tích hợp: đăng nhập, nộp bài, nháp, phân quyền', () => {
     const c = String(dangNhap.headers['set-cookie']).split(';')[0];
     const res = await app.inject({ method: 'GET', url: '/api/admin/export/students', headers: { cookie: c } });
     assert.equal(res.statusCode, 403);
+  });
+
+  // ------------------------------------------------ giáo viên, điều phối
+
+  test('giáo viên chỉ thấy lớp mình phụ trách', async () => {
+    const dn = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { username: 'giaovien1', password: 'MatKhau123' }
+    });
+    assert.equal(dn.statusCode, 200);
+    teacherCookie = String(dn.headers['set-cookie']).split(';')[0];
+
+    const res = await app.inject({ method: 'GET', url: '/api/staff/classes', headers: { cookie: teacherCookie } });
+    assert.equal(res.statusCode, 200);
+    const items = JSON.parse(res.body).items;
+    assert.equal(items.length, 1);
+    assert.equal(items[0].vai, 'teacher');
+  });
+
+  test('giáo viên xem tiến trình nhưng KHÔNG thấy nội dung bài', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/staff/classes/${classId}/progress`,
+      headers: { cookie: teacherCookie }
+    });
+    assert.equal(res.statusCode, 200);
+    const body = JSON.parse(res.body);
+    const hocSinh = body.hocSinh.find((h: { ma: string }) => h.ma === 'CH12-T');
+    assert.ok(hocSinh, 'phải thấy học sinh của lớp');
+    assert.deepEqual(hocSinh.cacTuan, [1], 'phải thấy tuần đã nộp');
+    assert.equal(res.body.includes('em học được'), false, 'không được lộ nội dung bài');
+    assert.equal(res.body.includes('thu_lam'), false, 'không được có cột nội dung');
+  });
+
+  test('giáo viên không phụ trách lớp khác thì bị chặn', async () => {
+    const dn = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { username: 'giaovien2', password: 'MatKhau123' }
+    });
+    const c = String(dn.headers['set-cookie']).split(';')[0];
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/staff/classes/${classId}/progress`,
+      headers: { cookie: c }
+    });
+    assert.equal(res.statusCode, 403);
+    assert.equal(JSON.parse(res.body).error, 'KHONG_PHU_TRACH');
+  });
+
+  test('giáo viên không ghi được phiếu buổi', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/staff/session-notes',
+      headers: { cookie: teacherCookie },
+      payload: { id: '22222222-2222-4222-8222-222222222222', classId, tuan: 1 }
+    });
+    assert.equal(res.statusCode, 403);
+  });
+
+  test('điều phối viên ghi phiếu buổi, gửi lại không tạo bản thứ hai', async () => {
+    const dn = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { username: 'dieuphoi1', password: 'MatKhau123' }
+    });
+    coordinatorCookie = String(dn.headers['set-cookie']).split(';')[0];
+
+    const payload = {
+      id: '22222222-2222-4222-8222-222222222222',
+      classId,
+      tuan: 1,
+      siSo: 35,
+      soThamGia: 33,
+      daLamMoThu: true,
+      dungAppHayGiay: 'ca_hai',
+      dieuTot: 'học sinh hào hứng',
+      khoKhan: 'mạng chậm'
+    };
+
+    const lan1 = await app.inject({
+      method: 'POST',
+      url: '/api/staff/session-notes',
+      headers: { cookie: coordinatorCookie },
+      payload
+    });
+    assert.equal(lan1.statusCode, 201);
+
+    const lan2 = await app.inject({
+      method: 'POST',
+      url: '/api/staff/session-notes',
+      headers: { cookie: coordinatorCookie },
+      payload
+    });
+    assert.equal(lan2.statusCode, 200);
+    assert.equal(JSON.parse(lan2.body).daNhanTruocDo, true);
+
+    const dem = await db.query(`select count(*)::int as n from phieu_buoi`);
+    assert.equal(dem.rows[0].n, 1);
+  });
+
+  test('điều phối viên đọc lại được phiếu của lớp mình', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/staff/classes/${classId}/notes`,
+      headers: { cookie: coordinatorCookie }
+    });
+    assert.equal(res.statusCode, 200);
+    const body = JSON.parse(res.body);
+    assert.equal(body.phieuBuoi.length, 1);
+    assert.equal(body.phieuBuoi[0].si_so, 35);
+  });
+
+  test('phân công sai vai bị trigger trong CSDL chặn', async () => {
+    const gv2 = await db.query(`select id from users where username = 'giaovien2'`);
+    await assert.rejects(
+      async () => {
+        await db.query(`insert into staff_assignments (user_id, class_id, vai) values ($1, $2, 'coordinator')`, [
+          gv2.rows[0].id,
+          classId
+        ]);
+      },
+      /không khớp vai tài khoản/
+    );
   });
 });
