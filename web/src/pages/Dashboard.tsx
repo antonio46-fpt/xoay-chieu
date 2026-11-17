@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ApiError, authApi, meApi, type PhienNguoiDung, type TongQuan } from '../api/client';
 
-type Props = { phien: PhienNguoiDung; onLoggedOut: () => void };
+type Props = { phien: PhienNguoiDung; onLoggedOut: () => void; onOpenWeek: (tuan: number) => void };
 
 const TUAN = [
   { so: 1, ten: 'Tự nhận thức', phut: 15, mo_ta: 'Mình đã thật sự hiểu chưa?' },
@@ -17,7 +17,7 @@ function dinhDangNgay(iso: string | null): string {
   return ngay.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-export default function Dashboard({ phien, onLoggedOut }: Props): JSX.Element {
+export default function Dashboard({ phien, onLoggedOut, onOpenWeek }: Props): JSX.Element {
   const [tongQuan, setTongQuan] = useState<TongQuan | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
   const [dangTai, setDangTai] = useState(true);
@@ -152,14 +152,29 @@ export default function Dashboard({ phien, onLoggedOut }: Props): JSX.Element {
                     <p className={`mt-4 inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold ${mau}`}>
                       {nhan}
                     </p>
+                    <button
+                      type="button"
+                      onClick={() => onOpenWeek(t.so)}
+                      className={
+                        trangThai?.daNop
+                          ? 'mt-4 w-full rounded-xl border border-ink/10 px-4 py-2.5 text-sm font-semibold text-ink-muted transition hover:border-gold/50 hover:text-ink'
+                          : 'btn-primary mt-4 w-full'
+                      }
+                    >
+                      {trangThai?.daNop
+                        ? 'Làm lượt mới'
+                        : trangThai?.coBanNhap
+                          ? 'Tiếp tục làm'
+                          : 'Bắt đầu'}
+                    </button>
                   </li>
                 );
               })}
             </ul>
 
             <p className="mt-6 rounded-xl border border-ink/10 bg-paper/60 px-4 py-3 text-[13px] leading-relaxed text-ink-muted">
-              Màn hình làm bài từng bước đang được xây ở giai đoạn tiếp theo. Tiến trình và trạng thái bên trên
-              là dữ liệu thật từ máy chủ.
+              Bản nháp tự lưu trong lúc bạn làm. Nộp xong vẫn xem lại được; muốn sửa thì làm lượt mới, bài cũ
+              giữ nguyên.
             </p>
           </>
         )}

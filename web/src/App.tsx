@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { authApi, type PhienNguoiDung } from './api/client';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
+import WeekPage from './pages/WeekPage';
 
 /**
  * Trạng thái cấp cao nhất: đang kiểm tra phiên → chưa đăng nhập → đã đăng nhập.
@@ -12,6 +13,7 @@ import Dashboard from './pages/Dashboard';
 export default function App(): JSX.Element {
   const [phien, setPhien] = useState<PhienNguoiDung | null>(null);
   const [dangKiemTra, setDangKiemTra] = useState(true);
+  const [tuanDangLam, setTuanDangLam] = useState<number | null>(null);
 
   useEffect(() => {
     let huy = false;
@@ -68,5 +70,15 @@ export default function App(): JSX.Element {
     );
   }
 
-  return <Dashboard phien={phien} onLoggedOut={() => setPhien(null)} />;
+  if (tuanDangLam !== null) {
+    return (
+      <WeekPage
+        tuan={tuanDangLam}
+        onThoat={() => setTuanDangLam(null)}
+        onDaNop={() => undefined}
+      />
+    );
+  }
+
+  return <Dashboard phien={phien} onLoggedOut={() => setPhien(null)} onOpenWeek={setTuanDangLam} />;
 }

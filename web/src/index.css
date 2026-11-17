@@ -24,6 +24,14 @@
   :focus-visible {
     @apply outline-none ring-2 ring-gold ring-offset-2 ring-offset-sand;
   }
+
+  /* Ô nhập và vùng chọn đã có viền đổi màu khi focus, nên bỏ vòng ring
+     để tránh viền kép trông nặng nề. */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    @apply ring-0 ring-offset-0;
+  }
 }
 
 @layer components {
