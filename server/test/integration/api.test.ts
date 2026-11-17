@@ -18,6 +18,7 @@ chay('tích hợp: đăng nhập, nộp bài, nháp, phân quyền', () => {
   let app: Awaited<ReturnType<typeof buildApp>>;
   let db: Client;
   let cookie = '';
+  let adminCookie = '';
   let studentId = '';
 
   const config = {
@@ -53,6 +54,10 @@ chay('tích hợp: đăng nhập, nộp bài, nháp, phân quyền', () => {
     await db.query(
       `insert into users (username, password_hash, role, student_id) values ('ch12-t', $1, 'student', $2)`,
       [hash, studentId]
+    );
+    await db.query(
+      `insert into users (username, password_hash, role) values ('quantri', $1, 'super_admin')`,
+      [hash]
     );
 
     app = await buildApp(config);
@@ -206,5 +211,107 @@ chay('tích hợp: đăng nhập, nộp bài, nháp, phân quyền', () => {
     await app.inject({ method: 'POST', url: '/api/auth/logout', headers: { cookie } });
     const res = await app.inject({ method: 'GET', url: '/api/me/overview', headers: { cookie } });
     assert.equal(res.statusCode, 401);
+  });
+
+  // ------------------------------------------------------------ quản trị
+
+  test('quản trị đăng nhập và xem được danh sách học sinh', async () => {
+    const dangNhap = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { username: 'quantri', password: 'MatKhau123' }
+    });
+    assert.equal(dangNhap.statusCode, 200);
+    adminCookie = String(dangNhap.headers['set-cookie']).split(';')[0];
+
+    const res = await app.inject({ method: 'GET', url: '/api/admin/students', headers: { cookie: adminCookie } });
+    assert.equal(res.statusCode, 200);
+    assert.ok(JSON.parse(res.body).total >= 1);
+  });
+
+  test('xem trước CSV: báo lỗi từng dòng, chưa ghi gì', async () => {
+    const csv =
+      'ma,username,truong,lop\nHS-01,hs01,CVA,10A3\nHS-02,hs 02,CVA,10A3\nHS-03,hs03,KHONGCO,10A3\n';
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/admin/import/preview',
+      headers: { cookie: adminCookie },
+      payload: { csv }
+    });
+    assert.equal(res.statusCode, 200);
+    const body = JSON.parse(res.body);
+    assert.equal(body.hopLe, 1);
+    assert.equal(body.loi, 2);
+
+    const dem = await db.query(`select count(*)::int as n from students`);
+    assert.equal(dem.rows[0].n, 1, 'xem trước không được ghi vào CSDL');
+  });
+
+  test('nhập CSV còn dòng lỗi thì không ghi', async () => {
+    const csv = 'ma,username,truong,lop\nHS-09,hs09,KHONGCO,10A3\n';
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/admin/import/commit',
+      headers: { cookie: adminCookie },
+      payload: { csv }
+    });
+    assert.equal(res.statusCode, 400);
+    assert.equal(JSON.parse(res.body).error, 'CON_DONG_LOI');
+  });
+
+  test('nhập CSV sạch: tạo tài khoản, trả mật khẩu đúng một lần', async () => {
+    const csv = 'ma,username,truong,lop\nHS-01,hs01,CVA,10A3\nHS-02,hs02,CVA,10A3\n';
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/admin/import/commit',
+      headers: { cookie: adminCookie },
+      payload: { csv }
+    });
+    assert.equal(res.statusCode, 201);
+    const body = JSON.parse(res.body);
+    assert.equal(body.soLuong, 2);
+    assert.ok(body.taiKhoan[0].matKhau.length >= 8);
+
+    const dem = await db.query(`select count(*)::int as n from users where role = 'student'`);
+    assert.equal(dem.rows[0].n, 3);
+
+    const luu = await db.query(`select password_hash from users where username = 'hs01'`);
+    assert.ok(luu.rows[0].password_hash.startsWith('$argon2id$'));
+    assert.ok(!luu.rows[0].password_hash.includes(body.taiKhoan[0].matKhau), 'không lưu mật khẩu thô');
+  });
+
+  test('nhập lại chính tệp đó bị coi là trùng', async () => {
+    const csv = 'ma,username,truong,lop\nHS-01,hs01,CVA,10A3\n';
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/admin/import/preview',
+      headers: { cookie: adminCookie },
+      payload: { csv }
+    });
+    const body = JSON.parse(res.body);
+    assert.equal(body.hopLe, 0);
+    assert.equal(body.loi, 1);
+  });
+
+  test('xuất CSV có BOM và giữ tiếng Việt', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/admin/export/students',
+      headers: { cookie: adminCookie }
+    });
+    assert.equal(res.statusCode, 200);
+    assert.ok(res.body.startsWith('\uFEFF'), 'phải có BOM cho Excel');
+    assert.ok(res.body.includes('Chu Văn An'));
+  });
+
+  test('học sinh không gọi được API nhập/xuất', async () => {
+    const dangNhap = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { username: 'ch12-t', password: 'MatKhau123' }
+    });
+    const c = String(dangNhap.headers['set-cookie']).split(';')[0];
+    const res = await app.inject({ method: 'GET', url: '/api/admin/export/students', headers: { cookie: c } });
+    assert.equal(res.statusCode, 403);
   });
 });

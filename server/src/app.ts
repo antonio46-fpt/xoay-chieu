@@ -13,6 +13,7 @@ import { closePool, getPool } from './db.ts';
 import { authRoutes } from './auth/routes.ts';
 import { studentRoutes } from './routes/student.ts';
 import { adminRoutes } from './routes/admin.ts';
+import { importRoutes } from './routes/importExport.ts';
 
 export async function buildApp(config: AppConfig): Promise<FastifyInstance> {
   const app = Fastify({
@@ -68,6 +69,7 @@ export async function buildApp(config: AppConfig): Promise<FastifyInstance> {
   await app.register(authRoutes, { prefix: '/api/auth', db, config });
   await app.register(studentRoutes, { prefix: '/api/me', db, config });
   await app.register(adminRoutes, { prefix: '/api/admin', db, config });
+  await app.register(importRoutes, { prefix: '/api/admin', db, config });
 
   // Phản hồi lỗi thống nhất. Không lộ stack trace ra ngoài khi production.
   app.setErrorHandler((loi: Error & { statusCode?: number }, request, reply) => {

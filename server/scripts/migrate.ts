@@ -30,7 +30,7 @@ export async function applyMigrations(connectionString: string): Promise<string[
     for (const ten of tep) {
       const version = ten.replace(/\.sql$/, '');
       const daCo = await client.query('select 1 from schema_migrations where version = $1', [version]);
-      if (daCo.rowCount > 0) continue;
+      if ((daCo.rowCount ?? 0) > 0) continue;
 
       const sql = await readFile(path.join(thuMuc, ten), 'utf8');
       await client.query(sql);
