@@ -369,4 +369,52 @@ export async function adminRoutes(app: FastifyInstance, opts: PhuThuocRoute): Pr
     await ghiNhatKy(db, phien.user.id, 'staff.assign', 'class', body.classId, { userId: body.userId, vai }, request.ip);
     return reply.code(201).send({ ok: true });
   });
+
+  // ------------------------------------------------------- nhật ký
+  app.get('/audit', async (request: FastifyRequest, reply: FastifyReply) => {
+    if (!(await canQuyen(request, reply, db, 'audit.read'))) return;
+
+    const daKiem = PaginationSchema.safeParse(request.query);
+    if (!daKiem.success) {
+      return reply.code(400).send({ error: 'INVALID_INPUT', message: 'Tham số lọc không hợp lệ.' });
+    }
+    const { page, pageSize } = daKiem.data;
+
+    const rows = await query<{
+      id: string;
+      luc: Date;
+      hanh_dong: string;
+      doi_tuong: string | null;
+      doi_tuong_id: string | null;
+      du_lieu: unknown;
+      ip: string | null;
+      username: string | null;
+    }>(
+      db,
+      `select a.id, a.luc, a.hanh_dong, a.doi_tuong, a.doi_tuong_id, a.du_lieu, a.ip, u.username
+         from audit_log a
+         left join users u on u.id = a.actor_id
+        order by a.luc desc
+        limit $1 offset $2`,
+      [pageSize, (page - 1) * pageSize]
+    );
+
+    const [tong] = await query<{ n: string }>(db, `select count(*)::text as n from audit_log`);
+
+    return reply.send({
+      page,
+      pageSize,
+      total: Number(tong.n),
+      items: rows.map(r => ({
+        id: r.id,
+        luc: r.luc,
+        hanhDong: r.hanh_dong,
+        doiTuong: r.doi_tuong,
+        doiTuongId: r.doi_tuong_id,
+        duLieu: r.du_lieu,
+        ip: r.ip,
+        nguoiThucHien: r.username
+      }))
+    });
+  });
 }
