@@ -1,8 +1,5 @@
 /**
  * Khung giao diện: sidebar trắng (thu gọn được) + topbar trắng.
- *
- * Thu gọn: trên máy tính, bấm nút ở chân sidebar để chuyển giữa dải rộng
- * 260px có nhãn và dải hẹp 76px chỉ còn icon. Trạng thái được ghi nhớ.
  */
 import { useEffect, useState, type ReactNode } from 'react';
 import ThemeToggle from './ThemeToggle';
@@ -19,7 +16,6 @@ type Props = {
   cacMuc: MucDieuHuong[];
   dangChon: string;
   onChon: (key: string) => void;
-  onDoiMatKhau?: () => void;
   onDangXuat: () => void;
   children: ReactNode;
 };
@@ -41,14 +37,6 @@ export default function AppShell({
   const [thuGon, setThuGon] = useState(false);
   const [quayNhanh, setQuayNhanh] = useState(false);
 
-  /** Báº¥m logo: xoay má»™t vĂ²ng rĂµ rá»‡t rá»“i vá» trang chá»§. */
-  function bamLogo(): void {
-    setQuayNhanh(true);
-    onChon('hanh-trinh');
-    setMoMenu(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
   useEffect(() => {
     setThuGon(localStorage.getItem(KHOA_THU_GON) === '1');
   }, []);
@@ -60,17 +48,24 @@ export default function AppShell({
     });
   }
 
+  function bamLogo(): void {
+    setQuayNhanh(true);
+    onChon('hanh-trinh');
+    setMoMenu(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   return (
     <div className="relative min-h-screen">
-      {/* Ná»n trá»i sao má»›i + lá»›p tá»‘i nháº¹ */}
+      {/* Nền trời sao */}
       <div
-        className="pointer-events-none fixed inset-0 z-0 bg-cover bg-center bg-repeat"
+        className="pointer-events-none fixed inset-0 z-0 bg-repeat"
         aria-hidden
         style={{ backgroundImage: 'url(/nen-sao.jpg)', backgroundSize: 'min(100%, 900px) auto' }}
       />
       <div className="pointer-events-none fixed inset-0 z-0" aria-hidden style={{ background: 'rgba(4,14,26,0.35)' }} />
 
-      {/* Sao vĂ ng rÆ¡i trĂªn ná»n */}
+      {/* Sao vàng rơi */}
       <StarFall soLuong={44} />
 
       {/* Sidebar */}
@@ -88,9 +83,9 @@ export default function AppShell({
             type="button"
             onClick={bamLogo}
             onAnimationEnd={() => setQuayNhanh(false)}
-            aria-label="Vá» trang chá»§"
-            title="Vá» trang chá»§"
-            className={`group grid h-11 w-11 shrink-0 place-items-center rounded-[14px] bg-primary transition hover:brightness-110 focus-visible:ring-2 focus-visible:ring-accent/60 ${
+            aria-label="Về trang chủ"
+            title="Về trang chủ"
+            className={`grid h-11 w-11 shrink-0 place-items-center rounded-[14px] bg-primary transition hover:brightness-110 ${
               quayNhanh ? 'logo-bam' : ''
             }`}
           >
@@ -104,10 +99,10 @@ export default function AppShell({
           </button>
           <span className={`min-w-0 ${thuGon ? 'lg:hidden' : ''}`}>
             <span className="block truncate font-display text-[17px] font-bold leading-tight text-ink-strong">
-              Xoay Chiá»u
+              Xoay Chiều
             </span>
             <span className="mt-0.5 block truncate text-[9.5px] font-semibold uppercase tracking-[0.16em] text-ink-muted">
-              Bá»‘n tuáº§n Â· má»™t gĂ³c nhĂ¬n
+              Bốn tuần · một góc nhìn
             </span>
           </span>
         </div>
@@ -138,21 +133,20 @@ export default function AppShell({
           })}
         </nav>
 
-        {/* NĂºt thu gá»n, chá»‰ hiá»‡n trĂªn mĂ¡y tĂ­nh */}
         <div className="hidden shrink-0 border-t border-line p-2 lg:block">
           <button
             type="button"
             onClick={doiThuGon}
-            aria-label={thuGon ? 'Má»Ÿ rá»™ng thanh bĂªn' : 'Thu gá»n thanh bĂªn'}
-            title={thuGon ? 'Má»Ÿ rá»™ng' : 'Thu gá»n'}
+            aria-label={thuGon ? 'Mở rộng thanh bên' : 'Thu gọn thanh bên'}
+            title={thuGon ? 'Mở rộng' : 'Thu gọn'}
             className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium text-ink-muted transition hover:bg-canvas hover:text-ink-strong ${
               thuGon ? 'justify-center px-0' : ''
             }`}
           >
             <span aria-hidden className="w-5 shrink-0 text-center">
-              {thuGon ? 'Â»' : 'Â«'}
+              {thuGon ? '»' : '«'}
             </span>
-            <span className={thuGon ? 'lg:hidden' : ''}>Thu gá»n</span>
+            <span className={thuGon ? 'lg:hidden' : ''}>Thu gọn</span>
           </button>
         </div>
       </aside>
@@ -160,22 +154,22 @@ export default function AppShell({
       {moMenu && (
         <button
           type="button"
-          aria-label="ÄĂ³ng menu"
+          aria-label="Đóng menu"
           onClick={() => setMoMenu(false)}
           className="fixed inset-0 z-30 bg-ink-strong/20 lg:hidden"
         />
       )}
 
-      {/* VĂ¹ng ná»™i dung */}
+      {/* Vùng nội dung */}
       <div className={`relative z-10 transition-all duration-200 ${thuGon ? 'lg:pl-[76px]' : 'lg:pl-[260px]'}`}>
         <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-line bg-surface px-4 lg:px-6">
           <button
             type="button"
             onClick={() => setMoMenu(true)}
             className="rounded-lg p-2 text-ink transition hover:bg-canvas lg:hidden"
-            aria-label="Má»Ÿ menu"
+            aria-label="Mở menu"
           >
-            â˜°
+            ☰
           </button>
 
           <div className="min-w-0 flex-1">
@@ -189,7 +183,7 @@ export default function AppShell({
               <p className="text-[13px] font-semibold leading-tight text-ink-strong">{ma}</p>
               <p className="text-[11px] leading-tight text-ink-muted">{lop}</p>
             </div>
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-primary-soft text-sm font-bold text-primary">
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-[#14B8A6] to-[#0D9488] text-[13px] font-bold text-white">
               {ma.slice(0, 2)}
             </span>
             <button
@@ -197,7 +191,7 @@ export default function AppShell({
               onClick={onDangXuat}
               className="rounded-lg border border-line px-3 py-1.5 text-[12px] font-semibold text-ink transition hover:border-accent/50 hover:text-accent-hover"
             >
-              ÄÄƒng xuáº¥t
+              Đăng xuất
             </button>
           </div>
         </header>
