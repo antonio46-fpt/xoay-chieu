@@ -233,14 +233,14 @@ export default function WeekPage({ tuan, onThoat, onDaNop, trangThai }: Props): 
               aria-current={i === chiSoBuoc ? 'step' : undefined}
               className={`h-8 min-w-8 rounded-lg border px-2 text-xs font-bold transition ${
                 i === chiSoBuoc
-                  ? 'border-gold bg-gold/15 text-ink'
-                  : 'border-ink/10 bg-paper/70 text-ink-muted hover:border-gold/40'
+                  ? 'border-[#5eead4] bg-[#5eead4]/25 text-white'
+                  : 'border-white/20 bg-white/10 text-white/75 hover:border-[#5eead4]/60 hover:text-white'
               }`}
             >
               {i + 1}
             </button>
           ))}
-          <span className="ml-1 text-xs text-ink-muted">
+          <span className="ml-1 text-xs text-white/70">
             {chiSoBuoc + 1}/{duLieuTuan.steps.length}
           </span>
         </div>
