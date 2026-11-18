@@ -2,7 +2,7 @@
  * Khung giao diện: sidebar trắng (thu gọn được) + topbar trắng.
  */
 import { useEffect, useState, type ReactNode } from 'react';
-import ThemeToggle from './ThemeToggle';
+import UserMenu from './UserMenu';
 import StarFall from './StarFall';
 
 export type MucDieuHuong = { key: string; nhan: string; icon: string };
@@ -16,6 +16,7 @@ type Props = {
   cacMuc: MucDieuHuong[];
   dangChon: string;
   onChon: (key: string) => void;
+  onDoiMatKhau?: () => void;
   onDangXuat: () => void;
   children: ReactNode;
 };
@@ -27,9 +28,11 @@ export default function AppShell({
   phuDe,
   ma,
   lop,
+  vai,
   cacMuc,
   dangChon,
   onChon,
+  onDoiMatKhau,
   onDangXuat,
   children
 }: Props): JSX.Element {
@@ -177,23 +180,7 @@ export default function AppShell({
             {phuDe && <p className="truncate text-[12px] font-medium text-ink-muted">{phuDe}</p>}
           </div>
 
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <div className="hidden text-right sm:block">
-              <p className="text-[13px] font-semibold leading-tight text-ink-strong">{ma}</p>
-              <p className="text-[11px] leading-tight text-ink-muted">{lop}</p>
-            </div>
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-[#14B8A6] to-[#0D9488] text-[13px] font-bold text-white">
-              {ma.slice(0, 2)}
-            </span>
-            <button
-              type="button"
-              onClick={onDangXuat}
-              className="rounded-lg border border-line px-3 py-1.5 text-[12px] font-semibold text-ink transition hover:border-accent/50 hover:text-accent-hover"
-            >
-              Đăng xuất
-            </button>
-          </div>
+          <UserMenu ma={ma} lop={lop} vai={vai ?? 'student'} onDoiMatKhau={onDoiMatKhau} onDangXuat={onDangXuat} />
         </header>
 
         <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">{children}</main>

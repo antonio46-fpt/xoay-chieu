@@ -78,6 +78,8 @@ export default function Dashboard({
       phuDe={hocSinh ? `${hocSinh.truong} · ${hocSinh.lop}` : undefined}
       ma={hocSinh?.ma ?? phien.user.username}
       lop={hocSinh?.lop ?? ''}
+      vai={phien.user.role}
+      onDoiMatKhau={onOpenChangePassword}
       cacMuc={[
         { key: 'hanh-trinh', nhan: 'Hành trình', icon: '▦' },
         { key: 'bai-da-nop', nhan: 'Bài đã nộp', icon: '▤' },
