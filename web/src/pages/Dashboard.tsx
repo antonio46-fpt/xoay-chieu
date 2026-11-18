@@ -160,10 +160,10 @@ export default function Dashboard({
             const tt = tongQuan?.cacTuan.find(x => x.tuan === t.so);
             const nhan = tt?.daNop ? 'Đã nộp' : tt?.coBanNhap ? 'Có bản nháp' : 'Chưa bắt đầu';
             const mau = tt?.daNop
-              ? 'bg-success-soft text-success'
+              ? 'bg-[#DCFCE7] text-[#15803D]'
               : tt?.coBanNhap
-                ? 'bg-warning-soft text-warning'
-                : 'bg-canvas text-ink';
+                ? 'bg-[#FEF3C7] text-[#B45309]'
+                : 'bg-[#F1F5F9] text-[#64748B]';
 
             return (
               <li key={t.so} className="flex flex-wrap items-center gap-3 px-5 py-4 transition hover:bg-canvas/60">

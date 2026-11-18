@@ -10,17 +10,18 @@
   body {
     @apply bg-canvas font-sans text-ink antialiased;
     font-size: 15px;
+    line-height: 1.5;
   }
 
   h1,
   h2,
   h3 {
-    @apply text-ink-strong;
-    letter-spacing: -0.01em;
+    @apply font-display text-ink-strong;
+    line-height: 1.25;
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-primary/40 ring-offset-2;
+    @apply outline-none ring-2 ring-accent/50 ring-offset-2;
   }
 
   input:focus-visible,
@@ -32,22 +33,34 @@
 
 @layer components {
   .field-input {
-    @apply w-full rounded-lg border border-line bg-surface px-3.5 py-2.5 text-[15px] text-ink-strong
+    @apply w-full rounded-[10px] border border-line bg-surface px-3.5 py-2.5 text-[15px] text-ink-strong
            transition placeholder:text-ink-muted/70
-           hover:border-ink-muted/50 focus:border-primary focus:ring-2 focus:ring-primary/15;
+           hover:border-ink-muted/50 focus:border-accent focus:ring-2 focus:ring-accent/15;
   }
 
   .btn-primary {
-    @apply inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5
-           text-sm font-semibold text-white shadow-[0_2px_6px_rgba(105,108,255,.4)] transition
-           hover:bg-primary-dark hover:-translate-y-px active:translate-y-0
-           disabled:pointer-events-none disabled:opacity-60;
+    @apply inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg px-4 py-2.5
+           text-sm font-semibold text-white transition
+           hover:-translate-y-px active:translate-y-0
+           disabled:pointer-events-none;
+    background-image: linear-gradient(180deg, #14b8a6 0%, #0d9488 100%);
+  }
+
+  .btn-primary:hover {
+    background-image: linear-gradient(180deg, #0d9488 0%, #0f766e 100%);
+  }
+
+  .btn-primary:disabled {
+    background-image: none;
+    background-color: #e2e8f0;
+    color: #94a3b8;
+    box-shadow: none;
   }
 
   .btn-ghost {
-    @apply inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-line
-           bg-surface px-4 py-2.5 text-sm font-semibold text-ink transition
-           hover:border-primary/40 hover:text-primary hover:shadow-card;
+    @apply inline-flex min-h-[42px] items-center justify-center gap-2 rounded-lg border border-[#CBD5E1]
+           bg-surface px-4 py-2.5 text-sm font-semibold text-[#334155] transition
+           hover:border-accent/50 hover:text-accent-hover;
   }
 
   .card {
@@ -55,23 +68,22 @@
   }
 
   .stat-value {
-    @apply text-[26px] font-bold leading-none text-ink-strong;
+    @apply font-display text-[26px] font-bold leading-none text-ink-strong;
   }
 
   .stat-label {
-    @apply text-[13px] font-medium text-ink;
+    @apply text-[13px] font-medium text-ink-muted;
   }
 }
 
 /* ================= Hiệu ứng tương tác ================= */
 
-/* Nút chính: vệt sáng quét qua + nhún khi bấm */
 .btn-primary {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  transition: transform 0.18s cubic-bezier(0.22, 0.61, 0.36, 1),
-    box-shadow 0.22s ease, filter 0.22s ease;
+  transition: transform 0.18s cubic-bezier(0.22, 0.61, 0.36, 1), background-color 0.22s ease,
+    box-shadow 0.22s ease;
 }
 
 .btn-primary::after {
@@ -79,7 +91,7 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.5) 50%, transparent 68%);
+  background: linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.35) 50%, transparent 68%);
   transform: translateX(-130%);
   transition: transform 0.65s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
@@ -89,29 +101,21 @@
 }
 
 .btn-primary:hover {
-  filter: brightness(1.06);
-  box-shadow: 0 10px 24px -8px rgba(105, 108, 255, 0.75);
+  box-shadow: 0 8px 20px -8px rgba(13, 148, 136, 0.65);
 }
 
 .btn-primary:active {
-  transform: translateY(1px) scale(0.975);
-  box-shadow: 0 2px 6px -2px rgba(105, 108, 255, 0.6);
+  transform: translateY(1px) scale(0.985);
 }
 
-/* Nút phụ: viền sáng dần + nâng nhẹ */
 .btn-ghost {
-  transition: transform 0.16s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.2s ease;
+  transition: transform 0.16s ease, border-color 0.18s ease, color 0.18s ease;
 }
 
 .btn-ghost:hover {
   transform: translateY(-1px);
 }
 
-.btn-ghost:active {
-  transform: translateY(0) scale(0.985);
-}
-
-/* Thẻ: nhấc lên khi rê chuột */
 .card {
   transition: transform 0.2s cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 0.24s ease;
 }
@@ -119,22 +123,16 @@
 @media (hover: hover) {
   .card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 26px -10px rgba(67, 89, 113, 0.35);
+    box-shadow: 0 8px 22px -10px rgba(15, 23, 42, 0.16);
   }
 }
 
-/* Mục menu: trượt nhẹ sang phải */
 aside nav button {
   transition: background-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
 }
 
 aside nav button:hover {
   transform: translateX(2px);
-}
-
-/* Dòng trong bảng tuần: sáng nền khi rê chuột */
-li.group-hover\:bg-canvas\/60:hover {
-  background-color: rgba(245, 245, 249, 0.9);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -150,12 +148,13 @@ li.group-hover\:bg-canvas\/60:hover {
   }
 
   .card:hover,
-  aside nav button:hover {
+  aside nav button:hover,
+  .btn-ghost:hover {
     transform: none;
   }
 }
 
-/* ---------------- Sao vàng rơi tự do ---------------- */
+/* ---------------- Sao vàng rơi (chỉ dùng ở trang đăng nhập) ---------------- */
 .star-fall {
   position: fixed;
   inset: 0;
@@ -171,7 +170,7 @@ li.group-hover\:bg-canvas\/60:hover {
   width: var(--s);
   height: var(--s);
   opacity: 0;
-  background: linear-gradient(180deg, #fff4cf 0%, #ffd97a 45%, #d9ac52 100%);
+  background: linear-gradient(180deg, #fff3c4 0%, #fcd34d 45%, #d97706 100%);
   clip-path: polygon(
     50% 0%,
     61% 35%,
@@ -184,7 +183,7 @@ li.group-hover\:bg-canvas\/60:hover {
     2% 35%,
     39% 35%
   );
-  filter: drop-shadow(0 0 6px rgba(255, 216, 130, 0.75));
+  filter: drop-shadow(0 0 7px rgba(252, 211, 77, 0.85));
   animation: xc-star-fall var(--d) linear var(--delay) infinite;
   will-change: transform, opacity;
 }
@@ -215,64 +214,172 @@ li.group-hover\:bg-canvas\/60:hover {
   }
 }
 
-/* ---------------- Chế độ tối ---------------- */
+/* ---------------- Chế độ tối (giữ cho trang đăng nhập) ---------------- */
 .dark body {
-  background-color: #070d1a;
-  color: #dbe4f0;
+  background-color: #071e26;
+  color: #e6f4f5;
 }
 
 .dark .card {
-  background-color: #0f1a2c;
-  border-color: #1e2c45;
-  color: #dbe4f0;
+  background-color: #0c2b34;
+  border-color: #17414c;
+  color: #e6f4f5;
 }
 
 .dark .field-input {
-  background-color: #0b1524;
-  border-color: #24354f;
-  color: #eaf1fb;
-}
-
-.dark .field-input::placeholder {
-  color: #6d81a0;
+  background-color: #0a242c;
+  border-color: #1c4a56;
+  color: #eaf6f7;
 }
 
 .dark h1,
 .dark h2,
 .dark h3 {
-  color: #f2f7ff;
+  color: #f2fbfc;
 }
 
-.dark .text-ink,
-.dark .text-ink-muted {
-  color: #a9bbd4;
-}
-
-.dark .text-ink-strong {
-  color: #f2f7ff;
+/* Đồng bộ toàn bộ khung khi bật nền tối: sidebar, topbar, nền trang */
+.dark aside,
+.dark header {
+  background-color: rgba(8, 32, 40, 0.94);
+  border-color: #17414c;
 }
 
 .dark .bg-canvas {
-  background-color: #070d1a;
+  background-color: #071e26;
+}
+
+.dark .text-ink-strong {
+  color: #eaf6f7;
+}
+
+.dark .text-ink {
+  color: #bcd3d8;
+}
+
+.dark .text-ink-muted {
+  color: #9fbcc4;
+}
+
+.dark .bg-primary-soft {
+  background-color: #0e3540;
+}
+
+.dark .bg-accent-soft {
+  background-color: rgba(20, 184, 166, 0.16);
 }
 
 .dark .border-line {
-  border-color: #1e2c45;
+  border-color: #17414c;
 }
 
-/* Hai trang nền sáng dùng màu gán trực tiếp trong thẻ, nên phải bắt theo
-   giá trị màu. Cách này tạm thời; khi có thời gian sẽ đổi sang token. */
-.dark [style*="rgba(245, 245, 249, 0.94)"],
-.dark [style*="rgba(245,245,249,0.94)"] {
-  background: rgba(4, 10, 20, 0.95) !important;
+/* Dòng gợi ý mật khẩu: xanh lá rực ở nền sáng, trắng ở nền tối */
+.hint-mat-khau {
+  color: #22c55e;
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(34, 197, 94, 0.55), 0 0 22px rgba(34, 197, 94, 0.3);
 }
 
-.dark [style*="#0d1f3a"],
-.dark [style*="#4b5563"] {
-  color: #eaf0fb !important;
+.dark .hint-mat-khau {
+  color: #ffffff;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.55);
 }
 
-.dark [style*="#3e5474"],
-.dark [style*="#6b7280"] {
-  color: #a9bbd4 !important;
+/* ---------------- Tab menu: hiệu ứng tráng gương ---------------- */
+aside nav button {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
+
+aside nav button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0) 62%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+aside nav button:hover::before {
+  opacity: 0.55;
+}
+
+aside nav button[aria-current='page']::before {
+  opacity: 0.9;
+}
+
+aside nav button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: skewX(-18deg);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+aside nav button:hover::after {
+  opacity: 1;
+  animation: xc-nav-sheen 0.75s ease;
+}
+
+@keyframes xc-nav-sheen {
+  from {
+    left: -60%;
+  }
+
+  to {
+    left: 120%;
+  }
+}
+
+.dark aside nav button::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 62%);
+}
+
+.dark aside nav button::after {
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  aside nav button:hover::after {
+    animation: none;
+  }
+}
+
+/* Logo bấm: xoay 720 độ một lần */
+.logo-bam {
+  animation: xc-logo-xoay 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes xc-logo-xoay {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(720deg);
+  }
+}
+
+
+@keyframes xc-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+

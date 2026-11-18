@@ -4,24 +4,25 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Bảng màu theo phong cách Sneat: tím chàm làm màu chính, nền xám lạnh.
-        primary: { DEFAULT: '#696cff', dark: '#5f61e6', soft: '#e7e7ff' },
-        surface: '#ffffff',
-        canvas: '#f5f5f9',
-        ink: { DEFAULT: '#566a7f', strong: '#384551', muted: '#a1acb8' },
-        line: '#e7e7f0',
-        success: { DEFAULT: '#71dd37', soft: '#e8fadf' },
-        warning: { DEFAULT: '#ffab00', soft: '#fff2d6' },
-        danger: { DEFAULT: '#ff3e1d', soft: '#ffe0db' },
-        info: { DEFAULT: '#03c3ec', soft: '#d7f8fe' }
+        // Xanh cổ vịt làm màu chính, xanh ngọc làm màu nhấn.
+        primary: { DEFAULT: '#0F4C5C', dark: '#0B3A46', soft: '#E6F2F4' },
+        accent: { DEFAULT: '#0D9488', hover: '#0F766E', soft: '#F0FDFA' },
+        surface: '#FFFFFF',
+        canvas: '#F4F7F9',
+        ink: { DEFAULT: '#475569', strong: '#0F172A', muted: '#64748B' },
+        line: '#E2E8F0',
+        success: { DEFAULT: '#15803D', soft: '#DCFCE7' },
+        warning: { DEFAULT: '#B45309', soft: '#FEF3C7' },
+        danger: { DEFAULT: '#B91C1C', soft: '#FEE2E2' }
       },
       fontFamily: {
-        sans: ['"Public Sans"', '"Segoe UI"', 'Inter', 'system-ui', 'sans-serif']
+        sans: ['"Be Vietnam Pro"', 'system-ui', 'sans-serif'],
+        display: ['"Plus Jakarta Sans"', '"Be Vietnam Pro"', 'system-ui', 'sans-serif']
       },
-      borderRadius: { card: '10px', pill: '9999px' },
+      borderRadius: { card: '16px' },
       boxShadow: {
-        card: '0 2px 6px rgba(67, 89, 113, 0.12)',
-        pop: '0 6px 20px rgba(67, 89, 113, 0.18)'
+        card: '0 2px 10px rgba(15, 23, 42, 0.04)',
+        pop: '0 8px 24px rgba(15, 23, 42, 0.08)'
       }
     }
   },

@@ -16,7 +16,7 @@ export default function StarFall({ soLuong = 16 }: { soLuong?: number }): JSX.El
           id: i,
           x: Math.random() * 100,
           size: lon,
-          duration: 9 + Math.random() * 10,
+          duration: 6 + Math.random() * 9,
           delay: -Math.random() * 18,
           sway: (Math.random() > 0.5 ? 1 : -1) * (10 + Math.random() * 50),
           opacity: 0.55 + Math.random() * 0.4

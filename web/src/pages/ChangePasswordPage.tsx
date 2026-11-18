@@ -1,24 +1,20 @@
-/**
- * Đổi mật khẩu.
- *
- * Dùng cho hai trường hợp:
- *   - Bắt buộc ở lần đăng nhập đầu (tài khoản do quản trị cấp).
- *   - Tự nguyện đổi từ trang chính.
- *
- * Kiểm tra độ mạnh ở đây chỉ để báo lỗi sớm. Backend luôn kiểm tra lại.
- */
 import { useState, type FormEvent } from 'react';
-import { ApiError, authApi } from '../api/client';
+import { ApiError, authApi, type PhienNguoiDung } from '../api/client';
+import AppShell from '../components/AppShell';
 
 type Props = {
   batBuoc: boolean;
   onXong: () => void;
   onHuy?: () => void;
+  /** Có khi người dùng tự đổi mật khẩu; không có khi bị buộc đổi lần đầu. */
+  phien?: PhienNguoiDung;
+  onNavigate?: (key: string) => void;
+  onLoggedOut?: () => void;
 };
 
 const LOI_MAU = 'Mật khẩu cần ít nhất 8 ký tự, có cả chữ cái và chữ số.';
 
-export default function ChangePasswordPage({ batBuoc, onXong, onHuy }: Props): JSX.Element {
+export default function ChangePasswordPage({ batBuoc, onXong, onHuy, phien, onNavigate, onLoggedOut }: Props): JSX.Element {
   const [hienTai, setHienTai] = useState('');
   const [moi, setMoi] = useState('');
   const [nhacLai, setNhacLai] = useState('');
@@ -50,98 +46,113 @@ export default function ChangePasswordPage({ batBuoc, onXong, onHuy }: Props): J
     }
   }
 
-  return (
-    <div className="relative grid min-h-screen place-items-center px-4 py-10">
-      {/* Nền Starry Night, phủ lớp sáng để chữ tối vẫn đọc rõ */}
-      <div
-        className="pointer-events-none fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"
-        aria-hidden
-        style={{ backgroundImage: 'url(/nen2.jpg)' }}
-      />
-      <div
-        className="pointer-events-none fixed inset-0 z-0"
-        aria-hidden
-        style={{ background: 'rgba(245,245,249,0.94)' }}
-      />
+  const khoiForm = (
+    <form onSubmit={gui} className="card w-full space-y-4" noValidate>
+      <div>
+        <label htmlFor="hienTai" className="mb-1.5 block text-[13px] font-semibold text-ink-strong">
+          Mật khẩu hiện tại
+        </label>
+        <input
+          id="hienTai"
+          type="password"
+          className="field-input"
+          autoComplete="current-password"
+          required
+          value={hienTai}
+          onChange={e => setHienTai(e.target.value)}
+        />
+      </div>
 
-      <main className="relative z-10 w-full max-w-[440px]">
-        <header className="mb-6 text-center">
-          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-indigo to-indigo-mid text-xl text-paper shadow-soft">
-            <span aria-hidden>🔑</span>
-          </div>
-          <h1 className="text-2xl font-bold" style={{ color: '#4b5563' }}>
-            {batBuoc ? 'Đổi mật khẩu lần đầu' : 'Đổi mật khẩu'}
-          </h1>
-          <p className="mt-2 text-sm leading-relaxed" style={{ color: '#6b7280' }}>
-            {batBuoc
-              ? 'Tài khoản này dùng mật khẩu do giáo viên cấp. Hãy đặt mật khẩu riêng của bạn trước khi bắt đầu.'
-              : 'Mật khẩu mới cần ít nhất 8 ký tự, có cả chữ cái và chữ số.'}
-          </p>
-        </header>
+      <div>
+        <label htmlFor="moi" className="mb-1.5 block text-[13px] font-semibold text-ink-strong">
+          Mật khẩu mới
+        </label>
+        <input
+          id="moi"
+          type="password"
+          className="field-input"
+          autoComplete="new-password"
+          required
+          value={moi}
+          onChange={e => setMoi(e.target.value)}
+        />
+      </div>
 
-        <form onSubmit={gui} className="card space-y-4" noValidate>
-          <div>
-            <label htmlFor="hienTai" className="mb-1.5 block text-[13px] font-semibold">
-              Mật khẩu hiện tại
-            </label>
-            <input
-              id="hienTai"
-              type="password"
-              className="field-input"
-              autoComplete="current-password"
-              required
-              value={hienTai}
-              onChange={e => setHienTai(e.target.value)}
-            />
-          </div>
+      <div>
+        <label htmlFor="nhacLai" className="mb-1.5 block text-[13px] font-semibold text-ink-strong">
+          Nhập lại mật khẩu mới
+        </label>
+        <input
+          id="nhacLai"
+          type="password"
+          className="field-input"
+          autoComplete="new-password"
+          required
+          value={nhacLai}
+          onChange={e => setNhacLai(e.target.value)}
+        />
+      </div>
 
-          <div>
-            <label htmlFor="moi" className="mb-1.5 block text-[13px] font-semibold">
-              Mật khẩu mới
-            </label>
-            <input
-              id="moi"
-              type="password"
-              className="field-input"
-              autoComplete="new-password"
-              required
-              value={moi}
-              onChange={e => setMoi(e.target.value)}
-            />
-          </div>
+      {loi && (
+        <p role="alert" className="rounded-lg border border-danger/30 bg-danger-soft px-3.5 py-2.5 text-[13px] font-medium text-ink-strong">
+          {loi}
+        </p>
+      )}
 
-          <div>
-            <label htmlFor="nhacLai" className="mb-1.5 block text-[13px] font-semibold">
-              Nhập lại mật khẩu mới
-            </label>
-            <input
-              id="nhacLai"
-              type="password"
-              className="field-input"
-              autoComplete="new-password"
-              required
-              value={nhacLai}
-              onChange={e => setNhacLai(e.target.value)}
-            />
-          </div>
+      <button type="submit" className="btn-primary w-full" disabled={dangGui || !hienTai || !moi || !nhacLai}>
+        {dangGui ? 'Đang lưu…' : 'Lưu mật khẩu mới'}
+      </button>
 
-          {loi && (
-            <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-800">
-              {loi}
+      {!batBuoc && onHuy && (
+        <button type="button" onClick={onHuy} className="w-full text-center text-xs font-semibold text-ink-muted hover:text-ink-strong">
+          Để sau
+        </button>
+      )}
+    </form>
+  );
+
+  // Bắt buộc đổi lần đầu: không có thanh bên, không lối thoát.
+  if (batBuoc || !phien) {
+    return (
+      <div className="relative grid min-h-screen place-items-center bg-canvas px-4 py-10">
+        <main className="w-full max-w-[440px]">
+          <header className="mb-6 text-center">
+            <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-primary text-xl text-white">🔑</div>
+            <h1 className="font-display text-2xl font-bold text-ink-strong">Đổi mật khẩu lần đầu</h1>
+            <p className="mt-2 text-sm leading-relaxed text-ink-muted">
+              Tài khoản này dùng mật khẩu do giáo viên cấp. Hãy đặt mật khẩu riêng của bạn trước khi bắt đầu.
             </p>
-          )}
+          </header>
+          {khoiForm}
+        </main>
+      </div>
+    );
+  }
 
-          <button type="submit" className="btn-primary w-full" disabled={dangGui || !hienTai || !moi || !nhacLai}>
-            {dangGui ? 'Đang lưu…' : 'Lưu mật khẩu mới'}
-          </button>
-
-          {!batBuoc && onHuy && (
-            <button type="button" onClick={onHuy} className="w-full text-center text-xs font-semibold text-ink-muted hover:text-ink">
-              Để sau
-            </button>
-          )}
-        </form>
-      </main>
-    </div>
+  // Tự nguyện đổi: giữ nguyên khung điều hướng.
+  return (
+    <AppShell
+      tieuDe="Đổi mật khẩu"
+      phuDe={phien.student ? `${phien.student.truong} · ${phien.student.lop}` : undefined}
+      ma={phien.student?.ma ?? phien.user.username}
+      lop={phien.student?.lop ?? ''}
+      cacMuc={[
+        { key: 'hanh-trinh', nhan: 'Hành trình', icon: '▦' },
+        { key: 'bai-da-nop', nhan: 'Bài đã nộp', icon: '▤' },
+        { key: 'doi-mat-khau', nhan: 'Đổi mật khẩu', icon: '⚿' }
+      ]}
+      dangChon="doi-mat-khau"
+      onChon={key => onNavigate?.(key)}
+      onDangXuat={() => {
+        void authApi.logout().finally(() => onLoggedOut?.());
+      }}
+    >
+      <div className="mx-auto flex min-h-[72vh] w-full max-w-[440px] flex-col justify-center">
+        <p className="hint-mat-khau mb-5 text-center text-[14px] font-medium">
+          Mật khẩu mới cần ít nhất 8 ký tự, có cả chữ cái và chữ số.
+        </p>
+        {khoiForm}
+      </div>
+    </AppShell>
   );
 }

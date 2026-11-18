@@ -97,6 +97,15 @@ export default function App(): JSX.Element {
         batBuoc={false}
         onXong={() => setDangDoiMatKhau(false)}
         onHuy={() => setDangDoiMatKhau(false)}
+        phien={phien}
+        onNavigate={key => {
+          if (key === 'hanh-trinh') setDangDoiMatKhau(false);
+          if (key === 'bai-da-nop') {
+            setDangDoiMatKhau(false);
+            setManHinh({ ten: 'review' });
+          }
+        }}
+        onLoggedOut={() => setPhien(null)}
       />
     );
   }
@@ -112,7 +121,16 @@ export default function App(): JSX.Element {
   }
 
   if (manHinh.ten === 'review') {
-    return <ReviewPage onThoat={() => setManHinh({ ten: 'dashboard' })} />;
+    return (
+      <ReviewPage
+        phien={phien}
+        onNavigate={key => {
+          if (key === 'hanh-trinh') setManHinh({ ten: 'dashboard' });
+          if (key === 'doi-mat-khau') setDangDoiMatKhau(true);
+        }}
+        onLoggedOut={() => setPhien(null)}
+      />
+    );
   }
 
   return (
