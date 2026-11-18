@@ -51,14 +51,28 @@ export default function ChangePasswordPage({ batBuoc, onXong, onHuy }: Props): J
   }
 
   return (
-    <div className="grid min-h-screen place-items-center px-4 py-10">
-      <main className="w-full max-w-[440px]">
+    <div className="relative grid min-h-screen place-items-center px-4 py-10">
+      {/* Nền Starry Night, phủ lớp sáng để chữ tối vẫn đọc rõ */}
+      <div
+        className="pointer-events-none fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        aria-hidden
+        style={{ backgroundImage: 'url(/nen2.jpg)' }}
+      />
+      <div
+        className="pointer-events-none fixed inset-0 z-0"
+        aria-hidden
+        style={{ background: 'rgba(245,245,249,0.94)' }}
+      />
+
+      <main className="relative z-10 w-full max-w-[440px]">
         <header className="mb-6 text-center">
           <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-indigo to-indigo-mid text-xl text-paper shadow-soft">
             <span aria-hidden>🔑</span>
           </div>
-          <h1 className="text-2xl font-bold">{batBuoc ? 'Đổi mật khẩu lần đầu' : 'Đổi mật khẩu'}</h1>
-          <p className="mt-2 text-sm leading-relaxed text-ink-muted">
+          <h1 className="text-2xl font-bold" style={{ color: '#4b5563' }}>
+            {batBuoc ? 'Đổi mật khẩu lần đầu' : 'Đổi mật khẩu'}
+          </h1>
+          <p className="mt-2 text-sm leading-relaxed" style={{ color: '#6b7280' }}>
             {batBuoc
               ? 'Tài khoản này dùng mật khẩu do giáo viên cấp. Hãy đặt mật khẩu riêng của bạn trước khi bắt đầu.'
               : 'Mật khẩu mới cần ít nhất 8 ký tự, có cả chữ cái và chữ số.'}

@@ -6,6 +6,7 @@
  * gì để che thêm.
  */
 import { useEffect, useState } from 'react';
+import StarFall from '../components/StarFall';
 import { ApiError, meApi, type BaiNopChiTiet, type BaiNopTomTat } from '../api/client';
 import { cacKhoaNoiDung, nhanCuaO } from '../content';
 
@@ -72,23 +73,41 @@ export default function ReviewPage({ onThoat }: Props): JSX.Element {
     : [];
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-ink/10 bg-paper/80 backdrop-blur">
+    <div className="relative min-h-screen">
+      {/* Nền Starry Night, phủ lớp sáng để chữ tối vẫn đọc rõ */}
+      <div
+        className="pointer-events-none fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        aria-hidden
+        style={{ backgroundImage: 'url(/nen1.jpg)' }}
+      />
+      <div
+        className="pointer-events-none fixed inset-0 z-0"
+        aria-hidden
+        style={{ background: 'rgba(245,245,249,0.94)' }}
+      />
+
+      {/* Sao vàng rơi, nằm trên lớp sáng và dưới nội dung */}
+      <StarFall soLuong={14} />
+
+      <header className="relative z-10 border-b border-ink/10 bg-paper/80 backdrop-blur">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-3">
           <button
             type="button"
             onClick={onThoat}
-            className="rounded-lg px-2 py-1.5 text-sm font-semibold text-ink-muted transition hover:bg-ink/5 hover:text-ink"
+            className="rounded-lg px-2.5 py-1.5 text-sm font-semibold transition hover:bg-black/5"
+            style={{ color: '#4b5563' }}
           >
             ← Về trang chính
           </button>
-          <span className="text-xs font-semibold text-ink-muted">Bài đã nộp</span>
+          <span className="text-xs font-bold uppercase tracking-wide" style={{ color: '#6b7280' }}>
+            Bài đã nộp
+          </span>
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 py-6">
-        <h1 className="text-2xl font-bold">Bài của mình</h1>
-        <p className="mt-1 text-sm text-ink-muted">
+      <main className="relative z-10 mx-auto max-w-4xl px-4 py-6">
+        <h1 className="text-[26px] font-extrabold tracking-tight text-[#0d1f3a]">Bài của mình</h1>
+        <p className="mt-1.5 text-[14px] font-medium text-[#3e5474]">
           Bài đã nộp không sửa được. Muốn làm khác thì vào tuần đó và chọn “Làm lượt mới”.
         </p>
 
@@ -107,7 +126,9 @@ export default function ReviewPage({ onThoat }: Props): JSX.Element {
 
         {danhSach !== null && danhSach.length === 0 && (
           <div className="card mt-6 text-center">
-            <p className="text-sm text-ink-muted">Bạn chưa nộp tuần nào. Vào trang chính để bắt đầu tuần 1.</p>
+            <p className="text-[14px] font-semibold text-[#3e5474]">
+              Bạn chưa nộp tuần nào. Vào trang chính để bắt đầu tuần 1.
+            </p>
           </div>
         )}
 

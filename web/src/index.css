@@ -62,3 +62,200 @@
     @apply text-[13px] font-medium text-ink;
   }
 }
+
+/* ================= Hiệu ứng tương tác ================= */
+
+/* Nút chính: vệt sáng quét qua + nhún khi bấm */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform 0.18s cubic-bezier(0.22, 0.61, 0.36, 1),
+    box-shadow 0.22s ease, filter 0.22s ease;
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.5) 50%, transparent 68%);
+  transform: translateX(-130%);
+  transition: transform 0.65s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.btn-primary:hover::after {
+  transform: translateX(130%);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 10px 24px -8px rgba(105, 108, 255, 0.75);
+}
+
+.btn-primary:active {
+  transform: translateY(1px) scale(0.975);
+  box-shadow: 0 2px 6px -2px rgba(105, 108, 255, 0.6);
+}
+
+/* Nút phụ: viền sáng dần + nâng nhẹ */
+.btn-ghost {
+  transition: transform 0.16s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.2s ease;
+}
+
+.btn-ghost:hover {
+  transform: translateY(-1px);
+}
+
+.btn-ghost:active {
+  transform: translateY(0) scale(0.985);
+}
+
+/* Thẻ: nhấc lên khi rê chuột */
+.card {
+  transition: transform 0.2s cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 0.24s ease;
+}
+
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 26px -10px rgba(67, 89, 113, 0.35);
+  }
+}
+
+/* Mục menu: trượt nhẹ sang phải */
+aside nav button {
+  transition: background-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
+}
+
+aside nav button:hover {
+  transform: translateX(2px);
+}
+
+/* Dòng trong bảng tuần: sáng nền khi rê chuột */
+li.group-hover\:bg-canvas\/60:hover {
+  background-color: rgba(245, 245, 249, 0.9);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary::after {
+    display: none;
+  }
+
+  .btn-primary,
+  .btn-ghost,
+  .card,
+  aside nav button {
+    transition: none;
+  }
+
+  .card:hover,
+  aside nav button:hover {
+    transform: none;
+  }
+}
+
+/* ---------------- Sao vàng rơi tự do ---------------- */
+.star-fall {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.star-fall i {
+  position: absolute;
+  top: 0;
+  left: var(--x);
+  width: var(--s);
+  height: var(--s);
+  opacity: 0;
+  background: linear-gradient(180deg, #fff4cf 0%, #ffd97a 45%, #d9ac52 100%);
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  );
+  filter: drop-shadow(0 0 6px rgba(255, 216, 130, 0.75));
+  animation: xc-star-fall var(--d) linear var(--delay) infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes xc-star-fall {
+  0% {
+    transform: translate3d(0, -12vh, 0) rotate(0deg);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: var(--o);
+  }
+
+  88% {
+    opacity: var(--o);
+  }
+
+  100% {
+    transform: translate3d(var(--sway), 112vh, 0) rotate(210deg);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .star-fall {
+    display: none;
+  }
+}
+
+/* ---------------- Chế độ tối ---------------- */
+.dark body {
+  background-color: #070d1a;
+  color: #dbe4f0;
+}
+
+.dark .card {
+  background-color: #0f1a2c;
+  border-color: #1e2c45;
+  color: #dbe4f0;
+}
+
+.dark .field-input {
+  background-color: #0b1524;
+  border-color: #24354f;
+  color: #eaf1fb;
+}
+
+.dark .field-input::placeholder {
+  color: #6d81a0;
+}
+
+.dark h1,
+.dark h2,
+.dark h3 {
+  color: #f2f7ff;
+}
+
+.dark .text-ink,
+.dark .text-ink-muted {
+  color: #a9bbd4;
+}
+
+.dark .text-ink-strong {
+  color: #f2f7ff;
+}
+
+.dark .bg-canvas {
+  background-color: #070d1a;
+}
+
+.dark .border-line {
+  border-color: #1e2c45;
+}

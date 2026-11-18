@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import StarFall from '../components/StarFall';
 import { ApiError, authApi, type PhienNguoiDung } from '../api/client';
 
 type Props = { onSuccess: (phien: PhienNguoiDung) => void };
@@ -53,6 +54,8 @@ export default function LoginPage({ onSuccess }: Props): JSX.Element {
           backgroundRepeat: 'no-repeat'
         }}
       />
+
+      <StarFall soLuong={20} />
 
       <div className="relative z-10 mx-auto grid min-h-screen max-w-6xl items-center gap-10 px-5 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:px-8">
         {/* Cột trái: thương hiệu */}
