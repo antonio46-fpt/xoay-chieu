@@ -1,6 +1,29 @@
-# Xoay Chiều — mã nguồn đầy đủ 2.8.1
+# Xoay Chiều — phiên bản 3.0.0
 
-Công cụ hoạt động và thu dữ liệu cho đề tài “Phát triển năng lực linh hoạt trong học tập của học sinh THPT tại Lạng Sơn”. Phạm vi bản bắt buộc: 3 lớp đang triển khai theo danh sách mới, giữ lớp Chi Lăng cũ; lớp thứ tư chờ chốt, 4 tuần can thiệp. Lịch triển khai và kết thúc chưa chốt. Không chấm đúng/sai, không xếp hạng, không tự suy ra điểm năng lực.
+Công cụ hoạt động và thu dữ liệu cho đề tài “Phát triển năng lực linh hoạt trong học tập của học sinh THPT tại Lạng Sơn”. 4 tuần can thiệp, 8 lớp, 226 học sinh. Không chấm đúng/sai, không xếp hạng, không tự suy ra điểm năng lực.
+
+## Bản 3.0.0 — kiến trúc mới
+
+Bản 3.0 là **lần viết lại hạ tầng**, không phải bản sửa giao diện. Hai điểm thay đổi căn bản:
+
+**1. Bỏ Google Apps Script, dựng backend độc lập.** Toàn bộ nghiệp vụ chuyển sang Node.js + Fastify chạy trên máy chủ riêng, dữ liệu nằm trong PostgreSQL. Không còn giới hạn 30 lượt chạy đồng thời, không còn phải dán tệp và bấm New version mỗi lần sửa, và dữ liệu không còn phụ thuộc hạn mức của Google Sheets.
+
+**2. Đăng nhập bằng tài khoản và mật khẩu.** Trước đây học sinh chỉ nhập mã giả danh; nay mỗi em có một tài khoản riêng, mật khẩu băm bằng Argon2id, phiên giữ trong cookie `httpOnly` và **chỉ lưu băm SHA-256 trong cơ sở dữ liệu**. Học sinh bắt buộc đổi mật khẩu ở lần đăng nhập đầu; sai quá 8 lần thì tài khoản tạm khoá 15 phút.
+
+| Thành phần | Bản 2.8.x | Bản 3.0.0 |
+|---|---|---|
+| Giao diện | HTML/CSS/JS thuần, một tệp | React 18 + TypeScript + Vite + Tailwind |
+| Máy chủ | Google Apps Script | Node.js + Fastify |
+| Dữ liệu | Google Sheets | PostgreSQL 16 |
+| Đăng nhập | Mã học sinh, không mật khẩu | Tài khoản + mật khẩu Argon2id |
+| Phiên | Token trong CacheService | Cookie httpOnly, băm trong CSDL |
+| Quản trị | Sửa trực tiếp Google Sheet | API quản trị + trang admin (đang xây) |
+
+**Giữ nguyên từ bản cũ:** nội dung bốn tuần trong `src/content.json`, mã giả danh, cách che nội dung nhạy cảm ở backend, cơ chế chống trùng theo `id`, đồng bộ nháp theo `revision`, và nguyên tắc giáo viên chỉ thấy tiến độ chứ không đọc bài.
+
+**Đang xây:** giao diện React cho học sinh đã chạy (đăng nhập, tổng quan, làm bài, xem lại, đổi mật khẩu); trang giáo viên và trang admin còn ở mức API.
+
+Phần Apps Script dưới đây vẫn còn trong kho mã để tham chiếu và làm đường lùi, nhưng không còn là backend chính.
 
 Xem [SCOPE.md](SCOPE.md) để đối chiếu yêu cầu, quyền dữ liệu và những điểm còn chờ chốt.
 
