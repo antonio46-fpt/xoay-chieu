@@ -58,17 +58,23 @@ export default function AdminOverview({ phien }: { phien: PhienNguoiDung }): JSX
           <p className="px-4 pt-4 text-[10px] font-bold uppercase tracking-[0.2em] text-ink-muted">Quản trị</p>
           <nav className="mt-2 space-y-1 p-2">
             {MUC.map(m => {
-              const dangXay = m.key !== 'tong-quan';
+              const laHocSinh = m.key === 'hoc-sinh';
+              const dangXay = m.key !== 'tong-quan' && !laHocSinh;
               return (
                 <button
                   key={m.key}
                   type="button"
                   disabled={dangXay}
+                  onClick={() => {
+                    if (laHocSinh) window.location.assign('/admin/students');
+                  }}
                   title={dangXay ? 'Mục này đang được xây' : undefined}
                   className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[14px] transition ${
                     m.key === 'tong-quan'
                       ? 'bg-accent-soft font-semibold text-accent'
-                      : 'cursor-not-allowed text-ink-muted/60'
+                      : dangXay
+                        ? 'cursor-not-allowed text-ink-muted/60'
+                        : 'text-ink hover:bg-canvas hover:text-ink-strong'
                   }`}
                 >
                   <span aria-hidden className="w-4 text-center">

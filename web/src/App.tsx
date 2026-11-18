@@ -6,6 +6,7 @@ import WeekPage from './pages/WeekPage';
 import ReviewPage from './pages/ReviewPage';
 import ChangePasswordPage from './pages/ChangePasswordPage';
 import AdminOverview from './pages/admin/AdminOverview';
+import AdminStudents from './pages/admin/AdminStudents';
 import { batDauTheoDoiMang } from './lib/queue';
 
 type ManHinh = { ten: 'dashboard' } | { ten: 'week'; tuan: number } | { ten: 'review' };
@@ -60,6 +61,9 @@ export default function App(): JSX.Element {
   // nếu không họ sẽ rơi vào màn hình tạm dù có quyền.
   const laVaiQuanTri = ['admin', 'super_admin', 'research_viewer'].includes(phien.user.role);
   if (laVaiQuanTri) {
+    if (window.location.pathname.startsWith('/admin/students')) {
+      return <AdminStudents />;
+    }
     if (!window.location.pathname.startsWith('/admin')) {
       window.location.assign('/admin');
     }
