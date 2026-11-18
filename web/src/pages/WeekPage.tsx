@@ -23,7 +23,7 @@ type Props = {
 type TrangThaiLuu = 'chua-luu' | 'dang-luu' | 'da-luu' | 'loi';
 
 const NHAN_LUU: Record<TrangThaiLuu, string> = {
-  'chua-luu': 'Chưa lưu',
+  'chua-luu': 'Chưa có thay đổi',
   'dang-luu': 'Đang lưu…',
   'da-luu': 'Đã lưu',
   loi: 'Chưa lưu được – kiểm tra mạng'
@@ -60,6 +60,9 @@ export default function WeekPage({ tuan, onThoat, onDaNop, trangThai }: Props): 
         setRevision(kq.revision);
         setGiaTri(kq.cacO ?? {});
         giaTriMoiNhat.current = kq.cacO ?? {};
+        // Đã có nháp trên máy chủ thì đó là trạng thái "đã lưu", không phải
+        // "chưa lưu" — tránh hiểu nhầm là mất dữ liệu.
+        setTrangThaiLuu(kq.revision > 0 ? 'da-luu' : 'chua-luu');
       })
       .catch(() => {
         if (huy) return;
