@@ -249,6 +249,11 @@ aside nav button:hover {
   background-color: #071e26;
 }
 
+/* Nền trắng dùng chung (bảng menu, thẻ) phải tối theo khi bật chế độ tối */
+.dark .bg-surface {
+  background-color: #0c2b34;
+}
+
 .dark .text-ink-strong {
   color: #eaf6f7;
 }
