@@ -189,8 +189,16 @@ export default function WeekPage({ tuan, onThoat, onDaNop, trangThai }: Props): 
   }
 
   return (
-    <div className="min-h-screen">
-      <header className="sticky top-0 z-10 border-b border-ink/10 bg-paper/80 backdrop-blur">
+    <div className="relative min-h-screen">
+      {/* Nền trời sao giống trang chủ, không có sidebar */}
+      <div
+        className="pointer-events-none fixed inset-0 z-0 bg-repeat"
+        aria-hidden
+        style={{ backgroundImage: 'url(/nen-sao.jpg)', backgroundSize: 'min(100%, 900px) auto' }}
+      />
+      <div className="pointer-events-none fixed inset-0 z-0" aria-hidden style={{ background: 'rgba(4,14,26,0.35)' }} />
+
+      <header className="sticky top-0 z-10 border-b border-line bg-surface/95 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
           <button
             type="button"
@@ -205,7 +213,7 @@ export default function WeekPage({ tuan, onThoat, onDaNop, trangThai }: Props): 
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 py-6">
+      <main className="relative z-10 mx-auto max-w-3xl px-4 py-6">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">
           Tuần {tuan} · {duLieuTuan.title}
         </p>
@@ -396,6 +404,18 @@ export default function WeekPage({ tuan, onThoat, onDaNop, trangThai }: Props): 
               Tiếp tục →
             </button>
           )}
+
+          {/* Lưu nháp lên máy chủ rồi về trang chủ */}
+          <button
+            type="button"
+            className="btn-ghost"
+            disabled={trangThaiLuu === 'dang-luu'}
+            onClick={() => {
+              void luuNhap().then(() => onThoat());
+            }}
+          >
+            {trangThaiLuu === 'dang-luu' ? 'Đang lưu…' : 'Lưu nháp & về trang chủ'}
+          </button>
         </div>
 
         {laBuocCuoi && oThieu.length > 0 && (
