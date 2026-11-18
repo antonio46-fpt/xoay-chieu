@@ -214,10 +214,12 @@ export default function WeekPage({ tuan, onThoat, onDaNop, trangThai }: Props): 
       </header>
 
       <main className="relative z-10 mx-auto max-w-3xl px-4 py-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#5eead4]">
           Tuần {tuan} · {duLieuTuan.title}
         </p>
-        <h1 className="mt-2 text-2xl font-bold leading-tight">{buoc.title}</h1>
+        <h1 className="mt-2 text-[26px] font-bold leading-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.75)]">
+          {buoc.title}
+        </h1>
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {duLieuTuan.steps.map((s, i) => (
