@@ -1,152 +1,292 @@
-# Xoay Chiều — phiên bản 3.0.0
+# Xoay Chiều 3.0.0
 
-Công cụ hoạt động và thu dữ liệu cho đề tài “Phát triển năng lực linh hoạt trong học tập của học sinh THPT tại Lạng Sơn”. 4 tuần can thiệp, 8 lớp, 226 học sinh. Không chấm đúng/sai, không xếp hạng, không tự suy ra điểm năng lực.
+**Hệ thống tổ chức hoạt động học tập 4 tuần và thu dữ liệu nghiên cứu — cho học sinh THPT Lạng Sơn**
 
-## Bản 3.0.0 — kiến trúc mới
+Xoay Chiều là ứng dụng web chạy thật: frontend React, backend Fastify, cơ sở dữ liệu PostgreSQL, xác thực bằng tài khoản và mật khẩu. Học sinh làm bốn tuần hoạt động ngắn (15 – 15 – 45 – 45 phút), hệ thống giữ bài viết, che nội dung nhạy cảm ở backend, và chuyển dữ liệu về một nơi duy nhất cho nhóm nghiên cứu phân tích.
 
-Bản 3.0 là **lần viết lại hạ tầng**, không phải bản sửa giao diện. Hai điểm thay đổi căn bản:
+> **Không chấm điểm, không xếp hạng, không dùng AI đánh giá bài.** Hệ thống chỉ tổ chức hoạt động và lưu lại những gì học sinh viết.
 
-**1. Bỏ Google Apps Script, dựng backend độc lập.** Toàn bộ nghiệp vụ chuyển sang Node.js + Fastify chạy trên máy chủ riêng, dữ liệu nằm trong PostgreSQL. Không còn giới hạn 30 lượt chạy đồng thời, không còn phải dán tệp và bấm New version mỗi lần sửa, và dữ liệu không còn phụ thuộc hạn mức của Google Sheets.
+> **Ghi chú kiến trúc:** bản 2.8.x chạy trên Google Apps Script + Google Sheets và vẫn còn trong kho mã (`apps-script/`, `src/`) làm đường lùi. Bản 3.0.0 thay hoàn toàn phần máy chủ và cơ sở dữ liệu.
 
-**2. Đăng nhập bằng tài khoản và mật khẩu.** Trước đây học sinh chỉ nhập mã giả danh; nay mỗi em có một tài khoản riêng, mật khẩu băm bằng Argon2id, phiên giữ trong cookie `httpOnly` và **chỉ lưu băm SHA-256 trong cơ sở dữ liệu**. Học sinh bắt buộc đổi mật khẩu ở lần đăng nhập đầu; sai quá 8 lần thì tài khoản tạm khoá 15 phút.
+---
 
-| Thành phần | Bản 2.8.x | Bản 3.0.0 |
+## Ảnh minh chứng
+
+![Dashboard học sinh](docs/preview/web-dashboard-sneat.png)
+
+*Dashboard: sidebar thu gọn được, bốn thẻ KPI, danh sách bốn tuần với trạng thái thật từ máy chủ.*
+
+![Màn hình làm bài](docs/preview/web-week.png)
+
+*Màn hình làm bài: 9 bước của tuần 1 — lá thư, ô trả lời có đếm từ, tự lưu nháp sau 1,2 giây.*
+
+![Trang đăng nhập](docs/preview/web-login.png)
+
+*Đăng nhập: hai cột, chong chóng quay, nền vũ trụ.*
+
+---
+
+## Công nghệ sử dụng
+
+| Lớp | Công nghệ | Ghi chú |
 |---|---|---|
-| Giao diện | HTML/CSS/JS thuần, một tệp | React 18 + TypeScript + Vite + Tailwind |
-| Máy chủ | Google Apps Script | Node.js + Fastify |
-| Dữ liệu | Google Sheets | PostgreSQL 16 |
-| Đăng nhập | Mã học sinh, không mật khẩu | Tài khoản + mật khẩu Argon2id |
-| Phiên | Token trong CacheService | Cookie httpOnly, băm trong CSDL |
-| Quản trị | Sửa trực tiếp Google Sheet | API quản trị + trang admin (đang xây) |
+| Giao diện | React 18, TypeScript, Vite 6, Tailwind CSS 3 | Build ra tệp tĩnh, Nginx phục vụ |
+| Font | Plus Jakarta Sans (tiêu đề), Be Vietnam Pro (nội dung) | Google Fonts, `display=swap` |
+| Máy chủ | Node.js 22+, Fastify 5, TypeScript chạy trực tiếp | Không bước build backend |
+| Cơ sở dữ liệu | PostgreSQL 16 | 15 bảng, có trigger và ràng buộc |
+| Xác thực | Cookie `httpOnly` + Argon2id | CSDL chỉ lưu băm SHA-256 của token |
+| Truy vấn | `pg` với tham số hoá | Không nối chuỗi SQL |
+| Kiểm thử | `node:test` | 59 test: 27 đơn vị + 32 tích hợp |
+| Công cụ | Git, GitHub, Python (build, xử lý ảnh) | |
 
-**Giữ nguyên từ bản cũ:** nội dung bốn tuần trong `src/content.json`, mã giả danh, cách che nội dung nhạy cảm ở backend, cơ chế chống trùng theo `id`, đồng bộ nháp theo `revision`, và nguyên tắc giáo viên chỉ thấy tiến độ chứ không đọc bài.
+**Vì sao không dùng framework nặng hơn:** quy mô 226 học sinh, ba trường, máy chủ 2 CPU / 4 GB. Fastify + Postgres chạy trong khoảng 500 MB RAM, đủ thoải mái. Không có ORM để tránh lớp trừu tượng che mất câu SQL thật.
 
-**Đang xây:** giao diện React cho học sinh đã chạy (đăng nhập, tổng quan, làm bài, xem lại, đổi mật khẩu); trang giáo viên và trang admin còn ở mức API.
+---
 
-Phần Apps Script dưới đây vẫn còn trong kho mã để tham chiếu và làm đường lùi, nhưng không còn là backend chính.
+## Kiến trúc
 
-Xem [SCOPE.md](SCOPE.md) để đối chiếu yêu cầu, quyền dữ liệu và những điểm còn chờ chốt.
-
-## Dùng bộ mã nguồn
-
-- Mở `dist/index.html` để xem thử. Bản này và bản Sites lưu trên máy, **chưa gửi Google Sheets**.
-- Để triển khai nhận dữ liệu thật, theo `HUONG_DAN_TRIEN_KHAI.md`; dùng các tệp đã ghép trong `apps-script/`.
-- Để đọc và sửa code, theo `MA_NGUON_CHI_TIET.md`. Mở `dist/ma-nguon.html` để xem từng tệp, sao chép hoặc tải về.
-- Nội dung bốn tuần nằm riêng tại `src/content.json`. Không cần sửa logic để thay thư/câu hỏi/ngưỡng độ dài.
-- Các sản phẩm là văn bản hoặc phần mô tả sản phẩm. Bản này không tải ảnh, âm thanh hoặc video lên Drive.
-
-## Chức năng đã lập trình
-
-| Phần | Hành vi |
-|---|---|
-| Vào app | Mã dạng AB12-C, chọn trường/lớp, không hỏi họ tên |
-| Tuần 1–2 | Mỗi tuần khoảng 15 phút; thư, Thử, từng câu Nghĩ, Nối, sản phẩm, Chia sẻ, tự đánh giá |
-| Tuần 3 | Khoảng 45 phút; tranh luận, đổi góc nhìn, ghi lý lẽ và đổi/giữ ý |
-| Tuần 4 | Khoảng 45 phút; chọn sản phẩm cũ trên máy, sửa bản mới và giữ nguyên bản gốc |
-| Kiểm tra | Bắt buộc trả lời, độ dài tối thiểu/tối đa, lựa chọn hợp lệ; mức 1–3 do học sinh tự chọn |
-| Lưu nháp | Lưu khi nhập, chuyển bước và ẩn trang; tiếp tục sau khi mở lại |
-| Chờ gửi | Lưu gói vào máy trước; mất mạng vẫn giữ gói; tự thử lại với cùng ID |
-| Chống trùng | Máy chủ khóa thao tác tìm ID và ghi; ID cũ + nội dung cũ chỉ xác nhận lại |
-| Làm lại | Học sinh chủ động tạo lượt mới → ID mới, dòng mới, không sửa bài đã nộp |
-| Khôi phục | Bản sao toàn bộ giữ bài chờ gửi; tạm dừng đến khi bấm Thử gửi lại |
-| Giáo viên chủ nhiệm | PIN riêng theo lớp; chỉ xem mã và tuần đã nộp, không đọc bài hay mức tự đánh giá |
-| Điều phối | PIN theo lớp, đồng hồ chặng, thẻ hỏi/vai, phiếu buổi, ý kiến nhóm tuần 3 |
-| Giao diện | Điện thoại, chàm–kem, họa tiết thổ cẩm bằng CSS, sáng/tối |
-
-## Cấu trúc tệp
-
-| Tệp | Trách nhiệm |
-|---|---|
-| `src/content.json` | Toàn bộ thư, hoạt động, trường/lớp và định nghĩa ô nhập |
-| `src/config.js` | Phiên bản, thời gian chờ RPC, nhịp gửi lại, khóa bộ nhớ |
-| `src/core.js` | Kiểm tra đầu vào, giữ nguyên văn, tạo ID/bản ghi, thời gian gửi lại |
-| `src/safety.js` | Chính sách che nội dung dùng chung cho trình duyệt và máy chủ |
-| `src/backup.js` | Kiểm tra và khôi phục bản sao an toàn |
-| `src/app.js` | Điều hướng, màn hình, nháp, hàng đợi, giao tiếp máy chủ |
-| `src/style.css`, `src/shell.html` | CSS và khung HTML |
-| `apps-script/Code.gs` | Máy chủ kiểm tra dữ liệu, xác thực điều phối, ghi Sheet RAW |
-| `apps-script/Management.gs` | Hai bảng quản lý tự tính từ nguồn, không xuất PIN/hash/token |
-| `apps-script/Learning.gs` | Nháp theo tuần, khôi phục Sổ riêng và chống ghi đè giữa thiết bị |
-| `apps-script/Accounts.gs` | Cấp PIN riêng, xác thực học sinh, tổng hợp tiến độ trên Sheet |
-| `apps-script/Schema.gs` | Schema kiểm tra tự sinh từ JSON; không sửa tay |
-| `apps-script/Index.html` | App đã ghép để dán vào HTML Service |
-| `apps-script/appsscript.json` | Manifest V8 và dịch vụ Google Sheets v4 |
-| `build.py` | Tạo HTML, schema và cache từ mã nguồn |
-| `package_source.py` | Tạo trang đọc mã và ZIP bàn giao |
-| `tests/` | Kiểm thử logic, máy chủ giả lập, hàng đợi, khôi phục và DOM |
-
-## Build và kiểm thử
-
-Python 3 dùng để build. App không dùng framework, CDN, khóa AI hay thư viện JavaScript bên ngoài. Node.js và jsdom **chỉ phục vụ kiểm thử**, không được ghép vào app.
-
-```bash
-python build.py
-npm ci --ignore-scripts
-npm test
-python package_source.py
+```
+Trình duyệt (React SPA)
+      │  fetch kèm cookie phiên
+      ▼
+Fastify API  ────────────────────────────────
+  auth/       đăng nhập, phiên, đổi mật khẩu
+  routes/     student, admin, staff, import/export
+  security/   argon2, token, che nội dung
+  policy.ts   sáu vai, bảng quyền
+      │  pg (tham số hoá)
+      ▼
+PostgreSQL 16 ── 15 bảng, trigger chặn sửa bài nộp
 ```
 
-Trên Windows có thể thay `python` bằng `py`. Bản build sẵn đã có trong ZIP, nên không cần cài các công cụ trên chỉ để triển khai Apps Script.
+**Bốn quyết định bảo mật quan trọng:**
 
-Nếu chỉ kiểm thử các phần không phụ thuộc thư viện DOM:
+1. **Bài nộp bất biến ở tầng CSDL** — trigger chặn mọi `UPDATE` trên bảng `submissions`. Không phải quy ước, mà là ràng buộc.
+2. **Che nội dung chạy ở backend** — học sinh sửa mã JavaScript cũng không bỏ qua được.
+3. **Giáo viên không đọc được bài** — câu SQL tiến trình cố ý **không join** bảng bài nộp.
+4. **Token chỉ lưu dạng băm** — lộ bảng `sessions` cũng không dựng lại được phiên.
+
+---
+
+## Cài đặt và chạy
+
+### Yêu cầu
+
+- Node.js ≥ 22.6
+- PostgreSQL ≥ 14
+
+### Các bước
 
 ```bash
-node tests/test.cjs
-node tests/queue.cjs
-node tests/recovery.cjs
+git clone https://github.com/antonio46-fpt/xoay-chieu.git
+cd xoay-chieu/server
+npm install
+cp .env.example .env
 ```
 
-Các kiểm thử tự động không thay cho thử trên điện thoại, Google Sheet thật và tải nộp của 150 học sinh dự kiến. Phạm vi chính xác ở `DU_LIEU_VA_TAP_HUAN.md`.
+Sửa `.env`:
 
-## Những điểm vận hành cần biết
+```env
+DATABASE_URL=postgres://user:matkhau@127.0.0.1:5432/xoaychieu
+COOKIE_SECRET=<chuỗi ngẫu nhiên ≥ 32 ký tự>
+PORT=3000
+```
 
-Bản HTML tĩnh không thể dùng `google.script.run`; bản dùng thật phải được phục vụ từ Apps Script bằng URL `/exec`. App nhận biết môi trường và hiển thị trạng thái rõ ràng. Không có tình huống dùng `no-cors` rồi báo thành công khi chưa biết máy chủ đã ghi hay chưa.
+Tạo bảng và chạy máy chủ:
 
-Mỗi hồ sơ được tách bằng bộ ba trường/lớp/mã. Mã là mã giả danh, không phải mật khẩu. Bản ghi ứng dụng không chứa họ tên, email hay thông tin thiết bị. Các đoạn học sinh viết vẫn có thể chứa thông tin nhận diện nếu tự nhập; lời nhắc trên app yêu cầu tránh điều đó. Sheet cần để quyền Hạn chế, chỉ cấp cho nhóm nghiên cứu.
+```bash
+npm run db:migrate     # áp dụng db/migrations/*.sql
+npm start              # API tại http://127.0.0.1:3000
+```
 
-Đăng nhập đúng tài khoản để khôi phục nháp đã đồng bộ, bước đang làm và bài cũ từ Sheet. Bản gốc trước khi che và phần chưa được xác nhận đồng bộ vẫn cần thiết bị đã viết hoặc bản sao riêng. Tuần 4 có thể chọn sản phẩm cũ đã được khôi phục. Trên máy chung, người có quyền vào trình duyệt có thể truy cập dữ liệu cục bộ. Phát hiện tab khác ghi dữ liệu sẽ tạm dừng lưu tab này, cho tải bản sao rồi mở lại; đây không phải cơ chế làm việc đồng thời nhiều tab.
+Chạy giao diện (cửa sổ khác):
 
-Khi trang đã tải, mất mạng vẫn có thể làm và lưu bài. Bản tĩnh HTTPS có cache sau lần mở online. Apps Script không bảo đảm tải mới/tải lại trang khi hoàn toàn offline. Không xóa dữ liệu trình duyệt trong lúc còn bài chờ. Bản sao nhập lại giữ nguyên ID và tạm dừng gửi; chỉ khôi phục trên trình duyệt chưa có dữ liệu.
+```bash
+cd ../web
+npm install
+npm run dev            # http://localhost:5173
+```
 
-Thời gian hoạt động chỉ tính khi màn hình làm bài hiển thị; thời gian trôi được lưu riêng. Hai số này không đo mức tập trung. Đồng hồ là gợi ý, không tự đóng bài. Tổng thời lượng chặng là 15/45 phút; tự đánh giá được làm theo nhịp lớp.
+### Tạo tài khoản quản trị đầu tiên
 
-Tất cả tuần đang mở để thử/làm bù. Website không tự ngừng sau tám tuần; chủ dự án chủ động kết thúc triển khai theo lịch. Danh sách trường/lớp và nội dung hiện là bản cấu hình để duyệt, chưa phải xác nhận đã tuyển đủ số mã dự kiến. App không có danh sách mã được cấp riêng; nó kiểm tra định dạng mã và lớp hợp lệ.
+Không có tài khoản mặc định trong mã nguồn:
 
-Nội dung thư/gợi ý có phần AI hỗ trợ soạn từ các yêu cầu đã trao đổi. Nhóm nghiên cứu cần duyệt, chốt phiên bản và ghi nhận phần hỗ trợ trước can thiệp. Bộ app không tự chứng minh hiệu quả nghiên cứu; khảo sát trước/sau và phân tích do nhóm thực hiện.
+```bash
+cd server
+ADMIN_USERNAME=quantri ADMIN_PASSWORD='MatKhauManh123' node --env-file=.env scripts/create-admin.ts
+```
 
-Lời nhắn hỗ trợ dựa trên từ khóa là lời nhắc tìm người hỗ trợ, không chẩn đoán hay tự thông báo người khác. Trước khi gửi, toàn bộ ô văn bản có từ khóa được thay bằng `[đã ẩn – an toàn]`; bản gốc giữ riêng trên máy và trong bản sao cá nhân. Máy chủ kiểm tra và che lại trước khi ghi Sheet. Bộ lọc theo từ khóa không bảo đảm phát hiện mọi tình huống.
+### Tạo dữ liệu mẫu để xem giao diện
 
+```bash
+node --env-file=.env scripts/seed-demo.ts
+# hs01 / hs02 / hs03 / hs10 — mật khẩu Demo12345
+```
 
-Nếu trình xem HTML chặn bộ nhớ, nút Bắt đầu hiển thị lỗi ngay trong biểu mẫu. Bản demo có lựa chọn **Xem thử không lưu** sau khi phát hiện lỗi lưu: cần chọn chủ động, bài chỉ ở phiên hiện tại, đóng/tải lại sẽ mất và không gửi Sheet. Bản Apps Script thật không cho bỏ qua yêu cầu lưu. Tải HTML về và mở trong Chrome/Edge cho phép lưu dữ liệu để thử lưu nháp lâu dài.
+---
 
+## Kiểm thử
 
-## Rà Backend theo góp ý chốt
+```bash
+cd server
+npx tsc --noEmit      # kiểm tra kiểu
+npm test              # 27 test đơn vị, chạy không cần CSDL
 
-Bản 2.3.0 chuyển đường đọc/ghi chống trùng sang cùng Sheets API, kiểm tra kích thước cả cột dẫn xuất và cho nhập lại PIN điều phối ngay trên phiếu khi cache mất. Xem [đối chiếu góp ý](docs/BACKEND_REVIEW.md), [issue thật](docs/issues/README.md), [checklist cấu hình](docs/DEPLOYMENT_CHECKLIST.md), [kế hoạch tải](docs/LOAD_TEST_PLAN.md) và [hướng dẫn học sinh](docs/HUONG_DAN_HOC_SINH.md). Không coi kiểm thử mô phỏng là xác nhận đạt tải hoặc đã triển khai Google.
+TEST_DATABASE_URL=postgres://... npm test   # thêm 32 test tích hợp
+```
 
+Test tích hợp chứng minh những điều chỉ là lời hứa ở bản cũ:
 
-## Đăng xuất (2.4.0)
+| Điều được chứng minh | Cách kiểm |
+|---|---|
+| Gửi lại cùng `id` không tạo bài trùng | Đếm số dòng sau hai lần gửi |
+| Trigger chặn sửa bài nộp | `UPDATE` phải ném lỗi |
+| Che nội dung chạy ở backend | Từ khoá bị thay trong CSDL, không chỉ ở giao diện |
+| Học sinh không vào được API admin | Gọi trực tiếp phải nhận `403` |
+| Giáo viên không đọc được nội dung bài | Kiểm chuỗi nội dung không xuất hiện trong phản hồi |
+| Lệch `revision` thì báo xung đột | Gửi sai số phiên bản phải nhận `409` |
 
-Sau khi vào bằng mã, nút **Đăng xuất** xuất hiện trên thanh phiên ở cả máy tính và điện thoại. App thu lại nội dung đang nhập, lưu nháp và bỏ hồ sơ đang chọn trước khi về màn hình nhập mã. Nháp, lịch sử và hàng đợi không bị xóa; dùng lại đúng mã/trường/lớp để tiếp tục. Nếu không lưu được, app giữ màn hình để người dùng tải bản sao thay vì âm thầm mất bài.
+---
 
-Đăng xuất chung xóa token điều phối/giáo viên trong trình duyệt và yêu cầu máy chủ thu hồi token khi kết nối cho phép. Mất mạng hoặc deployment cũ có thể khiến việc thu hồi chưa được xác nhận; token máy chủ còn hạn vẫn tuân theo thời gian hết phiên. Đây không phải mật khẩu bảo vệ dữ liệu cục bộ: người có quyền dùng trình duyệt và biết mã vẫn có thể vào hồ sơ trên máy. Với Xem thử không lưu, dữ liệu chỉ còn đến khi đóng/tải lại trang.
+## Cấu trúc kho mã
 
-## Tài khoản học sinh (2.5.0)
+```
+server/            API Fastify (đang dùng)
+  src/routes/      student, admin, staff, importExport
+  src/auth/        đăng nhập, phiên
+  src/security/    argon2, token, che nội dung
+  scripts/         migrate, create-admin, seed-demo
+  test/            27 đơn vị + 32 tích hợp
+web/               React + Vite + Tailwind (đang dùng)
+  src/components/  AppShell, UserMenu, StarFall
+  src/pages/       Login, Dashboard, Week, Review, ChangePassword
+  src/content/     nội dung 4 tuần (chép nguyên từ bản 2.x)
+db/migrations/     SQL có phiên bản
+supabase/          lược đồ tham chiếu (chưa dùng)
+src/, apps-script/ bản 2.8.1 — đường lùi, không còn là backend chính
+tests/             17 bộ kiểm thử của bản 2.x
+docs/              tài liệu, ảnh minh chứng
+```
 
-Bản Apps Script đăng nhập bằng mã có sẵn + mật khẩu riêng được cấp (giữ PIN cũ), kiểm tra đúng trường/lớp trước khi nhận bài; Sheet lưu bài đã che an toàn và bảng tiến độ bốn tuần. Đăng xuất giữ nháp/hàng đợi; đăng nhập trên máy mới tải tiến độ, Sổ khôi phục bài đã xử lý an toàn; bản gốc trước khi che vẫn trên thiết bị cũ/bản sao. Xem [cấp tài khoản và triển khai](docs/TAI_KHOAN_HOC_SINH.md), [issue #8](https://github.com/antonio46-fpt/xoay-chieu/issues/8). Chưa triển khai hay kiểm thử vào Sheet thật.
+---
 
-## Mật khẩu theo danh sách Excel (2.6.0)
+## Các bảng dữ liệu
 
-Cấu hình lớp được cập nhật theo đợt triển khai (xem mục 2.7 bên dưới); không chứa mã học sinh thật trong source. [Công cụ xuất CSV riêng](tools/import_student_roster.py) chỉ lấy mã/trường/lớp. Chủ dự án nhập CSV qua `importStudentRoster_`, cấp mật khẩu riêng bằng `provisionStudentAccounts_` và tải bảng tài khoản/mật khẩu trong hộp thoại Sheet. Máy chủ xác thực trước khi FE vào học, giữ tương thích PIN cũ; bản HTML ghi rõ demo. Xem [hướng dẫn](docs/TAI_KHOAN_HOC_SINH.md), [issue #9](https://github.com/antonio46-fpt/xoay-chieu/issues/9).
+| Bảng | Nội dung |
+|---|---|
+| `students` | Hồ sơ học sinh: mã, trường, lớp — **không có họ tên** |
+| `users` | Tài khoản, mật khẩu băm, vai, liên kết hồ sơ |
+| `sessions` | Phiên đăng nhập, chỉ lưu băm token |
+| `submissions` | Bài nộp 4 tuần, bất biến sau khi ghi |
+| `drafts` | Bản nháp đồng bộ, có `revision` chống ghi đè |
+| `progress` | Tuần đã nộp, chỉ sinh từ dữ liệu backend xác nhận |
+| `schools`, `classes` | Trường và lớp |
+| `staff_assignments` | Giáo viên / điều phối viên phụ trách lớp nào |
+| `phieu_buoi`, `doi_y` | Phiếu ghi buổi học và phiếu đổi ý |
+| `audit_log` | Nhật ký thao tác quản trị |
+| `roles`, `permissions`, `role_permissions` | Phân quyền |
+| `settings` | Cấu hình hệ thống |
 
-## Tiến trình qua các tuần (2.7.0)
+---
 
-[Hướng dẫn lưu/khôi phục tiến trình](docs/TIEN_TRINH_HOC_TAP.md): nháp và bài cũ của chính tài khoản được tải từ Sheet, tiếp tục đúng bước khi vào tuần sau; đồng bộ có revision để tránh thiết bị cũ ghi đè. Cập nhật thêm **Learning.gs** và chạy setup_ trước New version. Giữ tài khoản/tiến trình Chi Lăng cũ, thêm Lộc Bình; chưa kích hoạt NT-10A6/NT-10A7 khi chưa bốc thăm. [Issue #10](https://github.com/antonio46-fpt/xoay-chieu/issues/10).
+## API chính
 
-## Mã lớp 2.7.1
+**Xác thực**
 
-Giá trị dữ liệu dùng 10A3, 11E1, LB-11A; chú thích chỉ hiển thị. Giữ tương thích tài khoản, mật khẩu, bài và nháp cũ. Cập nhật đồng bộ đủ 5 tệp Apps Script rồi New version, không đổi hàng loạt Sheet gốc. Xem [mã lớp và nâng cấp](docs/MA_LOP.md).
+```
+POST /api/auth/login              đăng nhập
+POST /api/auth/logout             đăng xuất, thu hồi phiên
+GET  /api/auth/me                 phiên hiện tại
+POST /api/auth/change-password    đổi mật khẩu
+```
 
-## Quản lý trên Sheet và đồng bộ 1 phút (2.8.0)
+**Học sinh**
 
-Thêm Management.gs, cập nhật đủ sáu tệp Apps Script và chạy setup_ hoặc setupManagement_, rồi New version. Hai trang quan_ly_hoc_sinh và quan_ly_hoc_tap tự hiện tiến độ và câu trả lời an toàn của từng tài khoản. Nháp tự gửi mỗi 60 giây khi có thay đổi; checkpoint nộp/thoát vẫn lưu ngay. Xem [hướng dẫn quản lý Sheet](docs/QUAN_LY_SHEET.md).
+```
+GET  /api/me/overview             tiến độ bốn tuần
+POST /api/me/submissions          nộp bài (chống trùng theo id)
+GET  /api/me/submissions          bài của chính mình
+GET  /api/me/submissions/:id      chi tiết một bài
+GET  /api/me/drafts/:tuan         đọc bản nháp
+PUT  /api/me/drafts/:tuan         lưu bản nháp (CAS theo revision)
+```
+
+**Giáo viên và điều phối**
+
+```
+GET  /api/staff/classes                      lớp được phân công
+GET  /api/staff/classes/:id/progress         mã + tuần đã nộp (KHÔNG có nội dung)
+POST /api/staff/session-notes                phiếu buổi học
+POST /api/staff/decisions                    phiếu đổi ý
+```
+
+**Quản trị**
+
+```
+GET  /api/admin/overview                     thống kê tổng quan
+GET  /api/admin/students                     danh sách, lọc, phân trang
+POST /api/admin/students                     tạo tài khoản
+POST /api/admin/students/:id/reset-password  đặt lại mật khẩu
+POST /api/admin/students/:id/status          khoá / mở khoá
+POST /api/admin/import/preview               xem trước CSV, báo lỗi từng dòng
+POST /api/admin/import/commit                ghi danh sách, trả mật khẩu một lần
+GET  /api/admin/export/students              xuất CSV (có BOM cho Excel)
+GET  /api/admin/export/submissions           xuất bài nộp theo tuần / lớp
+GET  /api/admin/assignments                  phân công nhân sự
+```
+
+---
+
+## Triển khai
+
+```bash
+# Build giao diện
+cd web && npm run build          # ra web/dist
+
+# Chạy API nền
+cd ../server
+pm2 start npm --name xoaychieu-api -- start
+```
+
+Nginx làm reverse proxy: phục vụ `web/dist` ở `/`, chuyển `/api` sang cổng 3000. HTTPS bằng Let's Encrypt.
+
+Sao lưu hằng ngày:
+
+```bash
+pg_dump "$DATABASE_URL" | gzip > /backup/xoaychieu-$(date +%F).sql.gz
+```
+
+Xem `docs/DEPLOYMENT_CHECKLIST.md` để có danh sách đầy đủ.
+
+---
+
+## Trạng thái dự án
+
+| Hạng mục | Trạng thái |
+|---|---|
+| Backend: đăng nhập, nộp bài, nháp, CSV, giáo viên, điều phối, đổi mật khẩu | ✅ 59 test đạt |
+| Giao diện học sinh: đăng nhập, dashboard, làm bài, xem lại, đổi mật khẩu | ✅ chạy được |
+| Chế độ tối | ✅ |
+| Trang giáo viên | ⬜ API xong, chưa có giao diện |
+| Trang admin | ⬜ API phần lớn xong, chưa có giao diện |
+| Triển khai VPS | ⬜ chưa |
+| Chuyển dữ liệu từ Google Sheets | ⬜ chưa |
+
+---
+
+## Tài liệu
+
+| Tệp | Nội dung |
+|---|---|
+| [SCOPE.md](SCOPE.md) | Phạm vi, quyền dữ liệu, điểm chờ chốt |
+| [docs/HUONG_DAN_DOC_CODE_CHI_TIET.md](docs/HUONG_DAN_DOC_CODE_CHI_TIET.md) | Hướng dẫn đọc mã nguồn từ A đến Z |
+| [docs/Xoay_Chieu_Cong_nghe_Chi_tiet.docx](docs/Xoay_Chieu_Cong_nghe_Chi_tiet.docx) | Tài liệu công nghệ cho hội đồng |
+| [docs/Lo_trinh_day_doc_code_3_tuan.docx](docs/Lo_trinh_day_doc_code_3_tuan.docx) | Giáo án 15 buổi dạy người mới |
+| [docs/DEPLOYMENT_CHECKLIST.md](docs/DEPLOYMENT_CHECKLIST.md) | Danh sách kiểm triển khai |
+| [docs/GOP_Y_31-10.md](docs/GOP_Y_31-10.md) | Đối chiếu 19 góp ý của nhóm |
+
+---
+
+## Giấy phép và dữ liệu
+
+Mã nguồn công khai để nhóm nghiên cứu và đơn vị tiếp nhận tham chiếu. **Dữ liệu học sinh không nằm trong kho mã** — bảng đối chiếu mã với họ tên do nhóm giữ riêng, ngoài hệ thống.
