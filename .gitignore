@@ -19,3 +19,7 @@ server/dist/
 web/node_modules/
 web/dist/
 web/*.tsbuildinfo
+
+# Tep co du lieu hoc sinh that va script tam, khong dua len Git
+docs/hvt.docx
+.serve-public.cjs

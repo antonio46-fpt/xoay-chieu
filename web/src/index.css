@@ -259,3 +259,20 @@ li.group-hover\:bg-canvas\/60:hover {
 .dark .border-line {
   border-color: #1e2c45;
 }
+
+/* Hai trang nền sáng dùng màu gán trực tiếp trong thẻ, nên phải bắt theo
+   giá trị màu. Cách này tạm thời; khi có thời gian sẽ đổi sang token. */
+.dark [style*="rgba(245, 245, 249, 0.94)"],
+.dark [style*="rgba(245,245,249,0.94)"] {
+  background: rgba(4, 10, 20, 0.95) !important;
+}
+
+.dark [style*="#0d1f3a"],
+.dark [style*="#4b5563"] {
+  color: #eaf0fb !important;
+}
+
+.dark [style*="#3e5474"],
+.dark [style*="#6b7280"] {
+  color: #a9bbd4 !important;
+}
