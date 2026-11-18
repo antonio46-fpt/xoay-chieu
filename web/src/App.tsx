@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import WeekPage from './pages/WeekPage';
 import ReviewPage from './pages/ReviewPage';
 import ChangePasswordPage from './pages/ChangePasswordPage';
+import AdminOverview from './pages/admin/AdminOverview';
 import { batDauTheoDoiMang } from './lib/queue';
 
 type ManHinh = { ten: 'dashboard' } | { ten: 'week'; tuan: number } | { ten: 'review' };
@@ -108,6 +109,26 @@ export default function App(): JSX.Element {
         onLoggedOut={() => setPhien(null)}
       />
     );
+  }
+
+  // Khu quản trị: cùng phiên đăng nhập, phân biệt bằng vai và đường dẫn /admin
+  const laAdmin = ['admin', 'super_admin', 'research_viewer'].includes(phien.user.role);
+  const vaoAdmin = window.location.pathname.startsWith('/admin');
+
+  if (vaoAdmin) {
+    if (!laAdmin) {
+      return (
+        <div className="grid min-h-screen place-items-center bg-canvas px-4">
+          <div className="card max-w-md text-center">
+            <p className="text-sm text-ink">Tài khoản này không có quyền vào khu quản trị.</p>
+            <button type="button" className="btn-primary mt-4 w-full" onClick={() => window.location.assign('/')}>
+              Về trang học sinh
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return <AdminOverview phien={phien} />;
   }
 
   if (manHinh.ten === 'week') {
