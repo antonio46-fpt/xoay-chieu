@@ -1,7 +1,7 @@
 /**
  * Khung giao diện: sidebar trắng (thu gọn được) + topbar trắng.
  */
-import { useEffect, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import UserMenu from './UserMenu';
 import StarFall from './StarFall';
 
@@ -37,12 +37,10 @@ export default function AppShell({
   children
 }: Props): JSX.Element {
   const [moMenu, setMoMenu] = useState(false);
-  const [thuGon, setThuGon] = useState(false);
+  // Đọc ngay lúc khởi tạo, không qua useEffect: nếu để useEffect thì mỗi lần
+  // chuyển trang sidebar sẽ chạy animation từ 260px về 76px, trông như giật.
+  const [thuGon, setThuGon] = useState(() => localStorage.getItem(KHOA_THU_GON) === '1');
   const [quayNhanh, setQuayNhanh] = useState(false);
-
-  useEffect(() => {
-    setThuGon(localStorage.getItem(KHOA_THU_GON) === '1');
-  }, []);
 
   function doiThuGon(): void {
     setThuGon(v => {
