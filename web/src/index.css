@@ -254,6 +254,30 @@ aside nav button:hover {
   background-color: #0c2b34;
 }
 
+/* Chữ màu thương hiệu ở nền tối phải sáng lên mới đọc được */
+.dark .text-primary {
+  color: #7fd6e6;
+}
+
+.dark .text-accent {
+  color: #5eead4;
+}
+
+.dark .bg-primary-soft {
+  background-color: #123742;
+}
+
+/* Nút phụ ở nền tối: viền và chữ sáng */
+.dark .btn-ghost {
+  border-color: #2a5563;
+  color: #d7e9ee;
+}
+
+.dark .btn-ghost:hover {
+  border-color: #5eead4;
+  color: #a7f3eb;
+}
+
 .dark .text-ink-strong {
   color: #eaf6f7;
 }
