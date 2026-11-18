@@ -56,6 +56,16 @@ export default function App(): JSX.Element {
 
   if (!phien) return <LoginPage onSuccess={setPhien} />;
 
+  // Vai quản trị phải được xét TRƯỚC khối chặn "khác student" bên dưới,
+  // nếu không họ sẽ rơi vào màn hình tạm dù có quyền.
+  const laVaiQuanTri = ['admin', 'super_admin', 'research_viewer'].includes(phien.user.role);
+  if (laVaiQuanTri) {
+    if (!window.location.pathname.startsWith('/admin')) {
+      window.location.assign('/admin');
+    }
+    return <AdminOverview phien={phien} />;
+  }
+
   if (phien.user.role !== 'student') {
     return (
       <div className="grid min-h-screen place-items-center px-4">
