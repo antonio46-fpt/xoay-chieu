@@ -264,11 +264,11 @@ Xem `docs/DEPLOYMENT_CHECKLIST.md` để có danh sách đầy đủ.
 
 | Hạng mục | Trạng thái |
 |---|---|
-| Backend: đăng nhập, nộp bài, nháp, CSV, giáo viên, điều phối, đổi mật khẩu | ✅ 59 test đạt |
+| Backend: đăng nhập, nộp bài, nháp, CSV, giáo viên, điều phối, đổi mật khẩu | ✅ 60 test đạt |
 | Giao diện học sinh: đăng nhập, dashboard, làm bài, xem lại, đổi mật khẩu | ✅ chạy được |
 | Chế độ tối | ✅ |
+| Trang admin: tổng quan KPI, tiến độ 4 tuần, quản lý học sinh, cấp lại mật khẩu, nhập/xuất CSV, xem chi tiết bài làm | ✅ chạy được |
 | Trang giáo viên | ⬜ API xong, chưa có giao diện |
-| Trang admin | ⬜ API phần lớn xong, chưa có giao diện |
 | Triển khai VPS | ⬜ chưa |
 | Chuyển dữ liệu từ Google Sheets | ⬜ chưa |
 
