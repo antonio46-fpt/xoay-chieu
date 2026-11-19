@@ -22,7 +22,7 @@ const MUC: { key: MucAdmin; nhan: string; icon: string; duong: string; san: bool
   { key: 'tong-quan', nhan: 'Tổng quan', icon: '▦', duong: '/admin', san: true },
   { key: 'hoc-sinh', nhan: 'Học sinh & tài khoản', icon: '▤', duong: '/admin/students', san: true },
   { key: 'bai-nop', nhan: 'Theo dõi bài nộp', icon: '✎', duong: '/admin/submissions', san: true },
-  { key: 'noi-dung', nhan: 'Nội dung 4 tuần', icon: '☰', duong: '/admin/content', san: false }
+  { key: 'noi-dung', nhan: 'Nội dung 4 tuần', icon: '☰', duong: '/admin/content', san: true }
 ];
 
 const NHAN_VAI: Record<string, string> = {

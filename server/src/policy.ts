@@ -23,23 +23,35 @@ export type Quyen =
   | 'submission.read'
   | 'submission.export'
   | 'admin.manage'
+  | 'content.manage'
+  | 'content.read'
   | 'audit.read';
 
 const BANG_QUYEN: Record<Vai, readonly Quyen[]> = {
   student: ['student.self'],
   teacher: ['progress.class.read'],
-  coordinator: ['progress.class.read', 'session.note.write'],
-  admin: ['student.manage', 'school.manage', 'submission.read', 'submission.export', 'audit.read'],
+  coordinator: ['progress.class.read', 'session.note.write', 'content.read'],
+  admin: [
+    'student.manage',
+    'school.manage',
+    'submission.read',
+    'submission.export',
+    'content.manage',
+    'content.read',
+    'audit.read'
+  ],
   super_admin: [
     'student.manage',
     'school.manage',
     'submission.read',
     'submission.export',
     'admin.manage',
+    'content.manage',
+    'content.read',
     'audit.read',
     'progress.class.read'
   ],
-  research_viewer: ['submission.read', 'submission.export']
+  research_viewer: ['submission.read', 'submission.export', 'content.read']
 };
 
 export function permissionsOf(vai: Vai): readonly Quyen[] {

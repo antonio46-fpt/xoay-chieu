@@ -7,7 +7,8 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type pg from 'pg';
 import { can, type Quyen } from '../policy.ts';
-import { CreateStudentSchema, PaginationSchema } from '../validation.ts';
+import { CreateStudentSchema, PaginationSchema, ContentSchema } from '../validation.ts';
+import { docTatCa, docMotTuan, luuTuan, khoiPhucMacDinh } from '../content/store.ts';
 import { hashPassword } from '../security/password.ts';
 import { query, queryOne, transaction } from '../db.ts';
 import { phienHienTai, type PhuThuocRoute } from '../auth/routes.ts';
@@ -302,6 +303,66 @@ export async function adminRoutes(app: FastifyInstance, opts: PhuThuocRoute): Pr
   });
 
   // ------------------------------------------------- đặt lại mật khẩu
+  // ------------------------------------------------- nội dung bốn tuần
+  app.get('/content', async (request: FastifyRequest, reply: FastifyReply) => {
+    if (!(await canQuyen(request, reply, db, 'content.read'))) return;
+    const ds = await docTatCa(db);
+    return reply.send({ items: ds });
+  });
+
+  app.get('/content/:tuan', async (request: FastifyRequest, reply: FastifyReply) => {
+    if (!(await canQuyen(request, reply, db, 'content.read'))) return;
+    const so = Number((request.params as { tuan: string }).tuan);
+    if (![1, 2, 3, 4].includes(so)) {
+      return reply.code(400).send({ error: 'INVALID_INPUT', message: 'Tuần phải từ 1 đến 4.' });
+    }
+    const muc = await docMotTuan(db, so);
+    if (!muc) return reply.code(404).send({ error: 'NOT_FOUND', message: 'Không có nội dung tuần này.' });
+    return reply.send(muc);
+  });
+
+  app.put('/content/:tuan', async (request: FastifyRequest, reply: FastifyReply) => {
+    const phien = await canQuyen(request, reply, db, 'content.manage');
+    if (!phien) return;
+
+    const so = Number((request.params as { tuan: string }).tuan);
+    if (![1, 2, 3, 4].includes(so)) {
+      return reply.code(400).send({ error: 'INVALID_INPUT', message: 'Tuần phải từ 1 đến 4.' });
+    }
+
+    const daKiem = ContentSchema.safeParse({ ...(request.body as object), tuan: so });
+    if (!daKiem.success) {
+      const loiDau = daKiem.error.issues[0];
+      return reply.code(400).send({
+        error: 'DU_LIEU_KHONG_HOP_LE',
+        message: loiDau ? `${loiDau.path.join('.')}: ${loiDau.message}` : 'Nội dung không hợp lệ.'
+      });
+    }
+
+    await luuTuan(db, so, daKiem.data as never, phien.user.id);
+    await ghiNhatKy(db, phien.user.id, 'content.update', 'content', String(so), {}, request.ip);
+
+    const moi = await docMotTuan(db, so);
+    return reply.send(moi);
+  });
+
+  app.post('/content/:tuan/reset', async (request: FastifyRequest, reply: FastifyReply) => {
+    const phien = await canQuyen(request, reply, db, 'content.manage');
+    if (!phien) return;
+
+    const so = Number((request.params as { tuan: string }).tuan);
+    if (![1, 2, 3, 4].includes(so)) {
+      return reply.code(400).send({ error: 'INVALID_INPUT', message: 'Tuần phải từ 1 đến 4.' });
+    }
+
+    const goc = await khoiPhucMacDinh(db, so, phien.user.id);
+    if (!goc) return reply.code(404).send({ error: 'NOT_FOUND', message: 'Không có bản gốc cho tuần này.' });
+
+    await ghiNhatKy(db, phien.user.id, 'content.reset', 'content', String(so), {}, request.ip);
+    const moi = await docMotTuan(db, so);
+    return reply.send(moi);
+  });
+
   // ------------------------------------------- danh sách bài nộp 4 tuần
   app.get('/submissions', async (request: FastifyRequest, reply: FastifyReply) => {
     if (!(await canQuyen(request, reply, db, 'submission.read'))) return;

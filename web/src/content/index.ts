@@ -1,8 +1,9 @@
 /**
  * Nội dung bốn tuần.
  *
- * Tệp content.json được sao nguyên từ src/content.json của bản 2.x, không sửa
- * một chữ nào. Type ở đây chỉ mô tả hình dạng để TypeScript kiểm tra.
+ * Tệp content.json là bản gốc đóng gói trong build. Sau khi đăng nhập, App
+ * gọi `datNoiDungMoi()` để thay bằng bản trong cơ sở dữ liệu, nhờ đó quản trị
+ * viên sửa đề bài mà không phải build lại giao diện.
  */
 import duLieu from './content.json';
 
@@ -52,11 +53,37 @@ type NoiDung = {
   weeks: Tuan[];
 };
 
-const noiDung = duLieu as unknown as NoiDung;
+const noiDungGoc = duLieu as unknown as NoiDung;
 
-export const PHIEN_BAN_NOI_DUNG = noiDung.phien_ban;
-export const SO_TUAN = noiDung.so_tuan;
-export const THANG_TU_DANH_GIA = noiDung.tieu_chi_san_pham;
+/** Nội dung đang dùng: mặc định là bản đóng gói, thay được bằng bản từ máy chủ. */
+let noiDung: NoiDung = noiDungGoc;
+
+let bangNhan: Map<string, string> = new Map();
+
+function dungLaiBangNhan(): void {
+  const bang = new Map<string, string>();
+  for (const tuan of noiDung.weeks) {
+    for (const buoc of tuan.steps) {
+      for (const o of buoc.fields) {
+        if (!bang.has(o.key)) bang.set(o.key, o.label);
+      }
+    }
+  }
+  bangNhan = bang;
+}
+
+dungLaiBangNhan();
+
+export const PHIEN_BAN_NOI_DUNG = noiDungGoc.phien_ban;
+export const SO_TUAN = noiDungGoc.so_tuan;
+export const THANG_TU_DANH_GIA = noiDungGoc.tieu_chi_san_pham;
+
+/** Thay nội dung đang dùng bằng bản lấy từ máy chủ. */
+export function datNoiDungMoi(weeks: Tuan[]): void {
+  if (!Array.isArray(weeks) || weeks.length === 0) return;
+  noiDung = { ...noiDung, weeks };
+  dungLaiBangNhan();
+}
 
 export function layTuan(so: number): Tuan | undefined {
   return noiDung.weeks.find(t => t.tuan === so);
@@ -71,24 +98,11 @@ export function demTu(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
-/** Nhãn hiển thị của một ô, tra theo khoá. Dùng khi xem lại bài đã nộp. */
-const NHAN_THEO_KHOA: Map<string, string> = (() => {
-  const bang = new Map<string, string>();
-  for (const tuan of noiDung.weeks) {
-    for (const buoc of tuan.steps) {
-      for (const o of buoc.fields) {
-        if (!bang.has(o.key)) bang.set(o.key, o.label);
-      }
-    }
-  }
-  return bang;
-})();
-
 export function nhanCuaO(key: string): string {
-  return NHAN_THEO_KHOA.get(key) ?? key;
+  return bangNhan.get(key) ?? key;
 }
 
 /** Các khoá nội dung theo đúng thứ tự xuất hiện trong chương trình. */
 export function cacKhoaNoiDung(): string[] {
-  return [...NHAN_THEO_KHOA.keys()];
+  return [...bangNhan.keys()];
 }

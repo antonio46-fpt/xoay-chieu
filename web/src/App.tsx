@@ -8,7 +8,10 @@ import ChangePasswordPage from './pages/ChangePasswordPage';
 import AdminOverview from './pages/admin/AdminOverview';
 import AdminStudents from './pages/admin/AdminStudents';
 import AdminSubmissions from './pages/admin/AdminSubmissions';
+import AdminContent from './pages/admin/AdminContent';
 import { batDauTheoDoiMang } from './lib/queue';
+import { datNoiDungMoi, type Tuan } from './content';
+import { api } from './api/client';
 
 type ManHinh = { ten: 'dashboard' } | { ten: 'week'; tuan: number } | { ten: 'review' };
 
@@ -23,6 +26,30 @@ export default function App(): JSX.Element {
   const [dangKiemTra, setDangKiemTra] = useState(true);
   const [manHinh, setManHinh] = useState<ManHinh>({ ten: 'dashboard' });
   const [dangDoiMatKhau, setDangDoiMatKhau] = useState(false);
+
+  // Nạp nội dung 4 tuần từ máy chủ để quản trị viên sửa được mà không build lại.
+  // Nếu lỗi mạng, giao diện dùng bản đóng gói sẵn trong build — không chặn.
+  useEffect(() => {
+    if (!phien) return;
+    let huy = false;
+    const laQuanTri = ['admin', 'super_admin', 'research_viewer', 'teacher', 'coordinator'].includes(phien.user.role);
+
+    const lay = laQuanTri
+      ? api<{ items: { noiDung: Tuan }[] }>('/api/admin/content').then(kq => kq.items.map(i => i.noiDung))
+      : api<{ weeks: Tuan[] }>('/api/me/content').then(kq => kq.weeks);
+
+    void lay
+      .then(weeks => {
+        if (!huy) datNoiDungMoi(weeks);
+      })
+      .catch(() => {
+        /* giữ bản đóng gói */
+      });
+
+    return () => {
+      huy = true;
+    };
+  }, [phien]);
 
   // Gửi lại bài còn trong hàng đợi mỗi khi có mạng.
   useEffect(() => batDauTheoDoiMang(), []);
@@ -68,6 +95,9 @@ export default function App(): JSX.Element {
     }
     if (duong.startsWith('/admin/submissions')) {
       return <AdminSubmissions phien={phien} />;
+    }
+    if (duong.startsWith('/admin/content')) {
+      return <AdminContent phien={phien} />;
     }
     if (!duong.startsWith('/admin')) {
       window.location.assign('/admin');

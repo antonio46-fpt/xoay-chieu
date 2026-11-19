@@ -11,6 +11,7 @@ import { query, queryOne, transaction } from '../db.ts';
 import { phienHienTai, type PhuThuocRoute } from '../auth/routes.ts';
 import { cheBaiNop } from '../security/redact.ts';
 import { DraftSchema, SubmissionSchema } from '../validation.ts';
+import { docChoHocSinh } from '../content/store.ts';
 
 type PhienHocSinh = {
   userId: string;
@@ -59,6 +60,17 @@ async function docTuKhoa(db: pg.Pool): Promise<string[]> {
 
 export async function studentRoutes(app: FastifyInstance, opts: PhuThuocRoute): Promise<void> {
   const { db } = opts;
+
+  // ------------------------------------------------- nội dung bốn tuần
+  app.get('/content', async (request: FastifyRequest, reply: FastifyReply) => {
+    const phien = await phienHienTai(request, db);
+    if (!phien) {
+      return reply.code(401).send({ error: 'CHUA_DANG_NHAP', message: 'Chưa đăng nhập.' });
+    }
+
+    const weeks = await docChoHocSinh(db);
+    return reply.send({ weeks });
+  });
 
   // ------------------------------------------------------- tổng quan
   app.get('/overview', async (request: FastifyRequest, reply: FastifyReply) => {

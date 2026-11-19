@@ -777,8 +777,101 @@ chay('tích hợp: đăng nhập, nộp bài, nháp, phân quyền', () => {
     await db.query(`delete from students where ma = 'CH12-T-03'`);
   });
 
-  test('bảo mật: header phòng thủ được bật', async () => {
-    const tra = await app.inject({ method: 'GET', url: '/api/health' });
+  test('nội dung 4 tuần: đọc, sửa, học sinh thấy ngay, khôi phục bản gốc', async () => {
+    const doc = await app.inject({ method: 'GET', url: '/api/admin/content/1', headers: { cookie: adminCookie } });
+    assert.equal(doc.statusCode, 200);
+    const goc = doc.json();
+    assert.equal(goc.tuan, 1);
+    assert.ok(Array.isArray(goc.noiDung.steps));
+
+    // Sửa tiêu đề rồi đọc lại.
+    const sua = structuredClone(goc.noiDung);
+    sua.title = 'Tiêu đề đã sửa trong test';
+    const luu = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/content/1',
+      headers: { cookie: adminCookie },
+      payload: sua
+    });
+    assert.equal(luu.statusCode, 200);
+    assert.equal(luu.json().noiDung.title, 'Tiêu đề đã sửa trong test');
+
+    // Học sinh thấy nội dung mới qua /api/me/content.
+    const hs = await app.inject({ method: 'GET', url: '/api/me/content', headers: { cookie: adminCookie } });
+    assert.equal(hs.statusCode, 200);
+    const tuan1 = hs.json().weeks.find((w: { tuan: number }) => w.tuan === 1);
+    assert.equal(tuan1.title, 'Tiêu đề đã sửa trong test', 'học sinh phải thấy nội dung vừa sửa');
+
+    // Dữ liệu sai bị từ chối.
+    const rong = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/content/1',
+      headers: { cookie: adminCookie },
+      payload: { tuan: 1, title: '', steps: [] }
+    });
+    assert.equal(rong.statusCode, 400);
+
+    // Tuần ngoài phạm vi bị từ chối.
+    const saiTuan = await app.inject({
+      method: 'GET',
+      url: '/api/admin/content/9',
+      headers: { cookie: adminCookie }
+    });
+    assert.equal(saiTuan.statusCode, 400);
+
+    // Khôi phục.
+    const khoiPhuc = await app.inject({
+      method: 'POST',
+      url: '/api/admin/content/1/reset',
+      headers: { cookie: adminCookie }
+    });
+    assert.equal(khoiPhuc.statusCode, 200);
+    assert.equal(khoiPhuc.json().noiDung.title, goc.noiDung.title, 'phải trở về tiêu đề gốc');
+  });
+
+  test('bảo mật: học sinh không sửa được nội dung', async () => {
+    const hash = await hashPassword('MatKhau123');
+    await db.query(
+      `insert into students (ma, school_id, class_id)
+       select 'CH12-T-04', school_id, class_id from students where id = $1`,
+      [studentId]
+    );
+    const st = await db.query(`select id from students where ma = 'CH12-T-04'`);
+    await db.query(
+      `insert into users (username, password_hash, role, student_id) values ('hocsinh-noi-dung', $1, 'student', $2)`,
+      [hash, st.rows[0].id]
+    );
+
+    const phien = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { username: 'hocsinh-noi-dung', password: 'MatKhau123' }
+    });
+    const cookieHs = phien.headers['set-cookie'] as string;
+
+    const doc = await app.inject({ method: 'GET', url: '/api/admin/content', headers: { cookie: cookieHs } });
+    assert.equal(doc.statusCode, 403);
+
+    const sua = await app.inject({
+      method: 'PUT',
+      url: '/api/admin/content/1',
+      headers: { cookie: cookieHs },
+      payload: { tuan: 1, title: 'hack', steps: [{ title: 'x' }] }
+    });
+    assert.equal(sua.statusCode, 403);
+
+    const reset = await app.inject({
+      method: 'POST',
+      url: '/api/admin/content/1/reset',
+      headers: { cookie: cookieHs }
+    });
+    assert.equal(reset.statusCode, 403);
+
+    await db.query(`delete from users where username = 'hocsinh-noi-dung'`);
+    await db.query(`delete from students where ma = 'CH12-T-04'`);
+  });
+
+  test('bảo mật: header phòng thủ được bật', async () => {    const tra = await app.inject({ method: 'GET', url: '/api/health' });
     assert.equal(tra.statusCode, 200);
 
     const csp = String(tra.headers['content-security-policy'] ?? '');

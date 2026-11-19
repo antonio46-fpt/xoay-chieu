@@ -87,3 +87,31 @@ export const DraftSchema = z.object({
 
 export type LoginInput = z.infer<typeof LoginSchema>;
 export type SubmissionInput = z.infer<typeof SubmissionSchema>;
+
+/**
+ * Nội dung một tuần do quản trị viên sửa.
+ *
+ * Chỉ cho sửa phần chữ nghĩa hiển thị (tiêu đề, mô tả, thân bước, gợi ý).
+ * Cấu trúc ô trả lời (`fields`) được giữ nguyên để không làm lệch dữ liệu đã
+ * nộp: học sinh đã trả lời theo khoá `key`, đổi khoá là mất liên kết.
+ */
+const BuocNoiDungSchema = z.object({
+  title: z.string().trim().min(1, 'Tiêu đề bước không được để trống').max(200),
+  stage: z.string().trim().max(80).default(''),
+  minutes: z.coerce.number().int().min(0).max(600).default(0),
+  body: z.string().max(20_000).default(''),
+  fields: z.array(z.record(z.string(), z.unknown())).max(40).default([]),
+  hints: z.array(z.string().max(2_000)).max(20).default([])
+});
+
+export const ContentSchema = z.object({
+  tuan: TuanSchema,
+  title: z.string().trim().min(1, 'Tiêu đề tuần không được để trống').max(200),
+  focus: z.string().trim().max(500).default(''),
+  duration: z.coerce.number().int().min(0).max(600).default(0),
+  quy_trinh: z.string().max(80).optional(),
+  letter: z.record(z.string(), z.unknown()).default({}),
+  steps: z.array(BuocNoiDungSchema).min(1, 'Mỗi tuần phải có ít nhất một bước').max(40)
+});
+
+export type ContentInput = z.infer<typeof ContentSchema>;
