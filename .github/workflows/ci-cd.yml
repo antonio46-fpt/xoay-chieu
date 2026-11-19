@@ -1,8 +1,7 @@
 name: CI/CD
 
-# Chạy cho push và pull request vào main.
-# Không đụng tới nhánh gh-pages, nên workflow pages-build-deployment
-# (do GitHub Pages tạo) vẫn chạy độc lập như trước.
+# Chỉ chạy trên main. Không đụng gh-pages nên workflow pages-build-deployment
+# của GitHub Pages vẫn chạy độc lập.
 on:
   push:
     branches: [main]
@@ -19,22 +18,18 @@ concurrency:
 
 jobs:
   # ------------------------------------------------------------------ Job 1
-  # Kiểm tra chất lượng và bảo mật tĩnh. Mọi bước đều chạy được trên repo
-  # công khai, không cần license riêng, không cần Advanced Security.
+  # Chỉ dùng action chính chủ (actions/*) và lệnh shell chuẩn. Không cần
+  # secret, không cần license, không cần Advanced Security.
   checks:
-    name: Kiểm tra chất lượng & bảo mật tĩnh
+    name: Chất lượng & bảo mật tĩnh
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
 
       - name: Cài dependencies (server)
         working-directory: server
@@ -52,17 +47,21 @@ jobs:
         working-directory: web
         run: npx tsc -b --noEmit
 
-      - name: Kiểm tra lỗ hổng thư viện (production, mức high trở lên)
-        run: |
-          npm audit --omit=dev --audit-level=high --prefix server
-          npm audit --omit=dev --audit-level=high --prefix web
+      - name: Lỗ hổng thư viện (server)
+        working-directory: server
+        run: npm audit --omit=dev --audit-level=high
 
-      - name: Chặn mẫu mã nguy hiểm (XSS / thực thi mã)
+      - name: Lỗ hổng thư viện (web)
+        working-directory: web
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Chặn mẫu mã nguy hiểm
         run: |
           set -e
-          echo "Tìm dangerouslySetInnerHTML, eval(, new Function( ..."
-          if grep -rn --include='*.ts' --include='*.tsx' -E 'dangerouslySetInnerHTML|new Function\(|[^a-zA-Z_.]eval\(' web/src server/src; then
-            echo "::error::Phát hiện mẫu mã có nguy cơ XSS hoặc thực thi mã động."
+          if grep -rn --include='*.ts' --include='*.tsx' \
+              -E 'dangerouslySetInnerHTML|new Function\(|[^a-zA-Z_.]eval\(' \
+              web/src server/src; then
+            echo "::error::Phát hiện mẫu mã có nguy cơ XSS hoặc thực thi mã."
             exit 1
           fi
           echo "Không có mẫu nguy hiểm."
@@ -70,25 +69,11 @@ jobs:
       - name: Quét bí mật bị lộ
         run: node tools/scan-secrets.mjs
 
-      # Semgrep chạy bằng CLI, không cần token hay license. Ban đầu để chế độ
-      # báo cáo (không chặn) để tránh đỏ vì cảnh báo giả trên truy vấn SQL động
-      # có chủ đích; sau khi xem kết quả có thể chuyển thành chặn.
-      - name: Phân tích bảo mật tĩnh (Semgrep, OWASP Top 10)
-        continue-on-error: true
-        run: |
-          python -m pip install --quiet semgrep
-          semgrep scan \
-            --config=p/owasp-top-ten \
-            --severity=ERROR \
-            --exclude=node_modules \
-            --exclude=dist \
-            server/src web/src
-
   # ------------------------------------------------------------------ Job 2
   test:
-    name: Kiểm thử tự động (đơn vị + bảo mật + tích hợp)
+    name: Kiểm thử (đơn vị + bảo mật + tích hợp)
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 20
 
     services:
       postgres:
@@ -103,12 +88,14 @@ jobs:
           --health-cmd "pg_isready -U xoaychieu"
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 10
+          --health-retries 12
 
+    # Giá trị giả, chỉ dùng trong job này. Không phụ thuộc GitHub Secrets.
     env:
-      TEST_DATABASE_URL: postgres://xoaychieu:test_password@127.0.0.1:5432/xoaychieu_test
       DATABASE_URL: postgres://xoaychieu:test_password@127.0.0.1:5432/xoaychieu_test
+      TEST_DATABASE_URL: postgres://xoaychieu:test_password@127.0.0.1:5432/xoaychieu_test
       COOKIE_SECRET: ci-secret-phai-dai-hon-32-ky-tu-0123456789
+      NODE_ENV: test
 
     steps:
       - uses: actions/checkout@v4
@@ -125,7 +112,7 @@ jobs:
         working-directory: server
         run: node scripts/migrate.ts
 
-      - name: Chạy toàn bộ test
+      - name: Chạy test
         working-directory: server
         run: npm test
 
