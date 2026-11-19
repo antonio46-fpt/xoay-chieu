@@ -265,14 +265,20 @@ export async function adminRoutes(app: FastifyInstance, opts: PhuThuocRoute): Pr
     }
     const { username, password, ma, schoolId, classId } = daKiem.data;
 
-    const lopThuocTruong = await queryOne<{ id: string }>(
+    const lop = await queryOne<{ id: string; school_id: string }>(
       db,
-      `select id from classes where id = $1 and school_id = $2`,
-      [classId, schoolId]
+      `select id, school_id from classes where id = $1`,
+      [classId]
     );
-    if (!lopThuocTruong) {
+    if (!lop) {
+      return reply.code(400).send({ error: 'LOP_KHONG_TON_TAI', message: 'Lớp không tồn tại.' });
+    }
+
+    // Không gửi schoolId thì lấy theo lớp; gửi thì phải khớp lớp.
+    if (schoolId && schoolId !== lop.school_id) {
       return reply.code(400).send({ error: 'LOP_KHONG_THUOC_TRUONG', message: 'Lớp không thuộc trường đã chọn.' });
     }
+    const truongId = lop.school_id;
 
     const daTonTai = await queryOne<{ id: string }>(db, `select id from users where username = $1`, [username]);
     if (daTonTai) {
@@ -286,7 +292,7 @@ export async function adminRoutes(app: FastifyInstance, opts: PhuThuocRoute): Pr
         `insert into students (ma, school_id, class_id) values ($1, $2, $3)
          on conflict (school_id, ma) do update set cap_nhat_luc = now()
          returning id`,
-        [ma, schoolId, classId]
+        [ma, truongId, classId]
       );
       const studentId = hocSinh.rows[0].id;
       const nguoiDung = await client.query<{ id: string }>(

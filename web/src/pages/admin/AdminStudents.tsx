@@ -510,7 +510,8 @@ function FormTaoHocSinh({
       toast(`Đã tạo tài khoản ${username.trim()} với mật khẩu ${matKhau}.`);
       onXong();
     } catch (e) {
-      setLoi(e instanceof ApiError ? e.message : 'Không tạo được tài khoản.');
+      const loi = e instanceof ApiError ? e : null;
+      setLoi(loi ? [loi.message, ...loi.chiTiet].join(' · ') : 'Không tạo được tài khoản.');
     } finally {
       setDangGui(false);
     }

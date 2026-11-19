@@ -33,7 +33,8 @@ export const CreateStudentSchema = z.object({
   username: UsernameSchema,
   password: PasswordSchema,
   ma: MaHocSinhSchema,
-  schoolId: z.string().uuid(),
+  /** Không bắt buộc: máy chủ suy ra từ lớp, tránh lệch dữ liệu giữa hai trường. */
+  schoolId: z.string().uuid().optional(),
   classId: z.string().uuid()
 });
 

@@ -28,12 +28,15 @@ export type ApiErrorCode =
 export class ApiError extends Error {
   code: ApiErrorCode;
   status: number;
+  /** Chi tiết từng lỗi kiểm tra dữ liệu, nếu máy chủ trả về. */
+  chiTiet: string[];
 
-  constructor(code: ApiErrorCode, message: string, status: number) {
+  constructor(code: ApiErrorCode, message: string, status: number, chiTiet: string[] = []) {
     super(message);
     this.name = 'ApiError';
     this.code = code;
     this.status = status;
+    this.chiTiet = chiTiet;
   }
 }
 
@@ -66,7 +69,8 @@ export async function api<T>(path: string, yeuCau: YeuCau = {}): Promise<T> {
   if (!res.ok) {
     const code = (duLieu?.error as string) ?? 'LOI_MAY_CHU';
     const message = (duLieu?.message as string) ?? 'Có lỗi xảy ra. Vui lòng thử lại.';
-    throw new ApiError(code, message, res.status);
+    const chiTiet = Array.isArray(duLieu?.chiTiet) ? (duLieu.chiTiet as string[]) : [];
+    throw new ApiError(code, message, res.status, chiTiet);
   }
 
   return duLieu as T;
