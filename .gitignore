@@ -1,25 +1,28 @@
+# --- Phụ thuộc và sản phẩm build ---
 node_modules/
-__pycache__/
-*.pyc
-.DS_Store
+server/node_modules/
+web/node_modules/
+server/dist/
+web/dist/
+web/*.tsbuildinfo
 coverage/
 
-# Cấu hình riêng của người triển khai
+# --- Cấu hình riêng của người triển khai ---
 .env
 .env.*
 !.env.example
 .clasp.json
 
-# Ảnh chụp giao diện sinh ra bởi tools/screenshot.cjs
-docs/preview/
-server/node_modules/
-server/.env
-server/dist/
+# --- Tệp hệ điều hành / trình soạn thảo ---
+.DS_Store
+Thumbs.db
 *.log
-web/node_modules/
-web/dist/
-web/*.tsbuildinfo
 
-# Tep co du lieu hoc sinh that va script tam, khong dua len Git
+# --- Ảnh chụp giao diện sinh ra bởi tools/screenshot.cjs ---
+docs/preview/
+
+# --- Dữ liệu thật và script tạm, không đưa lên Git ---
 docs/hvt.docx
 .serve-public.cjs
+*.sqlite
+*.dump

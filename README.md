@@ -148,6 +148,36 @@ Test tích hợp chứng minh những điều chỉ là lời hứa ở bản c�
 
 ---
 
+## Bảo mật
+
+Báo cáo đầy đủ: **[docs/SECURITY_AUDIT.md](docs/SECURITY_AUDIT.md)** — rà soát ngày 19/11/2026.
+
+**Những gì đã có trong mã nguồn**
+
+| Kiểm soát | Cách làm |
+|---|---|
+| Chống SQL injection | 100% truy vấn tham số hoá `$1, $2…`; không nối chuỗi |
+| Mật khẩu | Argon2id, không log, không trả về API |
+| Phiên | Token 32 byte; CSDL chỉ lưu SHA-256; thu hồi khi đổi mật khẩu hoặc khoá tài khoản |
+| Cookie | `httpOnly`, `sameSite=lax`, `secure` ở production, hết hạn 12 giờ |
+| Phân quyền | Kiểm tra ở server trên mọi route admin; học sinh nhận `403` |
+| IDOR | Học sinh lấy `student_id` từ phiên, không nhận từ body/query |
+| XSS | React escape mặc định; không có `dangerouslySetInnerHTML` |
+| Header | CSP `default-src 'none'`, `X-Frame-Options: DENY`, `nosniff`, HSTS khi production |
+| Chống dò mật khẩu | Đăng nhập 10 lần/phút + khoá 8 lần sai/15 phút; đổi mật khẩu 5 lần/15 phút |
+| Lỗi 500 | Giấu chi tiết ở production, có global error handler |
+| Bí mật | `.env` không vào Git; Gitleaks chặn trong CI |
+
+**CI/CD tự động** — `.github/workflows/ci-cd.yml`, chạy mỗi push/PR vào `main`:
+
+1. Kiểm tra kiểu, `npm audit` (high+), Gitleaks, Semgrep (OWASP Top 10)
+2. 64 test trên PostgreSQL thật, gồm **5 test tấn công**: SQL injection, IDOR, leo thang quyền, header phòng thủ
+3. Build giao diện, chỉ chạy khi hai job trên xanh
+
+**Trước khi dùng thật:** xem mục 9 của báo cáo — đổi `NODE_ENV`, `COOKIE_SECRET`, dùng tài khoản CSDL hạn chế quyền (`db/roles.sql`), và đặt lại mật khẩu toàn bộ tài khoản demo.
+
+---
+
 ## Cấu trúc kho mã
 
 ```

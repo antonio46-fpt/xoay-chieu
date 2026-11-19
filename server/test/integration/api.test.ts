@@ -5,6 +5,7 @@
  * xanh trên máy chưa cài cơ sở dữ liệu. Không viết test giả thay thế.
  */
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 import { after, before, describe, test } from 'node:test';
 import { Client } from 'pg';
 import { buildApp } from '../../src/app.ts';
@@ -652,5 +653,140 @@ chay('tích hợp: đăng nhập, nộp bài, nháp, phân quyền', () => {
       headers: { cookie: teacherCookie }
     });
     assert.ok([401, 403].includes(giaoVienDoc.statusCode), 'giáo viên không được đọc nội dung');
+  });
+
+  test('bảo mật: SQL injection vào đăng nhập và ô tìm kiếm admin bị vô hiệu', async () => {
+    for (const payload of ["' OR '1'='1", "admin'--", "admin' OR 1=1 --", "'; drop table users; --"]) {
+      const thu = await app.inject({
+        method: 'POST',
+        url: '/api/auth/login',
+        payload: { username: payload, password: 'batky' }
+      });
+      assert.ok([400, 401].includes(thu.statusCode), `payload đăng nhập phải bị chặn: ${payload}`);
+    }
+
+    const conLai = await db.query(`select count(*)::int as n from users`);
+    assert.ok(conLai.rows[0].n > 0, 'bảng users phải còn dữ liệu');
+
+    const timKiem = await app.inject({
+      method: 'GET',
+      url: `/api/admin/students?q=${encodeURIComponent("%' OR '1'='1")}&pageSize=50`,
+      headers: { cookie: adminCookie }
+    });
+    assert.equal(timKiem.statusCode, 200, 'tìm kiếm không được sập vì payload');
+    assert.equal(timKiem.json().total, 0, 'payload không được khớp toàn bộ học sinh');
+
+    const bangCon = await db.query(`select count(*)::int as n from students`);
+    assert.ok(bangCon.rows[0].n > 0, 'bảng students phải còn dữ liệu');
+  });
+
+  test('bảo mật: IDOR - học sinh không đọc được bài của người khác', async () => {
+    const hash = await hashPassword('MatKhau789');
+    const hs2 = await db.query(
+      `insert into students (ma, school_id, class_id)
+       select 'CH12-T-02', school_id, class_id from students where id = $1
+       returning id`,
+      [studentId]
+    );
+    const u2 = await db.query(
+      `insert into users (username, password_hash, role, student_id)
+       values ('hocsinh2', $1, 'student', $2) returning id`,
+      [hash, hs2.rows[0].id]
+    );
+
+    const idBai = randomUUID();
+    await db.query(
+      `insert into submissions (id, student_id, school_id, class_id, tuan, thu_lam)
+       select $1, $2, school_id, class_id, 1, 'bài của học sinh thứ hai'
+         from students where id = $2`,
+      [idBai, hs2.rows[0].id]
+    );
+
+    const dangNhap = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { username: 'hocsinh2', password: 'MatKhau789' }
+    });
+    assert.equal(dangNhap.statusCode, 200);
+
+    const doc = await app.inject({
+      method: 'GET',
+      url: `/api/me/submissions/${idBai}`,
+      headers: { cookie }
+    });
+    assert.notEqual(doc.statusCode, 200, 'không được đọc bài người khác');
+
+    const cuaMinh = await app.inject({
+      method: 'GET',
+      url: `/api/me/submissions/${idBai}`,
+      headers: { cookie: dangNhap.headers['set-cookie'] as string }
+    });
+    assert.equal(cuaMinh.statusCode, 200, 'chủ bài phải đọc được bài của mình');
+
+    const giaMao = await app.inject({
+      method: 'GET',
+      url: `/api/me/submissions/${idBai}?studentId=${hs2.rows[0].id}`,
+      headers: { cookie }
+    });
+    assert.notEqual(giaMao.statusCode, 200, 'tham số học sinh trên URL không được có tác dụng');
+
+    await db.query(`delete from submissions where id = $1`, [idBai]);
+    await db.query(`delete from users where id = $1`, [u2.rows[0].id]);
+    await db.query(`delete from students where id = $1`, [hs2.rows[0].id]);
+  });
+
+  test('bảo mật: học sinh bị chặn 403 ở mọi API quản trị', async () => {
+    const hash = await hashPassword('MatKhau123');
+    await db.query(
+      `insert into students (ma, school_id, class_id)
+       select 'CH12-T-03', school_id, class_id from students where id = $1`,
+      [studentId]
+    );
+    const st3 = await db.query(`select id from students where ma = 'CH12-T-03'`);
+    await db.query(
+      `insert into users (username, password_hash, role, student_id) values ('hocsinh-demo', $1, 'student', $2)`,
+      [hash, st3.rows[0].id]
+    );
+
+    const phien = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { username: 'hocsinh-demo', password: 'MatKhau123' }
+    });
+    const cookieHs = phien.headers['set-cookie'] as string;
+
+    const apiAdmin = [
+      '/api/admin/overview',
+      '/api/admin/students',
+      '/api/admin/classes',
+      '/api/admin/submissions',
+      '/api/admin/audit',
+      '/api/admin/assignments'
+    ];
+
+    for (const duong of apiAdmin) {
+      const goi = await app.inject({ method: 'GET', url: duong, headers: { cookie: cookieHs } });
+      assert.equal(goi.statusCode, 403, `học sinh phải bị 403 ở ${duong}`);
+      assert.ok(!JSON.stringify(goi.json()).includes('password_hash'), 'không được lộ hash mật khẩu');
+    }
+
+    const khongPhien = await app.inject({ method: 'GET', url: '/api/admin/overview' });
+    assert.equal(khongPhien.statusCode, 401);
+
+    await db.query(`delete from users where username = 'hocsinh-demo'`);
+    await db.query(`delete from students where ma = 'CH12-T-03'`);
+  });
+
+  test('bảo mật: header phòng thủ được bật', async () => {
+    const tra = await app.inject({ method: 'GET', url: '/api/health' });
+    assert.equal(tra.statusCode, 200);
+
+    const csp = String(tra.headers['content-security-policy'] ?? '');
+    assert.ok(csp.includes("default-src 'none'"), 'CSP phải chặn mọi nguồn mặc định');
+    assert.ok(csp.includes("frame-ancestors 'none'"), 'CSP phải chống nhúng iframe');
+    assert.equal(tra.headers['x-frame-options'], 'DENY');
+    assert.equal(tra.headers['x-content-type-options'], 'nosniff');
+    assert.equal(tra.headers['referrer-policy'], 'no-referrer');
+    assert.equal(tra.headers['x-powered-by'], undefined, 'không được lộ công nghệ máy chủ');
   });
 });

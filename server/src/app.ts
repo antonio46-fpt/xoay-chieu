@@ -29,7 +29,21 @@ export async function buildApp(config: AppConfig): Promise<FastifyInstance> {
   const db = getPool(config.DATABASE_URL);
 
   await app.register(helmet, {
-    contentSecurityPolicy: false,
+    // API chỉ trả JSON, không nhúng tài nguyên nào: CSP chặt nhất có thể.
+    // Giao diện React là tệp tĩnh do Nginx phục vụ, đặt CSP riêng ở đó.
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+        baseUri: ["'none'"],
+        formAction: ["'none'"]
+      }
+    },
+    // Chống clickjacking ở tầng header (helmet mặc định SAMEORIGIN).
+    frameguard: { action: 'deny' },
+    // HSTS chỉ có ý nghĩa khi chạy HTTPS thật.
+    hsts: config.NODE_ENV === 'production' ? { maxAge: 31_536_000, includeSubDomains: true } : false,
+    referrerPolicy: { policy: 'no-referrer' },
     crossOriginResourcePolicy: { policy: 'same-site' }
   });
 

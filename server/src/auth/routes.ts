@@ -117,7 +117,11 @@ export async function authRoutes(app: FastifyInstance, opts: PhuThuocRoute): Pro
    * Sau khi đổi: thu hồi mọi phiên khác, giữ phiên đang dùng để người học
    * không bị đá ra ngay giữa buổi.
    */
-  app.post('/change-password', async (request: FastifyRequest, reply: FastifyReply) => {
+  app.post(
+    '/change-password',
+    // Chống dò mật khẩu hiện tại bằng cách thử liên tục.
+    { config: { rateLimit: { max: config.NODE_ENV === 'test' ? 1000 : 5, timeWindow: '15 minutes' } } },
+    async (request: FastifyRequest, reply: FastifyReply) => {
     const phien = await phienHienTai(request, db);
     if (!phien) {
       return reply.code(401).send({ error: 'CHUA_DANG_NHAP', message: 'Chưa đăng nhập.' });

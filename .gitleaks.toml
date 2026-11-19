@@ -1,0 +1,37 @@
+# Cấu hình Gitleaks cho Xoay Chiều.
+#
+# Quét toàn bộ lịch sử commit tìm khoá bí mật bị lộ. Các mục dưới đây là
+# ngoại lệ có chủ đích, không phải bỏ qua lỗi.
+
+title = "Xoay Chieu"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "xoaychieu-db-url"
+description = "Chuỗi kết nối PostgreSQL có mật khẩu"
+regex = '''postgres(?:ql)?://[^\s"'@]+:[^\s"'@]+@'''
+tags = ["database", "credentials"]
+
+[allowlist]
+description = "Giá trị mẫu, không phải bí mật thật"
+paths = [
+  '''\.env\.example$''',
+  '''README\.md$''',
+  '''docs/.*\.md$''',
+  '''server/scripts/seed-demo\.ts$''',
+  '''server/scripts/create-admin\.ts$''',
+  '''\.github/workflows/.*\.yml$'''
+]
+regexes = [
+  '''dev-secret-khong-dung-cho-production''',
+  '''test-secret-phai-dai-hon-32-ky-tu''',
+  '''ci-secret-phai-dai-hon-32-ky-tu''',
+  '''doi_mat_khau_that''',
+  '''thay_bang_chuoi_ngau_nhien_it_nhat_32_ky_tu''',
+  '''Demo12345''',
+  '''MatKhau123''',
+  '''MatKhau456''',
+  '''MatKhau789'''
+]
