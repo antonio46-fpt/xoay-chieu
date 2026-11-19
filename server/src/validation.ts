@@ -43,7 +43,9 @@ export const PaginationSchema = z.object({
   q: z.string().trim().max(64).optional(),
   schoolId: z.string().uuid().optional(),
   classId: z.string().uuid().optional(),
-  status: z.enum(['all', 'active', 'locked']).default('all')
+  status: z.enum(['all', 'active', 'locked']).default('all'),
+  /** Lọc theo tiến độ 4 tuần: đủ 4, đang làm, chưa bắt đầu. */
+  tienDo: z.enum(['all', 'done', 'doing', 'new']).default('all')
 });
 
 export const TuanSchema = z.coerce.number().int().min(1).max(4);

@@ -71,6 +71,10 @@ export async function adminRoutes(app: FastifyInstance, opts: PhuThuocRoute): Pr
       so_dang_hoat_dong: string;
       so_bi_khoa: string;
       so_bai_nop: string;
+      so_hoan_thanh: string;
+      chua_bat_dau: string;
+      hom_nay: string;
+      tuan_nay: string;
     }>(
       db,
       `select
@@ -79,12 +83,22 @@ export async function adminRoutes(app: FastifyInstance, opts: PhuThuocRoute): Pr
          (select count(*) from students)::text as so_hoc_sinh,
          (select count(*) from users where role = 'student' and dang_hoat_dong)::text as so_dang_hoat_dong,
          (select count(*) from users where role = 'student' and not dang_hoat_dong)::text as so_bi_khoa,
-         (select count(*) from submissions)::text as so_bai_nop`
+         (select count(*) from submissions)::text as so_bai_nop,
+         (select count(*) from (
+            select student_id from progress group by student_id having count(*) = 4
+          ) x)::text as so_hoan_thanh,
+         (select count(*) from students st
+           where not exists (select 1 from progress p where p.student_id = st.id))::text as chua_bat_dau,
+         (select count(*) from submissions
+           where nhan_luc >= date_trunc('day', now()))::text as hom_nay,
+         (select count(*) from submissions
+           where nhan_luc >= now() - interval '7 days')::text as tuan_nay`
     );
 
-    const theo_tuan = await query<{ tuan: number; so_bai: string }>(
+    const theo_tuan = await query<{ tuan: number; so_bai: string; so_hs: string }>(
       db,
-      `select tuan, count(*)::text as so_bai from submissions group by tuan order by tuan`
+      `select tuan, count(*)::text as so_bai, count(distinct student_id)::text as so_hs
+         from submissions group by tuan order by tuan`
     );
 
     const theo_lop = await query<{ lop: string; truong: string; so_bai: string }>(
@@ -104,10 +118,40 @@ export async function adminRoutes(app: FastifyInstance, opts: PhuThuocRoute): Pr
         soHocSinh: Number(dem.so_hoc_sinh),
         soDangHoatDong: Number(dem.so_dang_hoat_dong),
         soBiKhoa: Number(dem.so_bi_khoa),
-        soBaiNop: Number(dem.so_bai_nop)
+        soBaiNop: Number(dem.so_bai_nop),
+        soHoanThanh4Tuan: Number(dem.so_hoan_thanh),
+        chuaBatDau: Number(dem.chua_bat_dau),
+        baiNopHomNay: Number(dem.hom_nay),
+        baiNop7Ngay: Number(dem.tuan_nay),
+        tyLeHoanThanh:
+          Number(dem.so_hoc_sinh) > 0
+            ? Math.round((Number(dem.so_hoan_thanh) / Number(dem.so_hoc_sinh)) * 100)
+            : 0
       },
-      theoTuan: theo_tuan.map(row => ({ tuan: row.tuan, soBai: Number(row.so_bai) })),
+      theoTuan: theo_tuan.map(row => ({
+        tuan: row.tuan,
+        soBai: Number(row.so_bai),
+        soHocSinh: Number(row.so_hs)
+      })),
       theoLop: theo_lop.map(row => ({ lop: row.lop, truong: row.truong, soBai: Number(row.so_bai) }))
+    });
+  });
+
+  // ------------------------------------------------------- danh sách lớp
+  app.get('/classes', async (request: FastifyRequest, reply: FastifyReply) => {
+    if (!(await canQuyen(request, reply, db, 'student.manage'))) return;
+
+    const rows = await query<{ id: string; ten: string; truong: string; so_hs: string }>(
+      db,
+      `select c.id, c.ten, s.ten as truong,
+              (select count(*) from students st where st.class_id = c.id)::text as so_hs
+         from classes c
+         join schools s on s.id = c.school_id
+        order by s.ten, c.ten`
+    );
+
+    return reply.send({
+      items: rows.map(r => ({ id: r.id, ten: r.ten, truong: r.truong, soHocSinh: Number(r.so_hs) }))
     });
   });
 
@@ -119,7 +163,7 @@ export async function adminRoutes(app: FastifyInstance, opts: PhuThuocRoute): Pr
     if (!daKiem.success) {
       return reply.code(400).send({ error: 'INVALID_INPUT', message: 'Tham số lọc không hợp lệ.' });
     }
-    const { page, pageSize, q, schoolId, classId, status } = daKiem.data;
+    const { page, pageSize, q, schoolId, classId, status, tienDo } = daKiem.data;
     const dieuKien: string[] = [];
     const thamSo: unknown[] = [];
 
@@ -138,6 +182,12 @@ export async function adminRoutes(app: FastifyInstance, opts: PhuThuocRoute): Pr
     if (status === 'active') dieuKien.push('u.dang_hoat_dong');
     if (status === 'locked') dieuKien.push('not u.dang_hoat_dong');
 
+    // Lọc theo số tuần đã nộp: 0 = chưa bắt đầu, 4 = hoàn thành, còn lại = đang làm.
+    const soTuan = '(select count(*) from progress p where p.student_id = st.id)';
+    if (tienDo === 'new') dieuKien.push(`${soTuan} = 0`);
+    if (tienDo === 'doing') dieuKien.push(`${soTuan} between 1 and 3`);
+    if (tienDo === 'done') dieuKien.push(`${soTuan} = 4`);
+
     const where = dieuKien.length ? 'where ' + dieuKien.join(' and ') : '';
     thamSo.push(pageSize, (page - 1) * pageSize);
 
@@ -152,11 +202,15 @@ export async function adminRoutes(app: FastifyInstance, opts: PhuThuocRoute): Pr
       dang_nhap_cuoi: Date | null;
       tao_luc: Date;
       so_tuan: string;
+      cac_tuan: number[] | null;
+      luc_cuoi: Date | null;
     }>(
       db,
       `select u.id, u.username, st.ma, sc.ten as truong, c.ten as lop,
               u.dang_hoat_dong, u.phai_doi_mat_khau, u.dang_nhap_cuoi, u.tao_luc,
-              (select count(*) from progress p where p.student_id = st.id)::text as so_tuan
+              (select count(*) from progress p where p.student_id = st.id)::text as so_tuan,
+              array(select p.tuan from progress p where p.student_id = st.id order by p.tuan) as cac_tuan,
+              (select max(p.luc) from progress p where p.student_id = st.id) as luc_cuoi
          from users u
          join students st on st.id = u.student_id
          join schools sc on sc.id = st.school_id
@@ -188,7 +242,9 @@ export async function adminRoutes(app: FastifyInstance, opts: PhuThuocRoute): Pr
         phaiDoiMatKhau: row.phai_doi_mat_khau,
         dangNhapCuoi: row.dang_nhap_cuoi,
         taoLuc: row.tao_luc,
-        soTuanDaNop: Number(row.so_tuan)
+        soTuanDaNop: Number(row.so_tuan),
+        cacTuan: row.cac_tuan ?? [],
+        hoatDongCuoi: row.luc_cuoi
       }))
     });
   });
@@ -246,6 +302,198 @@ export async function adminRoutes(app: FastifyInstance, opts: PhuThuocRoute): Pr
   });
 
   // ------------------------------------------------- đặt lại mật khẩu
+  // ------------------------------------------- danh sách bài nộp 4 tuần
+  app.get('/submissions', async (request: FastifyRequest, reply: FastifyReply) => {
+    if (!(await canQuyen(request, reply, db, 'submission.read'))) return;
+
+    const daKiem = PaginationSchema.safeParse(request.query);
+    if (!daKiem.success) {
+      return reply.code(400).send({ error: 'INVALID_INPUT', message: 'Tham số lọc không hợp lệ.' });
+    }
+    const { page, pageSize, q, classId } = daKiem.data;
+    const tuanRaw = (request.query as { tuan?: string }).tuan;
+    const tuan = tuanRaw && /^[1-4]$/.test(tuanRaw) ? Number(tuanRaw) : null;
+
+    const dieuKien: string[] = [];
+    const thamSo: unknown[] = [];
+
+    if (tuan) {
+      thamSo.push(tuan);
+      dieuKien.push(`s.tuan = $${thamSo.length}`);
+    }
+    if (classId) {
+      thamSo.push(classId);
+      dieuKien.push(`s.class_id = $${thamSo.length}`);
+    }
+    if (q) {
+      thamSo.push(`%${q.toLowerCase()}%`);
+      dieuKien.push(`(lower(u.username) like $${thamSo.length} or lower(st.ma) like $${thamSo.length})`);
+    }
+
+    const where = dieuKien.length ? 'where ' + dieuKien.join(' and ') : '';
+    thamSo.push(pageSize, (page - 1) * pageSize);
+
+    const rows = await query<{
+      id: string;
+      user_id: string;
+      username: string;
+      ma: string;
+      lop: string;
+      truong: string;
+      tuan: number;
+      nhan_luc: Date;
+      thoi_luong_giay: number | null;
+      so_lan_dan: number;
+      da_che: boolean;
+    }>(
+      db,
+      `select s.id, u.id as user_id, u.username, st.ma, c.ten as lop, sc.ten as truong,
+              s.tuan, s.nhan_luc, s.thoi_luong_giay, s.so_lan_dan, s.da_che
+         from submissions s
+         join students st on st.id = s.student_id
+         join users u on u.student_id = st.id
+         join classes c on c.id = st.class_id
+         join schools sc on sc.id = st.school_id
+         ${where}
+        order by s.nhan_luc desc
+        limit $${thamSo.length - 1} offset $${thamSo.length}`,
+      thamSo
+    );
+
+    const [tong] = await query<{ n: string }>(
+      db,
+      `select count(*)::text as n
+         from submissions s
+         join students st on st.id = s.student_id
+         join users u on u.student_id = st.id
+         ${where}`,
+      thamSo.slice(0, thamSo.length - 2)
+    );
+
+    return reply.send({
+      page,
+      pageSize,
+      total: Number(tong.n),
+      items: rows.map(r => ({
+        id: r.id,
+        userId: r.user_id,
+        username: r.username,
+        ma: r.ma,
+        lop: r.lop,
+        truong: r.truong,
+        tuan: r.tuan,
+        nhanLuc: r.nhan_luc,
+        thoiLuongGiay: r.thoi_luong_giay,
+        soLanDan: r.so_lan_dan,
+        daChe: r.da_che
+      }))
+    });
+  });
+
+  // ------------------------------------- xem chi tiết bài làm một học sinh
+  app.get('/students/:id/submissions', async (request: FastifyRequest, reply: FastifyReply) => {
+    if (!(await canQuyen(request, reply, db, 'submission.read'))) return;
+
+    const { id } = request.params as { id: string };
+    if (!id) return reply.code(400).send({ error: 'INVALID_INPUT', message: 'Thiếu mã học sinh.' });
+
+    const hocSinh = await queryOne<{
+      id: string;
+      ma: string;
+      truong: string;
+      lop: string;
+      username: string;
+      dang_hoat_dong: boolean;
+    }>(
+      db,
+      `select st.id, st.ma, sc.ten as truong, c.ten as lop, u.username, u.dang_hoat_dong
+         from users u
+         join students st on st.id = u.student_id
+         join schools sc on sc.id = st.school_id
+         join classes c on c.id = st.class_id
+        where u.id = $1 and u.role = 'student'`,
+      [id]
+    );
+
+    if (!hocSinh) {
+      return reply.code(404).send({ error: 'NOT_FOUND', message: 'Không tìm thấy học sinh.' });
+    }
+
+    const baiNop = await query<{
+      id: string;
+      tuan: number;
+      nhan_luc: Date;
+      bat_dau: Date | null;
+      thoi_luong_giay: number | null;
+      so_lan_dan: number;
+      da_che: boolean;
+      thu_lam: string | null;
+      nghi_1: string | null;
+      nghi_2: string | null;
+      nghi_3: string | null;
+      noi: string | null;
+      dang_san_pham: string | null;
+      san_pham: string | null;
+      chia_se: string | null;
+      tu_danh_gia: string | null;
+      phe: string | null;
+      doi_hay_giu: string | null;
+      kiem_soat: string | null;
+      ngoai_kiem_soat: string | null;
+    }>(
+      db,
+      `select id, tuan, nhan_luc, bat_dau, thoi_luong_giay, so_lan_dan, da_che,
+              thu_lam, nghi_1, nghi_2, nghi_3, noi, dang_san_pham, san_pham,
+              chia_se, tu_danh_gia, phe, doi_hay_giu, kiem_soat, ngoai_kiem_soat
+         from submissions
+        where student_id = $1
+        order by tuan, nhan_luc desc`,
+      [hocSinh.id]
+    );
+
+    const nhap = await query<{ tuan: number; du_lieu: Record<string, unknown>; revision: number; cap_nhat_luc: Date }>(
+      db,
+      `select tuan, du_lieu, revision, cap_nhat_luc from drafts where student_id = $1 order by tuan`,
+      [hocSinh.id]
+    );
+
+    return reply.send({
+      hocSinh: {
+        id: hocSinh.id,
+        ma: hocSinh.ma,
+        truong: hocSinh.truong,
+        lop: hocSinh.lop,
+        username: hocSinh.username,
+        dangHoatDong: hocSinh.dang_hoat_dong
+      },
+      baiNop: baiNop.map(b => ({
+        id: b.id,
+        tuan: b.tuan,
+        nhanLuc: b.nhan_luc,
+        batDau: b.bat_dau,
+        thoiLuongGiay: b.thoi_luong_giay,
+        soLanDan: b.so_lan_dan,
+        daChe: b.da_che,
+        noiDung: {
+          thu_lam: b.thu_lam,
+          nghi_1: b.nghi_1,
+          nghi_2: b.nghi_2,
+          nghi_3: b.nghi_3,
+          noi: b.noi,
+          dang_san_pham: b.dang_san_pham,
+          san_pham: b.san_pham,
+          chia_se: b.chia_se,
+          tu_danh_gia: b.tu_danh_gia,
+          phe: b.phe,
+          doi_hay_giu: b.doi_hay_giu,
+          kiem_soat: b.kiem_soat,
+          ngoai_kiem_soat: b.ngoai_kiem_soat
+        }
+      })),
+      nhap: nhap.map(n => ({ tuan: n.tuan, duLieu: n.du_lieu, revision: n.revision, capNhatLuc: n.cap_nhat_luc }))
+    });
+  });
+
   app.post('/students/:id/reset-password', async (request: FastifyRequest, reply: FastifyReply) => {
     const phien = await canQuyen(request, reply, db, 'student.manage');
     if (!phien) return;

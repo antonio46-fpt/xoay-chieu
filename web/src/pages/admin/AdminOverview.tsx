@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { api, ApiError, authApi, type PhienNguoiDung } from '../../api/client';
+import { api, ApiError, type PhienNguoiDung } from '../../api/client';
+import { layTuan } from '../../content';
+import AdminShell from './AdminShell';
 
-type TongQuanAdmin = {
+type DuLieu = {
   tongQuan: {
     soTruong: number;
     soLop: number;
@@ -9,25 +11,23 @@ type TongQuanAdmin = {
     soDangHoatDong: number;
     soBiKhoa: number;
     soBaiNop: number;
+    soHoanThanh4Tuan: number;
+    chuaBatDau: number;
+    baiNopHomNay: number;
+    baiNop7Ngay: number;
+    tyLeHoanThanh: number;
   };
-  theoTuan: { tuan: number; soBai: number }[];
+  theoTuan: { tuan: number; soBai: number; soHocSinh: number }[];
   theoLop: { lop: string; truong: string; soBai: number }[];
 };
 
-const MUC = [
-  { key: 'tong-quan', nhan: 'Tổng quan', icon: '▦' },
-  { key: 'hoc-sinh', nhan: 'Học sinh', icon: '▤' },
-  { key: 'nhap-xuat', nhan: 'Nhập / Xuất', icon: '⇅' },
-  { key: 'nhat-ky', nhan: 'Nhật ký', icon: '☰' }
-];
-
 export default function AdminOverview({ phien }: { phien: PhienNguoiDung }): JSX.Element {
-  const [duLieu, setDuLieu] = useState<TongQuanAdmin | null>(null);
+  const [duLieu, setDuLieu] = useState<DuLieu | null>(null);
   const [loi, setLoi] = useState<string | null>(null);
 
   useEffect(() => {
     let huy = false;
-    api<TongQuanAdmin>('/api/admin/overview')
+    api<DuLieu>('/api/admin/overview')
       .then(kq => {
         if (!huy) setDuLieu(kq);
       })
@@ -40,133 +40,171 @@ export default function AdminOverview({ phien }: { phien: PhienNguoiDung }): JSX
   }, []);
 
   const t = duLieu?.tongQuan;
-  const the = [
-    { nhan: 'Trường', giaTri: t?.soTruong, icon: '🏫', mau: 'bg-primary-soft text-primary' },
-    { nhan: 'Lớp', giaTri: t?.soLop, icon: '▤', mau: 'bg-accent-soft text-accent' },
-    { nhan: 'Học sinh', giaTri: t?.soHocSinh, icon: '👥', mau: 'bg-success-soft text-success' },
-    { nhan: 'Bài đã nộp', giaTri: t?.soBaiNop, icon: '✓', mau: 'bg-warning-soft text-warning' }
-  ];
+  const tong = t?.soHocSinh ?? 0;
 
   return (
-    <div className="min-h-screen bg-canvas">
-      <div className="flex">
-        <aside className="min-h-screen w-[240px] shrink-0 border-r border-line bg-surface">
-          <div className="flex h-16 items-center gap-2 border-b border-line px-4">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-sm text-white">✦</span>
-            <span className="font-display text-[15px] font-bold text-ink-strong">Xoay Chiều</span>
-          </div>
-          <p className="px-4 pt-4 text-[10px] font-bold uppercase tracking-[0.2em] text-ink-muted">Quản trị</p>
-          <nav className="mt-2 space-y-1 p-2">
-            {MUC.map(m => {
-              const laHocSinh = m.key === 'hoc-sinh';
-              const dangXay = m.key !== 'tong-quan' && !laHocSinh;
-              return (
-                <button
-                  key={m.key}
-                  type="button"
-                  disabled={dangXay}
-                  onClick={() => {
-                    if (laHocSinh) window.location.assign('/admin/students');
-                  }}
-                  title={dangXay ? 'Mục này đang được xây' : undefined}
-                  className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[14px] transition ${
-                    m.key === 'tong-quan'
-                      ? 'bg-accent-soft font-semibold text-accent'
-                      : dangXay
-                        ? 'cursor-not-allowed text-ink-muted/60'
-                        : 'text-ink hover:bg-canvas hover:text-ink-strong'
-                  }`}
-                >
-                  <span aria-hidden className="w-4 text-center">
-                    {m.icon}
-                  </span>
-                  {m.nhan}
-                  {dangXay && <span className="ml-auto text-[10px] font-normal">đang xây</span>}
-                </button>
-              );
-            })}
-          </nav>
-          <div className="absolute bottom-4 left-4 w-[200px]">
-            <button
-              type="button"
-              onClick={() => {
-                void authApi.logout().finally(() => window.location.assign('/'));
-              }}
-              className="w-full rounded-lg border border-line px-3 py-2 text-[12px] font-semibold text-ink"
-            >
-              Đăng xuất
-            </button>
-          </div>
-        </aside>
+    <AdminShell phien={phien} tieuDe="Tổng quan hệ thống" phuDe={`${t?.soLop ?? 0} lớp · ${t?.soTruong ?? 0} trường`} dangChon="tong-quan">
+      {loi && (
+        <p role="alert" className="mb-4 rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-sm">
+          {loi}
+        </p>
+      )}
 
-        <main className="min-w-0 flex-1">
-          <header className="flex h-16 items-center justify-between border-b border-line bg-surface px-6">
-            <div>
-              <h1 className="font-display text-[17px] font-bold text-ink-strong">Tổng quan hệ thống</h1>
-              <p className="text-[12px] text-ink-muted">Quản trị · {phien.user.username}</p>
-            </div>
-          </header>
+      {!duLieu && !loi && <TheSkeleton />}
 
-          <div className="p-6">
-            {loi && (
-              <p role="alert" className="mb-4 rounded-lg border border-danger/30 bg-danger-soft px-4 py-3 text-sm">
-                {loi}
+      {duLieu && t && (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <The
+              nhan="Tổng số học sinh"
+              giaTri={String(t.soHocSinh)}
+              phu={`${t.soLop} lớp · ${t.soTruong} trường`}
+              icon="👥"
+              mau="bg-primary-soft text-primary"
+            />
+            <The
+              nhan="Hoàn thành đủ 4 tuần"
+              giaTri={`${t.tyLeHoanThanh}%`}
+              phu={`${t.soHoanThanh4Tuan}/${t.soHocSinh} học sinh`}
+              icon="▲"
+              mau="bg-success-soft text-success"
+              tienDo={t.tyLeHoanThanh}
+            />
+            <The
+              nhan="Bài nộp 7 ngày qua"
+              giaTri={String(t.baiNop7Ngay)}
+              phu={`+${t.baiNopHomNay} hôm nay`}
+              icon="✓"
+              mau="bg-accent-soft text-accent"
+              huyHieu={t.baiNopHomNay > 0 ? `+${t.baiNopHomNay}` : undefined}
+            />
+            <The
+              nhan="Chưa bắt đầu"
+              giaTri={String(t.chuaBatDau)}
+              phu={t.soBiKhoa > 0 ? `${t.soBiKhoa} tài khoản bị khoá` : 'Không có tài khoản bị khoá'}
+              icon="⏳"
+              mau="bg-warning-soft text-warning"
+            />
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+            <section className="card">
+              <div className="flex items-center justify-between">
+                <h2 className="font-display text-[15px] font-bold text-ink-strong">Tiến độ theo 4 tuần</h2>
+                <span className="text-[11px] font-medium text-ink-muted">{t.soBaiNop} bài nộp</span>
+              </div>
+
+              <ul className="mt-4 space-y-4">
+                {[1, 2, 3, 4].map(so => {
+                  const tuan = duLieu.theoTuan.find(x => x.tuan === so);
+                  const soHs = tuan?.soHocSinh ?? 0;
+                  const phanTram = tong > 0 ? Math.round((soHs / tong) * 100) : 0;
+                  return (
+                    <li key={so}>
+                      <div className="mb-1.5 flex items-baseline justify-between gap-3">
+                        <span className="truncate text-[13px] font-semibold text-ink">
+                          Tuần {so} · {layTuan(so)?.title ?? ''}
+                        </span>
+                        <span className="shrink-0 text-[11.5px] text-ink-muted">
+                          {soHs}/{tong} · {phanTram}%
+                        </span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-canvas">
+                        <div
+                          className="h-full rounded-full bg-accent transition-[width] duration-500"
+                          style={{ width: `${phanTram}%` }}
+                        />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <p className="mt-4 text-[11.5px] leading-relaxed text-ink-muted">
+                Cột tính theo <strong>số học sinh đã nộp</strong> tuần đó, không phải số bài. Một học sinh làm lại tuần
+                chỉ tính một lần.
               </p>
-            )}
+            </section>
 
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {the.map(x => (
-                <div key={x.nhan} className="card">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="stat-label">{x.nhan}</p>
-                      <p className="stat-value mt-2">{x.giaTri ?? '—'}</p>
-                    </div>
-                    <span className={`grid h-11 w-11 place-items-center rounded-lg text-lg ${x.mau}`} aria-hidden>
-                      {x.icon}
+            <section className="card">
+              <h2 className="font-display text-[15px] font-bold text-ink-strong">Theo lớp</h2>
+              <ul className="mt-3 divide-y divide-line">
+                {duLieu.theoLop.map(l => (
+                  <li key={`${l.truong}-${l.lop}`} className="flex items-center justify-between gap-3 py-2.5">
+                    <span className="min-w-0">
+                      <span className="block truncate text-[13.5px] font-semibold text-ink-strong">{l.lop}</span>
+                      <span className="block truncate text-[11px] text-ink-muted">{l.truong}</span>
                     </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-4 grid gap-4 lg:grid-cols-2">
-              <div className="card">
-                <h2 className="font-display text-[15px] font-bold text-ink-strong">Bài nộp theo tuần</h2>
-                <ul className="mt-3 space-y-2">
-                  {(duLieu?.theoTuan ?? []).map(t2 => (
-                    <li key={t2.tuan} className="flex items-center justify-between text-[14px]">
-                      <span className="text-ink">Tuần {t2.tuan}</span>
-                      <span className="font-semibold text-ink-strong">{t2.soBai}</span>
-                    </li>
-                  ))}
-                  {(duLieu?.theoTuan ?? []).length === 0 && <li className="text-[13px] text-ink-muted">Chưa có dữ liệu.</li>}
-                </ul>
-              </div>
-
-              <div className="card">
-                <h2 className="font-display text-[15px] font-bold text-ink-strong">Theo lớp</h2>
-                <ul className="mt-3 space-y-2">
-                  {(duLieu?.theoLop ?? []).slice(0, 8).map(l => (
-                    <li key={`${l.truong}-${l.lop}`} className="flex items-center justify-between text-[14px]">
-                      <span className="truncate text-ink">
-                        {l.truong} · {l.lop}
-                      </span>
-                      <span className="font-semibold text-ink-strong">{l.soBai}</span>
-                    </li>
-                  ))}
-                  {(duLieu?.theoLop ?? []).length === 0 && <li className="text-[13px] text-ink-muted">Chưa có dữ liệu.</li>}
-                </ul>
-              </div>
-            </div>
-
-            <p className="mt-4 text-[12px] text-ink-muted">
-              Trang này đọc dữ liệu thật từ <code>/api/admin/overview</code>. Các mục Học sinh, Nhập/Xuất, Nhật ký
-              đang được xây tiếp.
-            </p>
+                    <span className="shrink-0 rounded-pill bg-canvas px-2.5 py-1 text-[11.5px] font-semibold text-ink">
+                      {l.soBai} bài
+                    </span>
+                  </li>
+                ))}
+                {duLieu.theoLop.length === 0 && <li className="py-6 text-center text-[13px] text-ink-muted">Chưa có lớp nào.</li>}
+              </ul>
+            </section>
           </div>
-        </main>
+        </>
+      )}
+    </AdminShell>
+  );
+}
+
+function The({
+  nhan,
+  giaTri,
+  phu,
+  icon,
+  mau,
+  tienDo,
+  huyHieu
+}: {
+  nhan: string;
+  giaTri: string;
+  phu: string;
+  icon: string;
+  mau: string;
+  tienDo?: number;
+  huyHieu?: string;
+}): JSX.Element {
+  return (
+    <div className="card">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="stat-label">{nhan}</p>
+          <p className="stat-value mt-2">{giaTri}</p>
+        </div>
+        <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-lg text-lg ${mau}`} aria-hidden>
+          {icon}
+        </span>
       </div>
+
+      {typeof tienDo === 'number' && (
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-canvas">
+          <div className="h-full rounded-full bg-success" style={{ width: `${Math.min(100, tienDo)}%` }} />
+        </div>
+      )}
+
+      <div className="mt-2.5 flex items-center gap-2">
+        <p className="truncate text-[11.5px] text-ink-muted">{phu}</p>
+        {huyHieu && (
+          <span className="shrink-0 rounded-pill bg-success-soft px-2 py-0.5 text-[10.5px] font-bold text-success">{huyHieu}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TheSkeleton(): JSX.Element {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {[0, 1, 2, 3].map(i => (
+        <div key={i} className="card">
+          <div className="h-3 w-24 animate-pulse rounded bg-line" />
+          <div className="mt-3 h-7 w-16 animate-pulse rounded bg-line" />
+          <div className="mt-3 h-2 w-full animate-pulse rounded bg-line" />
+        </div>
+      ))}
     </div>
   );
 }

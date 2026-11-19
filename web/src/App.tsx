@@ -7,6 +7,7 @@ import ReviewPage from './pages/ReviewPage';
 import ChangePasswordPage from './pages/ChangePasswordPage';
 import AdminOverview from './pages/admin/AdminOverview';
 import AdminStudents from './pages/admin/AdminStudents';
+import AdminSubmissions from './pages/admin/AdminSubmissions';
 import { batDauTheoDoiMang } from './lib/queue';
 
 type ManHinh = { ten: 'dashboard' } | { ten: 'week'; tuan: number } | { ten: 'review' };
@@ -61,10 +62,14 @@ export default function App(): JSX.Element {
   // nếu không họ sẽ rơi vào màn hình tạm dù có quyền.
   const laVaiQuanTri = ['admin', 'super_admin', 'research_viewer'].includes(phien.user.role);
   if (laVaiQuanTri) {
-    if (window.location.pathname.startsWith('/admin/students')) {
-      return <AdminStudents />;
+    const duong = window.location.pathname;
+    if (duong.startsWith('/admin/students')) {
+      return <AdminStudents phien={phien} />;
     }
-    if (!window.location.pathname.startsWith('/admin')) {
+    if (duong.startsWith('/admin/submissions')) {
+      return <AdminSubmissions phien={phien} />;
+    }
+    if (!duong.startsWith('/admin')) {
       window.location.assign('/admin');
     }
     return <AdminOverview phien={phien} />;

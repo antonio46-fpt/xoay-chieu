@@ -583,4 +583,74 @@ chay('tích hợp: đăng nhập, nộp bài, nháp, phân quyền', () => {
     const kiem = await db.query(`select phai_doi_mat_khau from users where username = 'ch12-t'`);
     assert.equal(kiem.rows[0].phai_doi_mat_khau, false);
   });
+
+  test('quản trị: tổng quan mở rộng, lọc tiến độ, danh sách bài nộp, chi tiết học sinh', async () => {
+    const ov = await app.inject({ method: 'GET', url: '/api/admin/overview', headers: { cookie: adminCookie } });
+    assert.equal(ov.statusCode, 200);
+    const body = ov.json();
+    for (const khoa of ['soHoanThanh4Tuan', 'chuaBatDau', 'baiNopHomNay', 'baiNop7Ngay', 'tyLeHoanThanh']) {
+      assert.equal(typeof body.tongQuan[khoa], 'number', 'thiếu trường ' + khoa);
+    }
+    assert.ok(Array.isArray(body.theoTuan));
+
+    const theoNew = await app.inject({
+      method: 'GET',
+      url: '/api/admin/students?tienDo=new&pageSize=5',
+      headers: { cookie: adminCookie }
+    });
+    assert.equal(theoNew.statusCode, 200);
+
+    const theoDone = await app.inject({
+      method: 'GET',
+      url: '/api/admin/students?tienDo=done&pageSize=5',
+      headers: { cookie: adminCookie }
+    });
+    assert.equal(theoDone.statusCode, 200);
+    assert.ok(
+      theoDone.json().total <= theoNew.json().total,
+      'số học sinh hoàn thành không thể nhiều hơn số chưa bắt đầu'
+    );
+
+    const lopList = await app.inject({ method: 'GET', url: '/api/admin/classes', headers: { cookie: adminCookie } });
+    assert.equal(lopList.statusCode, 200);
+    assert.equal(lopList.json().items.length, 1);
+
+    const danhSach = await app.inject({
+      method: 'GET',
+      url: '/api/admin/submissions?pageSize=5',
+      headers: { cookie: adminCookie }
+    });
+    assert.equal(danhSach.statusCode, 200);
+    assert.ok(Array.isArray(danhSach.json().items));
+
+    const userRow = await db.query(`select id from users where username = 'ch12-t'`);
+    const chiTiet = await app.inject({
+      method: 'GET',
+      url: `/api/admin/students/${userRow.rows[0].id}/submissions`,
+      headers: { cookie: adminCookie }
+    });
+    assert.equal(chiTiet.statusCode, 200);
+    const ct = chiTiet.json();
+    assert.equal(ct.hocSinh.username, 'ch12-t');
+    assert.ok(Array.isArray(ct.baiNop));
+    assert.ok(Array.isArray(ct.nhap));
+
+    // Học sinh không được đọc bài của người khác qua API quản trị.
+    // Phiên học sinh ở bước này có thể đã bị thu hồi (đổi mật khẩu) nên chấp
+    // nhận cả 401: điều cần chứng minh là KHÔNG BAO GIỜ trả 200.
+    const hocSinhDoc = await app.inject({
+      method: 'GET',
+      url: `/api/admin/students/${userRow.rows[0].id}/submissions`,
+      headers: { cookie }
+    });
+    assert.ok([401, 403].includes(hocSinhDoc.statusCode), 'học sinh phải bị chặn');
+
+    // Giáo viên cũng không đọc được nội dung bài nộp.
+    const giaoVienDoc = await app.inject({
+      method: 'GET',
+      url: `/api/admin/students/${userRow.rows[0].id}/submissions`,
+      headers: { cookie: teacherCookie }
+    });
+    assert.ok([401, 403].includes(giaoVienDoc.statusCode), 'giáo viên không được đọc nội dung');
+  });
 });
