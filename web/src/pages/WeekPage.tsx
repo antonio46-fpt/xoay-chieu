@@ -262,14 +262,14 @@ export default function WeekPage({ tuan, onThoat, onDaNop, trangThai }: Props): 
               </p>
               <h2 className="text-xl font-bold">{duLieuTuan.letter.tieu_de}</h2>
               {duLieuTuan.letter.doan.map((doan, i) => (
-                <p key={i} className="text-[15px] leading-[1.75] text-ink/90">
+                <p key={i} className="text-[15px] leading-[1.75] text-ink">
                   {doan}
                 </p>
               ))}
             </article>
           )}
 
-          {buoc.body && <p className="text-[15px] leading-[1.75] text-ink/90">{buoc.body}</p>}
+          {buoc.body && <p className="text-[15px] leading-[1.75] text-ink">{buoc.body}</p>}
 
           {buoc.fields.map(o => (
             <div key={o.key}>
@@ -314,7 +314,7 @@ export default function WeekPage({ tuan, onThoat, onDaNop, trangThai }: Props): 
                         onChange={() => datGiaTri(o.key, String(muc))}
                       />
                       <span className="font-bold text-gold">Mức {muc}</span>
-                      <span className="mt-1 block leading-relaxed text-ink/85">{moTa}</span>
+                      <span className="mt-1 block leading-relaxed text-ink">{moTa}</span>
                     </label>
                   ))}
                 </div>
@@ -351,7 +351,7 @@ export default function WeekPage({ tuan, onThoat, onDaNop, trangThai }: Props): 
                 {hienGoiY ? 'Ẩn gợi ý' : 'Mình chưa biết bắt đầu thế nào'}
               </button>
               {hienGoiY && (
-                <ul className="mt-3 list-disc space-y-1.5 pl-5 text-[13px] leading-relaxed text-ink/85">
+                <ul className="mt-3 list-disc space-y-1.5 pl-5 text-[13px] leading-relaxed text-ink">
                   {buoc.hints.map((goiY, i) => (
                     <li key={i}>{goiY}</li>
                   ))}
