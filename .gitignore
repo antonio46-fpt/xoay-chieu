@@ -6,6 +6,8 @@ server/dist/
 web/dist/
 web/*.tsbuildinfo
 coverage/
+__pycache__/
+*.pyc
 
 # --- Cấu hình riêng của người triển khai ---
 .env
