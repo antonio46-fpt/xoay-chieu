@@ -577,10 +577,21 @@ function FormTaoHocSinh({
   );
 }
 
+type XemTruoc = {
+  tongSo: number;
+  hopLe: number;
+  loi: number;
+  danhSachLoi: { dong: number; loi: string }[];
+  xemTruoc: { dong: number; ma: string; username: string; truong: string; lop: string }[];
+};
+
+type TaiKhoanMoi = { ma: string; username: string; matKhau: string; lop: string; truong: string };
+
 function FormNhapCsv({ onDong, onXong }: { onDong: () => void; onXong: () => void }): JSX.Element {
   const [csv, setCsv] = useState('');
   const [tenTep, setTenTep] = useState('');
-  const [xemTruoc, setXemTruoc] = useState<{ tongSo: number; soHopLe: number; loi: number; danhSachLoi: { dong: number; loi: string }[] } | null>(null);
+  const [xemTruoc, setXemTruoc] = useState<XemTruoc | null>(null);
+  const [ketQua, setKetQua] = useState<TaiKhoanMoi[] | null>(null);
   const [dangGui, setDangGui] = useState(false);
   const [loi, setLoi] = useState<string | null>(null);
 
@@ -588,6 +599,7 @@ function FormNhapCsv({ onDong, onXong }: { onDong: () => void; onXong: () => voi
     setTenTep(tep.name);
     setCsv(await tep.text());
     setXemTruoc(null);
+    setKetQua(null);
     setLoi(null);
   }
 
@@ -595,7 +607,7 @@ function FormNhapCsv({ onDong, onXong }: { onDong: () => void; onXong: () => voi
     setDangGui(true);
     setLoi(null);
     try {
-      setXemTruoc(await api('/api/admin/import/preview', { method: 'POST', body: { csv } }));
+      setXemTruoc(await api<XemTruoc>('/api/admin/import/preview', { method: 'POST', body: { csv } }));
     } catch (e) {
       setLoi(e instanceof ApiError ? e.message : 'Không đọc được tệp.');
     } finally {
@@ -605,18 +617,78 @@ function FormNhapCsv({ onDong, onXong }: { onDong: () => void; onXong: () => voi
 
   async function nhapThat(): Promise<void> {
     setDangGui(true);
+    setLoi(null);
     try {
-      const kq = await api<{ taoMoi: number; capTaiKhoan: { username: string; matKhau: string }[] }>(
-        '/api/admin/import/commit',
-        { method: 'POST', body: { csv } }
-      );
-      toast(`Đã tạo ${kq.taoMoi} tài khoản từ CSV.`);
-      onXong();
+      const kq = await api<{ soLuong: number; taiKhoan: TaiKhoanMoi[] }>('/api/admin/import/commit', {
+        method: 'POST',
+        body: { csv }
+      });
+      // Mật khẩu chỉ trả về đúng một lần: phải hiện ra cho quản trị viên chép.
+      setKetQua(kq.taiKhoan);
+      toast(`Đã tạo ${kq.soLuong} tài khoản. Hãy tải danh sách mật khẩu bên dưới.`);
     } catch (e) {
       setLoi(e instanceof ApiError ? e.message : 'Nhập thất bại.');
     } finally {
       setDangGui(false);
     }
+  }
+
+  function taiCsv(): void {
+    if (!ketQua) return;
+    const dong = [
+      ['ma', 'username', 'matKhau', 'lop', 'truong'],
+      ...ketQua.map(t => [t.ma, t.username, t.matKhau, t.lop, t.truong])
+    ];
+    const noiDung = '\uFEFF' + dong.map(d => d.map(o => `"${o.replace(/"/g, '""')}"`).join(',')).join('\r\n');
+    const blob = new Blob([noiDung], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'tai-khoan-hoc-sinh.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Sau khi nhập xong: hiện danh sách tài khoản, không tự đóng hộp thoại.
+  if (ketQua) {
+    return (
+      <HopThoai tieuDe={`Đã tạo ${ketQua.length} tài khoản`} onDong={onXong}>
+        <p className="rounded-lg bg-warning-soft px-3 py-2 text-[12px] leading-relaxed text-warning">
+          Mật khẩu dưới đây <strong>chỉ hiện một lần</strong>. Tải tệp về trước khi đóng hộp thoại — đóng rồi không
+          lấy lại được, chỉ có thể cấp lại từng tài khoản.
+        </p>
+
+        <div className="mt-3 max-h-[240px] overflow-y-auto rounded-lg border border-line">
+          <table className="w-full text-left text-[12px]">
+            <thead className="sticky top-0 bg-canvas text-[10.5px] uppercase text-ink-muted">
+              <tr>
+                <th className="px-2 py-2">Tài khoản</th>
+                <th className="px-2 py-2">Mã</th>
+                <th className="px-2 py-2">Mật khẩu</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ketQua.map(t => (
+                <tr key={t.username} className="border-t border-line/60">
+                  <td className="px-2 py-1.5 font-semibold text-ink-strong">{t.username}</td>
+                  <td className="px-2 py-1.5 text-ink-muted">{t.ma}</td>
+                  <td className="px-2 py-1.5 font-mono text-ink-strong">{t.matKhau}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button type="button" className="btn-ghost min-h-[36px] px-3 py-1.5 text-[13px]" onClick={taiCsv}>
+            Tải CSV
+          </button>
+          <button type="button" className="btn-primary min-h-[36px] px-3.5 py-1.5 text-[13px]" onClick={onXong}>
+            Đã lưu, đóng
+          </button>
+        </div>
+      </HopThoai>
+    );
   }
 
   return (
@@ -644,7 +716,7 @@ function FormNhapCsv({ onDong, onXong }: { onDong: () => void; onXong: () => voi
       {xemTruoc && (
         <div className="mt-3 rounded-lg bg-canvas p-3 text-[12.5px]">
           <p className="font-semibold text-ink-strong">
-            {xemTruoc.tongSo} dòng · {xemTruoc.soHopLe} hợp lệ · {xemTruoc.loi} lỗi
+            {xemTruoc.tongSo} dòng · {xemTruoc.hopLe} hợp lệ · {xemTruoc.loi} lỗi
           </p>
           {xemTruoc.danhSachLoi.length > 0 && (
             <ul className="mt-2 max-h-[140px] space-y-1 overflow-y-auto">
@@ -675,10 +747,10 @@ function FormNhapCsv({ onDong, onXong }: { onDong: () => void; onXong: () => voi
           <button
             type="button"
             className="btn-primary min-h-[36px] px-3.5 py-1.5 text-[13px]"
-            disabled={dangGui || xemTruoc.loi > 0 || xemTruoc.soHopLe === 0}
+            disabled={dangGui || xemTruoc.loi > 0 || xemTruoc.hopLe === 0}
             onClick={() => void nhapThat()}
           >
-            {dangGui ? 'Đang nhập…' : `Nhập ${xemTruoc.soHopLe} tài khoản`}
+            {dangGui ? 'Đang nhập…' : `Nhập ${xemTruoc.hopLe} tài khoản`}
           </button>
         )}
       </div>
