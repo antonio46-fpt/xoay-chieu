@@ -430,7 +430,7 @@ export default function WeekPage({ tuan, onThoat, onDaNop, trangThai }: Props): 
           </p>
         )}
 
-        <p className="mt-8 text-center text-[11px] leading-relaxed text-ink-muted">
+        <p className="mt-8 text-center text-[11px] leading-relaxed font-medium text-white/85 drop-shadow-[0_1px_6px_rgba(0,0,0,0.9)]">
           Nội dung chỉ nằm trên thiết bị này cho tới khi bạn bấm nộp. Ô có nội dung nhạy cảm sẽ được máy chủ che
           trước khi lưu. Không ghi họ tên bạn bè, số điện thoại hay địa chỉ.
         </p>

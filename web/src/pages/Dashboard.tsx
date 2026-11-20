@@ -193,7 +193,8 @@ export default function Dashboard({
         </ul>
       </div>
 
-      <p className="mt-5 text-center text-[12px] text-ink-muted">
+      {/* Nằm trên nền trời sao nên phải dùng chữ sáng, không dùng token nền sáng */}
+      <p className="mt-5 text-center text-[12px] font-medium text-white/85 drop-shadow-[0_1px_6px_rgba(0,0,0,0.9)]">
         Bản nháp tự lưu trong lúc làm. Nộp xong vẫn xem lại được; muốn sửa thì làm lượt mới.
       </p>
     </AppShell>
